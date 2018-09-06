@@ -21,7 +21,8 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   # time increments
   dt = diff(t) 
   # diffusion increments
-  dz = rnorm(dt,mean=0, sd=sigma*sqrt(dt))
+  l = length(t)
+  dz = rnorm(l-1)
   # jump increments
   dj = diff(CompoundPoissonProcess(lambda = lambda, TT = TT, mu_j=mu_j, sigma_j = sigma_j, t = t))
       # _________________________________________________________________________________
@@ -29,10 +30,10 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   
   
   # simulation of log-returns
-  l = length(t)
+  
   X=rep(0,l)
   for (i in 1:(l-1)){
-    X[i+1]= X[i] + mu*dt[i] + dz[i] + dj[i]
+    X[i+1]= X[i] + (mu)*dt[i] +sigma*sqrt(dt[i])* dz[i] + dj[i]
   }
   
   S = S0*exp(X)
