@@ -55,12 +55,21 @@ GBrM = function(mu,sigma, S0, T, dt){
 
 # simulation
 n = 20
-res = BrM(mu,sigma,S0,T,dt=0.01)
+res = GBrM(mu,sigma,S0,T,dt=0.01)
 t = res[1,]
 sims = res[2,]
 
 for (i in 2:n) {
-  sims = rbind(sims, BrM(mu,sigma,S0,T,dt=0.01)[2,])
+  sims = rbind(sims, GBrM(mu,sigma,S0,T,dt=0.01)[2,])
+}
+
+n = 20
+res = GBM(S0,mu,sigma,T,T/dt)
+t = res[1,]
+sims = GBM(S0,mu,sigma,T,T/dt)
+
+for (i in 2:n) {
+  sims = rbind(sims, GBM(S0,mu,sigma,T,T/dt))
 }
 
 # plot 
@@ -68,4 +77,5 @@ plot_simulations(t,sims,FALSE)
 
 
 #plot(t,S0*exp((mu-0.5*sigma^2)*t + sigma*sqrt(t)*rnorm(501)),type = 'l')
-lines(t,S0*exp((mu-0.5*sigma^2)*t),type = 'l')
+lines(time(res),S0*exp((mu-0.5*sigma^2)*time(res)),type = 'l')
+

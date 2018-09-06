@@ -20,7 +20,7 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   
   # time increments
   dt = diff(t) 
-  # diffusion increments
+  # standard gaussians
   l = length(t)
   dz = rnorm(l-1)
   # jump increments
@@ -33,10 +33,10 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   
   X=rep(0,l)
   for (i in 1:(l-1)){
-    X[i+1]= X[i] + (mu)*dt[i] +sigma*sqrt(dt[i])* dz[i] + dj[i]
+    X[i+1]= X[i] + (mu-sigma*sigma*0.5)*dt[i] +sigma*sqrt(dt[i])*dz[i] + dj[i]
   }
   
-  S = S0*exp(X)
+  S = S0*exp((X))
   
   return (list(t = t, S = S, X = X, jumps = dj))
 }
