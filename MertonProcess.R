@@ -1,27 +1,41 @@
-MertonProcess <-function(mu,sigma,lambda,mu_j,sigma_j,TT, dt){
+MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
+  # Simulates a trajectory of the merton process with 
+  # given parameters on a given time grid.
+  # Jump size is assumed to be normally distributed.
+  
   # INPUT
-  # mu:
-  # sigma:
+  # S0: initial value of the asset
+  # mu: drift of continuous component 
+  # sigma: volatility of continuous component
   # lambda: Poisson parameter
   # mu_j: mean of (log of) jumps
   # sigma_j: volatility of (log of) jumps
 
-  # VARIABLES
-  # X: log of 
-
-  t=(0:N/h)/N
-  X=rep(0, N+1)
-  F=rep(0, N+1)
-  I=rep(0,N)
-  X[1]=1
-  for(j in 1:N) {
-    I[j]=PPgen(h*lambda)
-    if (I[j]==0){F[j]=0} else {
-      F[j]=mu_j 
-    }
-    X[j+1]=X[j] + mu*h*X[j]+sigma*sqrt(h)*rnorm(1)*X[j]-F[j]*X[j]
-    
+  
+  # OUTPUT
+  # S: Merton process trajectory 
+  # X: log-returns of process
+  
+  source('CompoundPoissonProcess.R')
+  
+  # time increments
+  dt = diff(t) 
+  # diffusion increments
+  dz = rnorm(dt,mean=0, sd=sigma*sqrt(dt))
+  # jump increments
+  dj = diff(CompoundPoissonProcess(lambda = lambda, TT = TT, mu_j=mu_j, sigma_j = sigma_j, t = t))
+      # _________________________________________________________________________________
+      # it could be a better/faster way to simulate jump increments as poisson(lambda*dt)
+  
+  
+  # simulation of log-returns
+  l = length(t)
+  X=rep(0,l)
+  for (i in 1:(l-1)){
+    X[i+1]= X[i] + mu*dt[i] + dz[i] + dj[i]
   }
-
-return (X)
+  
+  S = S0*exp(X)
+  
+  return (list(t = t, S = S, X = X, jumps = dj))
 }
