@@ -16,7 +16,7 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   # S: Merton process trajectory 
   # X: log-returns of process
   
-  source('CompoundPoissonProcess.R')
+  #source('CompoundPoissonProcess.R')
   
   # time increments
   dt = diff(t) 
@@ -24,7 +24,7 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   l = length(t)
   dz = rnorm(l-1)
   # jump increments
-  dj = diff(CompoundPoissonProcess(lambda = lambda, TT = TT, mu_j=mu_j, sigma_j = sigma_j, t = t))
+  dj = CompoundPoissonProcess(lambda = lambda, TT = TT, mu_j=mu_j, sigma_j = sigma_j, t = t, increments = TRUE)
       # _________________________________________________________________________________
       # it could be a better/faster way to simulate jump increments as poisson(lambda*dt)
   
@@ -33,7 +33,7 @@ MertonProcess <-function(S0,mu,sigma,lambda,mu_j,sigma_j,TT, t){
   
   X=rep(0,l)
   for (i in 1:(l-1)){
-    X[i+1]= X[i] + (mu-sigma*sigma*0.5)*dt[i] +sigma*sqrt(dt[i])*dz[i] + dj[i]
+    X[i+1]= X[i] + (mu)*dt[i] +sigma*sqrt(dt[i])*dz[i] + dj[i]
   }
   
   S = S0*exp((X))

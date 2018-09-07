@@ -1,4 +1,4 @@
-CompoundPoissonProcess=function(lambda, TT, mu_j, sigma_j, t){
+CompoundPoissonProcess=function(lambda, TT, mu_j, sigma_j, t, increments = FALSE){
   # Simulates a compound poisson process using alg 6.2
   # in Cont Tankov (2004). Jump size is assumed normally
   # distributed N(mu_j,sigma_j^2). Assumed NO drift in between jumps.
@@ -26,13 +26,29 @@ CompoundPoissonProcess=function(lambda, TT, mu_j, sigma_j, t){
   l = length(t)
   X = rep(0,l)
   
-  for (i in 1:l){
-    if (N_j <=N & t[i] > t_j[N_j]){
-      jump_sum = jump_sum + J[N_j]
-      N_j = N_j + 1
+  
+  if (increments){  # only save jump values
+    for (i in 1:l){
+      if (N_j <=N & t[i] > t_j[N_j]){
+        X[i] = J[N_j]
+        N_j = N_j + 1
+      }
+      else{
+        X[i] = jump_sum
+      }
     }
-    X[i] = jump_sum
+    return(X[-1])
+  }
+  
+  else{   # save total height
+    for (i in 1:l){
+      if (N_j <=N & t[i] > t_j[N_j]){
+        jump_sum = jump_sum + J[N_j]
+        N_j = N_j + 1
+      }
+      X[i] = jump_sum
+    }
+    return(X)
   }
 
-  return(X)
 }
