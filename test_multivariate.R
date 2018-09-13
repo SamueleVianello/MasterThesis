@@ -55,8 +55,8 @@ res
 
 
 N=50
-x <- seq(-5,5,length.out=N)
-y <- seq(-5,5,length.out=N)
+x <- seq(-1,1,length.out=N)
+y <- seq(-1,1,length.out=N)
 
 z <- matrix(rep(0,N*N),ncol = N)
 X = matrix(rep(0,N*N),ncol = N)
@@ -67,15 +67,16 @@ for(i in 1:N){
     X[i,j] = x[i]
     Y[i,j] = y[j]
     z[i,j] = MultivariateMertonPdf(c(x[i],y[j]), dt=dt, m,SS,thet,delt,lambd,thet_z,delt_z, lambd_z, alph)
-    z_nojumps[i,j] = dmvnorm(c(x[i],y[j]),mean = m, sigma = SS)
+    z_nojumps[i,j] = dmvnorm(c(x[i],y[j]),mean = m*dt, sigma = SS*sqrt(dt))
   }
 }
 
 
 
 library(rgl)
-surface3d(X,Y,z, col='green')
-surface3d(X,Y, z_nojumps, col = 'blue')
+plot3d(X,Y,z, col='green')
+points3d(X,Y, z_nojumps, col = 'blue')
+legend3d("bottomleft",c("Jumps", "No jumps"))
 
 mean((z-z_nojumps)^2)
 
@@ -88,108 +89,54 @@ mean((z-z_nojumps)^2)
 
 ################################ negloglikelihood function #############################
 
-negloglik = function(params, x, dt, n) {
-  # 
-  # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
-  # 
-  
-  
-  ## add check on inputs
-  
-  # reconstruction of parameters:
-  idx =1
-  mu = params[idx:(idx+n-1)]
-  idx = idx+n 
-
-  
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
-    }
-  }
-  idx = idx + n*(n+1)/2
-  
-  theta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  delta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  lambda = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  theta_z = params[idx]
-  idx = idx+1
-  
-  delta_z = params[idx]
-  idx = idx+1
-  
-  lambda_z = params[idx]
-  idx = idx+1
-  
-  alpha = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  # print(mu)
-  # print(S)
-  # print(theta)
-  # print(delta)
-  # print(lambda)
-  # print(alpha)
-  if( (idx-1)!=length(params))
-    stop("Error in parameter reconstruction: number of parameters is wrong.")
-  
-  
-  # computing pdf on each point and adding
-  partial = 0
-  for(i in 1:dim(x)[1]){
-    pdf = MultivariateMertonPdf(x[i,], dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha)
-    # cat("\npdf:")
-    # print(pdf)
-    partial = partial + log(pdf)
-  }
-  
-  # last check on results
-  nll = -(partial)
-  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
-    nll = 1e10
-  }
-  return(nll)
-}
-
-
-
 ## test negloglikelihood function
 
 param=c(m,c(SS[1,1],SS[1,2],SS[2,2]), thet,delt,lambd,thet_z,delt_z,lambd_z,alph)
-xx = rmvnorm(100, mean = m, sigma = SS)
+xx = rmvnorm(1000, mean = m*dt, sigma = SS*dt)
+
+start_time <- Sys.time()
 negloglik(param, xx, dt=dt, n = 2)
+end_time <- Sys.time()
+
+end_time-start_time
+
+lx =lapply(seq_len(nrow(xx)), function(i) xx[i,])
+
+start_time <- Sys.time()
+vnegloglik(param, lx, dt=dt, n = 2)
+end_time <- Sys.time()
+
+end_time-start_time
+
+start_time <- Sys.time()
+negloglik_2assets(param, xx, dt=dt, n = 2)
+end_time <- Sys.time()
+
+end_time-start_time
 
 
 
-
-
+#######################################################
 ###################### Calibration ####################
+control_list = list(itermax = 1000, NP = 200, strategy = 6,trace=5)
 
 bounds = BoundsCreator(2, n_common=1)
 
-
-outDE <- DEoptim(negloglik,
+start_time <- Sys.time()
+outDE <- DEoptim(negloglik_2assets,
                  lower = bounds$lower,
                  upper = bounds$upper,
-                 control = list(itermax = 100, NP = 100), dt = dt, x = xx, n=2)
+                 control = control_list, dt = dt, x = xx, n=2)
+
+end_time <- Sys.time()
+end_time-start_time
 
 
-
-
-
+# 
+# cov_z = alph%*%t(alph)*delt_z
+# mean_z = thet_z*alph
+# 
+# dmvnorm(x, mean = m*dt + mean_z, sigma = SS*dt + cov_z)
 
 
 
