@@ -167,8 +167,8 @@ BoundsCreator= function(n, n_common=1 ){
   max_mu = 10
   min_lambda = 0.1
   max_lambda = 100
-  min_theta = 0.1 #1% jump is the minimun we consider
-  max_theta = 2  # 200% max jump
+  min_theta = -1 #1% jump is the minimun we consider
+  max_theta = 1 # 200% max jump
   min_var = 1e-4
   max_var = 10
   min_alpha = -1
@@ -290,6 +290,134 @@ ParametersReconstruction = function(params, n, common = TRUE){
     return(list( mu = mu, S = S, theta = theta, delta = delta, lambda =lambda))
   }
 }
+
+#############################################################################
+################################### no common ###############################
+#############################################################################
+
+MultivariateMertonPdf_nocommon = function(x, dt, mu, S, theta, delta, lambda){
+  # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
+  # NOTE: all vectors should be vertical [n*1]
+  # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
+  #
+  # INPUT
+  # x:      vector representing at which point to compute the density [vector of n]
+  # mu:     drift of the continuos part [vector of n]
+  # S:      covariance of the continuous part [matrix n*n]
+  # theta:  means of the idiosyncratic jump intensity [vector of n]
+  # delta:  variances of the idiosyncratic jump intensity [vector of n]
+  # lambda:  poisson parameters of the idiosyncratic jump part [vector of n]
+  # theta_z: mean of common jump intensity 
+  # delta_z: variance of common jump intensity
+  # lambda_z: poisson parameter of common jump part
+  # alpha:  vector of coefficient that multiply the common jump effect for each component
+  
+  # check on lambdas: 
+  require(binaryLogic)
+  
+  if(sum(lambda*dt>=1)){
+    stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
+  }
+  
+  n = length(mu)
+  
+  pdf = 0
+  
+  for(k in 0:(2^(n)-1)){
+    mean_x = mu*dt
+    cov_x = S*sqrt(dt)
+    prob = 1
+    
+    k_bin = as.binary(k,n = n+1,littleEndian=T)
+    
+    # building probability and conditional density
+    for (i in 1:(n)){
+        if ( k_bin[i]){
+          prob = prob*lambda[i]*dt
+          mean_x[i] = mean_x[i] + theta[i]
+          cov_x[i,i] = cov_x[i,i] + delta[i]
+        }
+        else{
+          prob = prob*(1-lambda[i]*dt)
+        }
+    }
+    
+    # adding each term
+    # print(length(x))
+    
+    partial_pdf = dmvnorm(x,mean = mean_x, sigma = cov_x)
+    pdf = pdf + prob*partial_pdf
+    print(prob)
+    # print(partial_pdf)
+    # print(pdf)
+  }
+
+  return(pdf)
+}
+
+negloglik_nocommon = function(params, x, dt, n) {
+  # 
+  # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
+  # 
+
+  ## add check on inputs
+  
+  # reconstruction of parameters:
+  idx =1
+  mu = params[idx:(idx+n-1)]
+  idx = idx+n 
+  
+  
+  S = matrix(rep(0,n*n), ncol = n)
+  i=1
+  j=1
+  for(k in 1:(n*(n+1)/2)){
+    S[i,j] = params[idx+k-1]
+    S[j,i] =  S[i,j]
+    j=j+1
+    if(j == n+1){
+      i=i+1
+      j=i
+    }
+  }
+  idx = idx + n*(n+1)/2
+  
+  theta = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  delta = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  lambda = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  # print(mu)
+  # print(S)
+  # print(theta)
+  # print(delta)
+  # print(lambda)
+  # print(alpha)
+  if( (idx-1)!=length(params))
+    stop("Error in parameter reconstruction: number of parameters is wrong.")
+  
+  
+  # computing pdf on each point and adding
+  partial = 0
+  for(i in 1:dim(x)[1]){
+    pdf = MultivariateMertonPdf_nocommon(x[i,], dt, mu, S, theta, delta, lambda)
+    cat("\npdf:")
+    print(pdf)
+    partial = partial + log(pdf)
+  }
+  
+  # last check on results
+  nll = -(partial)
+  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+    nll = 1e10
+  }
+  return(nll)
+}
+
 
 
 #############################################################################
@@ -515,7 +643,7 @@ negloglik_2assets= function(params, x, dt, n) {
 #############################################################################
 
 
-MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha){
+MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, lambda){
   # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
   # NOTE: all vectors should be vertical [n*1]
   # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
@@ -624,11 +752,11 @@ negloglik_2assets_nocommon= function(params, x, dt, n) {
 
 
 #############################################################################
-####################### three asset no common jump ############################
+####################### three asset no common jump ##########################
 #############################################################################
 
 
-MultivariateMertonPdf_3assets_nocommon = function(x, dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha){
+MultivariateMertonPdf_3assets_nocommon = function(x, dt, mu, S, theta, delta, lambda){
   # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
   # NOTE: all vectors should be vertical [n*1]
   # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1

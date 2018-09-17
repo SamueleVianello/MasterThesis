@@ -62,7 +62,7 @@ graphics.off()
 
 dt = 1/255
 
-control_list = list(itermax = 2000, NP = 200, strategy = 6,trace=5)
+control_list = list(itermax = 3000, NP = 200, strategy = 6,trace=5)
 ### no common jump
 bounds_nocommon = BoundsCreator(3, n_common=0)
 
@@ -81,4 +81,10 @@ calibrated
 
 correlation = cov2cor(calibrated$S)
 correlation
+
+
+#
+negloglik_nocommon(outDE$optim$bestmem,assets_return,dt,n=3)
+MultivariateMertonPdf_nocommon(assets_return[1,],dt=dt, mu = calibrated$mu, S = calibrated$S, 
+                               theta = calibrated$theta, delta = calibrated$delta, lambda = calibrated$lambda)
 
