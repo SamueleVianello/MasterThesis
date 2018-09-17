@@ -167,6 +167,8 @@ BoundsCreator= function(n, n_common=1 ){
   max_mu = 10
   min_lambda = 0.1
   max_lambda = 100
+  min_theta = 0.1 #1% jump is the minimun we consider
+  max_theta = 2  # 200% max jump
   min_var = 1e-4
   max_var = 10
   min_alpha = -1
@@ -191,8 +193,8 @@ BoundsCreator= function(n, n_common=1 ){
   idx = idx + N_var
   
   # means of idiosyncratic term
-  low[idx:(idx+n-1)] = rep(min_mu,n)
-  up[idx:(idx+n-1)] = rep(max_mu,n)
+  low[idx:(idx+n-1)] = rep(min_theta,n)
+  up[idx:(idx+n-1)] = rep(max_theta,n)
   idx = idx+n
   
   # variance of idyosincratic term
@@ -619,3 +621,130 @@ negloglik_2assets_nocommon= function(params, x, dt, n) {
   }
   return(nll)
 }
+
+
+#############################################################################
+####################### three asset no common jump ############################
+#############################################################################
+
+
+MultivariateMertonPdf_3assets_nocommon = function(x, dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha){
+  # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
+  # NOTE: all vectors should be vertical [n*1]
+  # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
+  #
+  # INPUT
+  # x:      vector representing at which point to compute the density [vector of n]
+  # mu:     drift of the continuos part [vector of n]
+  # S:      covariance of the continuous part [matrix n*n]
+  # theta:  means of the idiosyncratic jump intensity [vector of n]
+  # delta:  variances of the idiosyncratic jump intensity [vector of n]
+  # lambda:  poisson parameters of the idiosyncratic jump part [vector of n]
+  # theta_z: mean of common jump intensity 
+  # delta_z: variance of common jump intensity
+  # lambda_z: poisson parameter of common jump part
+  # alpha:  vector of coefficient that multiply the common jump effect for each component
+  
+  # check on lambdas: 
+  ldt =lambda*dt
+  
+  if(sum(ldt>=1)){
+    stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
+  }
+  
+  n = length(mu)
+  
+  pdf = 0
+  
+  mean_y1 = c(theta[1],0,0)
+  cov_y1 = matrix(c(delta[1],0,0,0,0,0,0,0,0), 3,3)
+  
+  mean_y2 = c(0,theta[2],0)
+  cov_y2 = matrix(rep(0,3*3),3,3)
+  cov_y2[2,2] = delta[2]
+  
+  mean_y3 = c(0,0,theta[3])
+  cov_y3 = matrix(rep(0,3*3),3,3)
+  cov_y3[3,3] = delta[3]
+  
+  mean_x = mu*dt
+  cov_x = S*sqrt(dt)
+  
+  
+  #000
+  pdf= pdf + (1-ldt[1])*(1-ldt[2])*(1-ldt[3])*dmvnorm(x, mean = mean_x, sigma = cov_x)
+  #001
+  pdf= pdf + (ldt[1])*(1-ldt[2])*(1-ldt[3])*dmvnorm(x, mean = mean_x+mean_y1, sigma = cov_x+cov_y1)
+  #010
+  pdf= pdf + (1-ldt[1])*(ldt[2])*(1-ldt[3])*dmvnorm(x, mean = mean_x+mean_y2, sigma = cov_x+cov_y2)
+  #011
+  pdf= pdf + (ldt[1])*(ldt[2])*(1-ldt[3])*dmvnorm(x, mean = mean_x+mean_y1+mean_y2, sigma = cov_x+cov_y1+cov_y2)
+  #100
+  pdf= pdf + (1-ldt[1])*(1-ldt[2])*(ldt[3])*dmvnorm(x, mean = mean_x+mean_y3, sigma = cov_x+cov_y3)
+  #101
+  pdf= pdf + (ldt[1])*(1-ldt[2])*(ldt[3])*dmvnorm(x, mean = mean_x+mean_y1+mean_y3, sigma = cov_x+cov_y1+cov_y3)
+  #110
+  pdf= pdf + (1-ldt[1])*(ldt[2])*(ldt[3])*dmvnorm(x, mean = mean_x+mean_y2+mean_y3, sigma = cov_x+cov_y2+cov_y3)
+  #111
+  pdf= pdf + (ldt[1])*(ldt[2])*(ldt[3])*dmvnorm(x, mean = mean_x+mean_y1+mean_y2+mean_y3, sigma = cov_x+cov_y1+cov_y2+cov_y3)
+  
+  return(pdf)
+}
+
+
+negloglik_3assets_nocommon= function(params, x, dt, n) {
+  # 
+  # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
+  # 
+  ## add check on inputs
+  
+  # reconstruction of parameters:
+  idx =1
+  mu = params[idx:(idx+n-1)]
+  idx = idx+n 
+  
+  
+  S = matrix(rep(0,n*n), ncol = n)
+  i=1
+  j=1
+  for(k in 1:(n*(n+1)/2)){
+    S[i,j] = params[idx+k-1]
+    S[j,i] =  S[i,j]
+    j=j+1
+    if(j == n+1){
+      i=i+1
+      j=i
+    }
+  }
+  idx = idx + n*(n+1)/2
+  
+  theta = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  delta = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  lambda = params[idx:(idx+n-1)]
+  idx = idx+n
+  
+  # print(mu)
+  # print(S)
+  # print(theta)
+  # print(delta)
+  # print(lambda)
+  # print(alpha)
+  if( (idx-1)!=length(params))
+    stop("Error in parameter reconstruction: number of parameters is wrong.")
+  
+  
+  # computing pdf on each point and adding
+  partial = MultivariateMertonPdf_3assets_nocommon(x, dt, mu, S, theta, delta, lambda)
+  nll = -sum(log(partial))
+  
+  # last check on result
+  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+    nll = 1e10
+  }
+  return(nll)
+}
+
