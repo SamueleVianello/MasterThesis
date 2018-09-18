@@ -167,8 +167,8 @@ BoundsCreator= function(n, n_common=1 ){
   max_mu = 10
   min_lambda = 0.1
   max_lambda = 100
-  min_theta = -1 #1% jump is the minimun we consider
-  max_theta = 1 # 200% max jump
+  min_theta = -1 
+  max_theta = 1 
   min_var = 1e-4
   max_var = 10
   min_alpha = -1
@@ -233,9 +233,6 @@ BoundsCreator= function(n, n_common=1 ){
   
   return(list(lower = low, upper = up))
 }
-
-
-
 
 
 ParametersReconstruction = function(params, n, common = TRUE){

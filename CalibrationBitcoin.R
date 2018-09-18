@@ -1,5 +1,5 @@
 
-library(tseries)
+
 library(mvtnorm)
 library(pracma)
 library(DEoptim)
@@ -12,39 +12,78 @@ library(xlsx)
 
 
 
-
 library(binaryLogic)
 
 source('MultivariateMertonModel.R')
 
-# Calibration on 3 asset including bitcoin
+# CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
 
-my_data<-read.xlsx(file="XBT Correlations.xlsm",sheetName = "STATIC" , header=TRUE)
+# my_data<-read.xlsx(file="XBT Correlations.xlsm",sheetName = "STATIC" , header=TRUE)
+# 
+# 
+# 
+# leng = dim(my_data)[1]
+# my_returns = data.frame(btc_date = my_data$BTC_DATE[1:(leng-1)])
+# my_returns$btc = log(my_data$BITCOIN[1:(leng-1)]/my_data$BITCOIN[2:leng])
+# 
+# my_returns$bric_date = my_data$MSCI.BRIC._DATE[1:(leng-1)]
+# my_returns$bric = log(my_data$MSCI.BRIC.[1:(leng-1)]/my_data$MSCI.BRIC.[2:leng])
+# 
+# my_returns$sp500_date = my_data$S.P500_DATE[1:(leng-1)]
+# my_returns$sp500 = log(my_data$S.P500[1:(leng-1)]/my_data$S.P500[2:leng])
+# 
+# my_returns$eurostoxx_date = my_data$EUROSTOXX50_DATE[1:(leng-1)]
+# my_returns$eurostoxx = log(my_data$EUROSTOXX50[1:(leng-1)]/my_data$EUROSTOXX50[2:leng])
+# 
+# my_returns$gold_date = my_data$GOLD_DATE[1:(leng-1)]
+# my_returns$gold = log(my_data$GOLD[1:(leng-1)]/my_data$GOLD[2:leng])
+# 
+# my_returns$wti_date = my_data$WTI_DATE[1:(leng-1)]
+# my_returns$wti = log(my_data$WTI[1:(leng-1)]/my_data$WTI[2:leng])
+# 
+# my_returns$grain_date = my_data$GRAIN_DATE[1:(leng-1)]
+# my_returns$grain = log(my_data$GRAIN[1:(leng-1)]/my_data$GRAIN[2:leng])
+# 
+# my_returns$metal_date = my_data$IND.METALS_DATE[1:(leng-1)]
+# my_returns$metal = log(my_data$IND.METALS[1:(leng-1)]/my_data$IND.METALS[2:leng])
+# 
+# my_returns$eur_date = my_data$EUR_DATE[1:(leng-1)]
+# my_returns$eur = log(my_data$EUR[1:(leng-1)]/my_data$EUR[2:leng])
+# 
+# my_returns$gbp_date = my_data$GBP_DATE[1:(leng-1)]
+# my_returns$gbp = log(my_data$GBP[1:(leng-1)]/my_data$GBP[2:leng])
+# 
+# my_returns$chf_date = my_data$CHF_DATE[1:(leng-1)]
+# my_returns$chf = log(my_data$CHF[1:(leng-1)]/my_data$CHF[2:leng])
+# 
+# my_returns$jpy_date = my_data$JPY_DATE[1:(leng-1)]
+# my_returns$jpy = log(my_data$JPY[1:(leng-1)]/my_data$JPY[2:leng])
+# 
+# my_returns$pan_euro_date = my_data[[25]][1:(leng-1)]
+# my_returns$pan_euro = log(my_data$BBG.Barclays.PAN.EURO.Aggregate[1:(leng-1)]/my_data$BBG.Barclays.PAN.EURO.Aggregate[2:leng])
+# 
+# my_returns$pan_us_date = my_data[[27]][1:(leng-1)]
+# my_returns$pan_us = log(my_data$BBG.Barclays.PAN.US.Aggregate[1:(leng-1)]/my_data$BBG.Barclays.PAN.US.Aggregate[2:leng])
+# 
+#
+#
+# save(my_returns, file = "returns.Rda")
+
+load("returns.Rda")
+load("data.Rda")
 
 
-bitcoin = list(date = (my_data[[1]]), value =  (my_data[[2]]))
-sp500 = list(date = (my_data[[5]]), value = (my_data[[6]]))
-
-  
 N=500
 
-btc_x =(bitcoin$value[1:N])
-sp500_x = sp500$value[1:N]
-eurostoxx_euro_x =my_data$EUROSTOXX50[1:N] 
-
-
-assets_return = cbind(log(btc_x[1:(N-1)]/btc_x[2:N]),
-                      log(sp500_x[1:(N-1)]/sp500_x[2:N]),
-                      log(eurostoxx_euro_x[1:(N-1)]/eurostoxx_euro_x[2:N]))
 
 x11()
 par(mfrow = c(2,3))
-plot(bitcoin$date[1:N],bitcoin$value[1:N],type='l')
-plot(sp500$date[1:N],sp500$value[1:N],type = 'l',col='green')
+plot(my_data$BTC_DATE[1:N],my_data$BITCOIN[1:N],type='l')
+plot(my_data$S.P500_DATE[1:N],my_data$S.P500[1:N],type = 'l',col='green')
 plot(my_data$EUROSTOXX50_DATE[1:N],my_data$EUROSTOXX50[1:N],type = 'l',col='blue')
-plot(bitcoin$date[1:(N-1)],assets_return[,1], type='l')
-plot(sp500$date[1:(N-1)],assets_return[,2], type='l')
-plot(my_data$EUROSTOXX50_DATE[1:(N-1)],assets_return[,3], type='l',col='blue')
+plot(my_returns$btc_date[1:N],my_returns$btc[1:N], type='l')
+plot(my_returns$sp500_date[1:N],my_returns$sp500[1:N], type='l',col='green')
+plot(my_returns$eurostoxx_date[1:N],my_returns$eurostoxx[1:N], type='l',col='blue')
 
 graphics.off()
   
