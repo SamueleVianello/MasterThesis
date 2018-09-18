@@ -88,13 +88,16 @@ plot(my_returns$eurostoxx_date[1:N],my_returns$eurostoxx[1:N], type='l',col='blu
 graphics.off()
   
 
-############# CALIBRATION ######################
+############# CALIBRATION using DEOPTIM ######################
 
 attach(my_returns)
+
+N = 500
 
 dt = 1/255
 
 control_list = list(itermax = 500, NP = 200, strategy = 6,trace=5)
+
 ### no common jump
 bounds_nocommon = BoundsCreator(3, n_common=0)
 
@@ -102,7 +105,7 @@ start_time <- Sys.time()
 outDE <- DEoptim(negloglik_3assets_nocommon,
                  lower = bounds_nocommon$lower,
                  upper = bounds_nocommon$upper,
-                 control = control_list, dt = dt, x = cbind(btc,sp500,eurostoxx), n=3)
+                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N]), n=3)
 
 end_time <- Sys.time()
 calibration_time = end_time-start_time
@@ -115,8 +118,39 @@ correlation = cov2cor(calibrated$S)
 correlation
 
 
-#
-negloglik_nocommon(outDE$optim$bestmem,assets_return,dt,n=3)
-MultivariateMertonPdf_nocommon(assets_return[1,],dt=dt, mu = calibrated$mu, S = calibrated$S, 
-                               theta = calibrated$theta, delta = calibrated$delta, lambda = calibrated$lambda)
 
+
+################ CALIBRATION USING OPTIM #############################
+
+initial =  rep(0,18)
+bounds_nocommon = BoundsCreator(3, n_common=0)
+
+calibrated_optim = optim(par = initial, fn = negloglik_3assets_nocommon,method = 'L-BFGS-B',lower = bounds_nocommon$lower,
+                         upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N]),n=3)
+
+# doesnt work
+
+
+
+
+
+
+
+
+
+
+################ CALIBRATION USING nlminb ############################
+initial=outDE$optim$bestmem
+bounds_nocommon = BoundsCreator(3, n_common=0)
+
+
+out_nlminb = nlminb(initial,objective = negloglik_3assets_nocommon,lower = bounds_nocommon$lower,
+       upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N]),n=3,
+       control=list(eval.max = 10000,iter.max = 500, trace = 10))
+out_nlminb
+
+calibrated_nlminb=ParametersReconstruction(out_nlminb$par,n=3,common = FALSE)
+
+correlation = cov2cor(calibrated_nlminb$S)
+correlation
+calibrated_nlminb$theta
