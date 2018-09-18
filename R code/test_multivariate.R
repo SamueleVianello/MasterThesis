@@ -16,9 +16,6 @@ library(statmod)
 library(NMOF)
 
 
-library(pracma)
-library(DEoptim)
-library(statmod)
 library(readxl)
 library(xlsx)
 
@@ -115,10 +112,20 @@ end_time <- Sys.time()
 end_time-start_time
 
 
+# no common jump
+start_time <- Sys.time()
+negloglik_2assets_nocommon(params = c(m,c(SS[1,1],SS[1,2],SS[2,2]), thet,delt,lambd), xx, dt=dt, n = 2)
+end_time <- Sys.time()
+
+end_time-start_time
+
+
+
+
 
 #######################################################
 ###################### Calibration ####################
-control_list = list(itermax = 1000, NP = 200, strategy = 6,trace=5)
+control_list = list(itermax = 500, NP = 200, strategy = 6,trace=5)
 
 bounds = BoundsCreator(2, n_common=1)
 
@@ -132,11 +139,20 @@ end_time <- Sys.time()
 end_time-start_time
 
 
-# 
-# cov_z = alph%*%t(alph)*delt_z
-# mean_z = thet_z*alph
-# 
-# dmvnorm(x, mean = m*dt + mean_z, sigma = SS*dt + cov_z)
+### no common jump
+bounds_nocommon = BoundsCreator(2, n_common=0)
+
+start_time <- Sys.time()
+outDE <- DEoptim(negloglik_2assets_nocommon,
+                 lower = bounds_nocommon$lower,
+                 upper = bounds_nocommon$upper,
+                 control = control_list, dt = dt, x = xx, n=2)
+
+end_time <- Sys.time()
+end_time-start_time
+
+
+ParametersReconstruction(outDE$optim$bestmem,2,common = FALSE)
 
 
 

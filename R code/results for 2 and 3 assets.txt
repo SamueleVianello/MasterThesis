@@ -1,0 +1,112 @@
+$mu
+     par1      par2 
+6.4235363 0.5830725 
+
+$S
+          [,1]        [,2]
+[1,] 1.4369360 0.109346354
+[2,] 0.1093464 0.009499564
+
+$theta
+       par6        par7 
+ 0.19547519 -0.08163012 
+
+$delta
+      par8       par9 
+0.07217683 0.02661951 
+
+$lambda
+    par10     par11 
+0.8500589 0.1088622 
+
+Time difference of 56.66312 secs
+
+
+
+$mu
+     par1      par2 
+1.2706139 0.2151004 
+
+$S
+           [,1]        [,2]
+[1,] 0.90467131 0.080988091
+[2,] 0.08098809 0.007835908
+
+$theta
+      par6       par7 
+0.06142987 0.01023531 
+
+$delta
+       par8        par9 
+0.023271777 0.001065987 
+
+$lambda
+     par10      par11 
+17.5526649  0.4081611 
+
+
+
+> calibration_time
+Time difference of 3.492968 mins
+> 
+> ParametersReconstruction(outDE$optim$bestmem,2,common = FALSE)
+$mu
+     par1      par2 
+1.4384214 0.2158435 
+
+$S
+           [,1]         [,2]
+[1,] 0.00898169 0.0001000000
+[2,] 0.00010000 0.0003208481
+
+$theta
+par6 par7 
+0.01 0.01 
+
+$delta
+        par8         par9 
+0.0050445534 0.0004487392 
+
+$lambda
+    par10     par11 
+100.00000  19.65906 
+
+
+
+###############results with 3 assets btc-sp500-eurostoxx###############
+
+> calibration_time = end_time-start_time
+> calibration_time
+Time difference of 11.12582 mins
+> 
+> calibrated = ParametersReconstruction(outDE$optim$bestmem,3,common = FALSE)
+> calibrated
+$mu
+      par1       par2       par3 
+-2.2365623 -1.0971376 -0.9092783 
+
+$S
+         [,1]     [,2]     [,3]
+[1,] 4.171900 3.671522 3.293979
+[2,] 3.671522 3.555247 3.222727
+[3,] 3.293979 3.222727 2.925230
+
+$theta
+    par10     par11     par12 
+0.1579835 0.1000137 0.1002615 
+
+$delta
+       par13        par14        par15 
+0.0001723621 0.0053833774 0.0155333291 
+
+$lambda
+   par16    par17    par18 
+5.942829 1.434746 0.102635 
+
+> 
+> correlation = cov2cor(calibrated$S)
+> correlation
+          [,1]      [,2]      [,3]
+[1,] 1.0000000 0.9533324 0.9429179
+[2,] 0.9533324 1.0000000 0.9993293
+[3,] 0.9429179 0.9993293 1.0000000
