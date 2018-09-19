@@ -105,13 +105,13 @@ start_time <- Sys.time()
 outDE <- DEoptim(negloglik_4assets_nocommon,
                  lower = bounds_nocommon$lower,
                  upper = bounds_nocommon$upper,
-                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]), n=3)
+                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]), n=4)
 
 end_time <- Sys.time()
 calibration_time = end_time-start_time
 calibration_time
 
-calibrated = ParametersReconstruction(outDE$optim$bestmem,3,common = FALSE)
+calibrated = ParametersReconstruction(outDE$optim$bestmem,4,common = FALSE)
 calibrated
 
 correlation = cov2cor(calibrated$S)
@@ -146,16 +146,16 @@ N = 500
 
 dt = 1/255
 
-control_list = list(itermax = 500, NP = 200, strategy = 6,trace=5)
+control_list = list(itermax = 400, NP = 200, strategy = 6,trace=5)
 
 ### no common jump
 bounds_nocommon = BoundsCreator(4, n_common=0)
 
 start_time <- Sys.time()
-outDE <- DEoptim(negloglik_3assets_nocommon,
+outDE <- DEoptim(negloglik_4assets_nocommon,
                  lower = bounds_nocommon$lower,
                  upper = bounds_nocommon$upper,
-                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],), n=4)
+                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]), n=4)
 
 end_time <- Sys.time()
 calibration_time = end_time-start_time
@@ -169,15 +169,20 @@ correlation
 
 
 initial=outDE$optim$bestmem
-bounds_nocommon = BoundsCreator(3, n_common=0)
+
+bounds_nocommon = BoundsCreator(4, n_common=0)
 
 
-out_nlminb = nlminb(initial,objective = negloglik_3assets_nocommon,lower = bounds_nocommon$lower,
-       upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N]),n=3,
+start_time <- Sys.time()
+out_nlminb = nlminb(initial,objective = negloglik_4assets_nocommon,lower = bounds_nocommon$lower,
+       upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]),n=4,
        control=list(eval.max = 10000,iter.max = 1000, trace = 10))
 out_nlminb
+end_time <- Sys.time()
+end_time-start_time
 
-calibrated_nlminb=ParametersReconstruction(out_nlminb$par,n=3,common = FALSE)
+
+calibrated_nlminb=ParametersReconstruction(out_nlminb$par,n=4,common = FALSE)
 
 correlation = cov2cor(calibrated_nlminb$S)
 correlation
