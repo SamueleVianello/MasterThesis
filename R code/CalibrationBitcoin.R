@@ -1,7 +1,6 @@
 
 
 library(mvtnorm)
-library(pracma)
 library(DEoptim)
 library(statmod)
 library(NMOF)
@@ -15,6 +14,8 @@ library(xlsx)
 library(binaryLogic)
 
 source('MultivariateMertonModel.R')
+source('CalibrationMVMerton.R')
+
 
 # CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
 
@@ -75,7 +76,7 @@ load("data.Rda")
 
 N=500
 
-
+# Plot of first few data
 x11()
 par(mfrow = c(2,3))
 plot(my_data$BTC_DATE[1:N],my_data$BITCOIN[1:N],type='l')
@@ -88,102 +89,88 @@ plot(my_returns$eurostoxx_date[1:N],my_returns$eurostoxx[1:N], type='l',col='blu
 graphics.off()
   
 
-############# CALIBRATION using DEOPTIM ######################
-
-attach(my_returns)
-
-N = 500
-
-dt = 1/255
-
-control_list = list(itermax = 500, NP = 200, strategy = 6,trace=5)
-
-### no common jump
-bounds_nocommon = BoundsCreator(4, n_common=0)
-
-start_time <- Sys.time()
-outDE <- DEoptim(negloglik_4assets_nocommon,
-                 lower = bounds_nocommon$lower,
-                 upper = bounds_nocommon$upper,
-                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]), n=4)
-
-end_time <- Sys.time()
-calibration_time = end_time-start_time
-calibration_time
-
-calibrated = ParametersReconstruction(outDE$optim$bestmem,4,common = FALSE)
-calibrated
-
-correlation = cov2cor(calibrated$S)
-correlation
-
-
-
-
-################ CALIBRATION USING OPTIM #############################
-
-initial =  rep(0,18)
-bounds_nocommon = BoundsCreator(3, n_common=0)
-
-calibrated_optim = optim(par = initial, fn = negloglik_3assets_nocommon,method = 'L-BFGS-B',lower = bounds_nocommon$lower,
-                         upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N]),n=3)
-
-# doesnt work
-
-
-
-
-
-
-
 
 
 
 ################ CALIBRATION USING deoptim + nlminb ############################
+attach(my_returns)
 
 
-N = 500
+N = dim(my_returns)[1]
 
 dt = 1/255
 
-control_list = list(itermax = 400, NP = 200, strategy = 6,trace=5)
 
-### no common jump
-bounds_nocommon = BoundsCreator(4, n_common=0)
+# calibration_time = end_time-start_time
+# calibration_time
+# 
+# calibrated = ParametersReconstruction(outDE$optim$bestmem,4,common = FALSE)
+# calibrated
+# 
+# correlation = cov2cor(calibrated$S)
+# correlation
+# 
+# 
+# initial=outDE$optim$bestmem
+# 
+# bounds_nocommon = BoundsCreator(4, n_common=0)
+# 
+#
+# start_time <- Sys.time()
+# out_nlminb = nlminb(start = c(calibrated_params),objective = negloglik_4assets_nocommon,lower = bounds_nocommon$lower,
+#        upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],bric[1:N],eurostoxx[1:N]),n=4,
+#        control=list(eval.max = 10000,iter.max = 1000, trace = 10))
+# out_nlminb
+# end_time <- Sys.time()
+# end_time-start_time
+# 
+# 
+# calibrated_nlminb=ParametersReconstruction(out_nlminb$par,n=4,common = FALSE)
+# 
+# correlation = cov2cor(calibrated_nlminb$S)
+# correlation
+# calibrated_nlminb$theta
 
-start_time <- Sys.time()
-outDE <- DEoptim(negloglik_4assets_nocommon,
-                 lower = bounds_nocommon$lower,
-                 upper = bounds_nocommon$upper,
-                 control = control_list, dt = dt, x = cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]), n=4)
-
-end_time <- Sys.time()
-calibration_time = end_time-start_time
-calibration_time
-
-calibrated = ParametersReconstruction(outDE$optim$bestmem,4,common = FALSE)
-calibrated
-
-correlation = cov2cor(calibrated$S)
-correlation
+calibrated_params = CalibrateMVMerton(x=cbind(sp500[1:N],bric[1:N],eurostoxx[1:N],btc[1:N]), n=4, dt = dt )
+#calibrated_params
+cov2cor(calibrated_params$S)
 
 
-initial=outDE$optim$bestmem
 
-bounds_nocommon = BoundsCreator(4, n_common=0)
-
-
-start_time <- Sys.time()
-out_nlminb = nlminb(initial,objective = negloglik_4assets_nocommon,lower = bounds_nocommon$lower,
-       upper = bounds_nocommon$upper,dt=dt, x=cbind(btc[1:N],sp500[1:N],eurostoxx[1:N],bric[1:N]),n=4,
-       control=list(eval.max = 10000,iter.max = 1000, trace = 10))
-out_nlminb
-end_time <- Sys.time()
-end_time-start_time
+###########################################################################
+######################## Building complete correlaion #####################
+###########################################################################
+# from a 4 asset model
 
 
-calibrated_nlminb=ParametersReconstruction(out_nlminb$par,n=4,common = FALSE)
+# ONLY WORKS IF N_ASSET IS *EVEN*
+#N_assets = dim(my_returns)[2]/2
+N_assets = 4
 
-correlation = cov2cor(calibrated_nlminb$S)
-correlation
-calibrated_nlminb$theta
+example_matrix = matrix(c(1,2,2,2,
+                          2,1,3,3,
+                          2,3,1,5,
+                          2,3,5,10),4,4)
+
+idx_matrix = matrix(seq(from = 1, to = N_assets, by = 1),N_assets%/% 2,2, byrow = TRUE)
+
+final_cov = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+
+incremental = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+w_matrix = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+for (i in 1:(N_assets%/% 2 -1)){
+  for (j in (i+1):(N_assets%/% 2)){
+    idx =c(idx_matrix[i,],idx_matrix[j,])
+    
+    w_matrix[idx,idx]=
+      w_matrix[idx,idx]+1
+    SS = CalibrateMVMerton(x=cbind(my_returns[,2*idx[1]],my_returns[,2*idx[2]],my_returns[,2*idx[3]],my_returns[,2*idx[4]]),
+                           n=4, dt = dt )$S
+    final_cov[idx,idx]= final_cov[idx,idx] + SS
+    print(final_cov)
+  }
+}
+w_matrix
+final_cov/w_matrix
+
+cov2cor(final_cov/w_matrix)*100
