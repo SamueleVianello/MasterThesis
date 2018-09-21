@@ -219,11 +219,11 @@ end<- Sys.time()
 
 w_matrix
 final_cov/w_matrix
-
+covariance = final_cov/w_matrix
+correlation = cov2cor(final_cov/w_matrix)
+  
 out = capture.output(cov2cor(final_cov/w_matrix))
 cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix.txt",sep="\n", append=TRUE)
-
-cov2cor(final_cov/w_matrix)
 
 end-beg
 
