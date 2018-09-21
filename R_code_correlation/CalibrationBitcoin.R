@@ -227,7 +227,8 @@ cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix
 
 end-beg
 
-
+results = list(covariance = covariance, correlation = correlation)
+save(results, file= "results.Rda")
 #######
 # paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")
 
