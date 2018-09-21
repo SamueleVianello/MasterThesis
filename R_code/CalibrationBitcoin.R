@@ -131,7 +131,7 @@ dt = 1/255
 # correlation
 # calibrated_nlminb$theta
 
-calibrated_params = CalibrateMVMerton(x=cbind(sp500[1:N],bric[1:N],eurostoxx[1:N],btc[1:N]), n=4, dt = dt )
+calibrated_params = CalibrateMVMerton(x=cbind(eur[1:N],gbp[1:N],chf[1:N],jpy[1:N]), n=4, dt = dt )
 #calibrated_params
 cov2cor(calibrated_params$S)
 
@@ -147,10 +147,6 @@ cov2cor(calibrated_params$S)
 #N_assets = dim(my_returns)[2]/2
 N_assets = 4
 
-example_matrix = matrix(c(1,2,2,2,
-                          2,1,3,3,
-                          2,3,1,5,
-                          2,3,5,10),4,4)
 
 idx_matrix = matrix(seq(from = 1, to = N_assets, by = 1),N_assets%/% 2,2, byrow = TRUE)
 
@@ -158,6 +154,8 @@ final_cov = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
 
 incremental = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
 w_matrix = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+
+beg <- Sys.time()
 for (i in 1:(N_assets%/% 2 -1)){
   for (j in (i+1):(N_assets%/% 2)){
     idx =c(idx_matrix[i,],idx_matrix[j,])
@@ -170,7 +168,12 @@ for (i in 1:(N_assets%/% 2 -1)){
     print(final_cov)
   }
 }
+
+end<- Sys.time()
+
 w_matrix
 final_cov/w_matrix
 
 cov2cor(final_cov/w_matrix)*100
+
+end-beg
