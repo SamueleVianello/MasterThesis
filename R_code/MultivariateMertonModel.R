@@ -60,7 +60,7 @@ MultivariateMertonPdf = function(x, dt, mu, S, theta, delta, lambda, theta_z, de
         if ( k_bin[i]){
           prob = prob*lambda[i]*dt
           mean_x[i] = mean_x[i] + theta[i]
-          cov_x[i,i] = cov_x[i,i] + delta[i]
+          cov_x[i,i] = cov_x[i,i] + delta[i]^2
         }
         else{
           prob = prob*(1-lambda[i]*dt)
@@ -216,7 +216,7 @@ MultivariateMertonPdf_nocommon = function(x, dt, mu, S, theta, delta, lambda){
         if ( k_bin[i]){
           prob = prob*lambda[i]*dt
           mean_x[i] = mean_x[i] + theta[i]
-          cov_x[i,i] = cov_x[i,i] + delta[i]
+          cov_x[i,i] = cov_x[i,i] + delta[i]^2
         }
         else{
           prob = prob*(1-lambda[i]*dt)
@@ -228,7 +228,7 @@ MultivariateMertonPdf_nocommon = function(x, dt, mu, S, theta, delta, lambda){
     
     partial_pdf = dmvnorm(x,mean = mean_x, sigma = cov_x)
     pdf = pdf + prob*partial_pdf
-    print(prob)
+    # print(prob)
     # print(partial_pdf)
     # print(pdf)
   }
@@ -247,21 +247,28 @@ negloglik_nocommon = function(params, x, dt, n) {
   idx =1
   mu = params[idx:(idx+n-1)]
   idx = idx+n 
+
+
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
   
-  
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
+  
+  # print(S)
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n
@@ -286,8 +293,8 @@ negloglik_nocommon = function(params, x, dt, n) {
   partial = 0
   for(i in 1:dim(x)[1]){
     pdf = MultivariateMertonPdf_nocommon(x[i,], dt, mu, S, theta, delta, lambda)
-    cat("\npdf:")
-    print(pdf)
+    # cat("\npdf:")
+    # print(pdf)
     partial = partial + log(pdf)
   }
   
@@ -431,10 +438,10 @@ MultivariateMertonPdf_2assets = function(x, dt, mu, S, theta, delta, lambda, the
   pdf = 0
   
   mean_y1 = c(theta[1],0)
-  cov_y1 = matrix(c(delta[1],0,0,0), 2,2)
+  cov_y1 = matrix(c(delta[1]^2,0,0,0), 2,2)
   
   mean_y2 = c(0,theta[2])
-  cov_y2 = matrix(c(0,0,0,delta[2]),2,2)
+  cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
   mean_x = mu*dt
   cov_x = S*sqrt(dt)
@@ -474,19 +481,24 @@ negloglik_2assets= function(params, x, dt, n) {
   idx = idx+n 
   
   
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n
@@ -565,10 +577,10 @@ MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, la
   pdf = 0
   
   mean_y1 = c(theta[1],0)
-  cov_y1 = matrix(c(delta[1],0,0,0), 2,2)
+  cov_y1 = matrix(c(delta[1]^2,0,0,0), 2,2)
   
   mean_y2 = c(0,theta[2])
-  cov_y2 = matrix(c(0,0,0,delta[2]),2,2)
+  cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
   mean_x = mu*dt
   cov_x = S*sqrt(dt)
@@ -599,19 +611,25 @@ negloglik_2assets_nocommon= function(params, x, dt, n) {
   idx = idx+n 
   
   
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
+  
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n
@@ -678,15 +696,15 @@ MultivariateMertonPdf_3assets_nocommon = function(x, dt, mu, S, theta, delta, la
   pdf = 0
   
   mean_y1 = c(theta[1],0,0)
-  cov_y1 = matrix(c(delta[1],0,0,0,0,0,0,0,0), 3,3)
+  cov_y1 = matrix(c(delta[1]^2,0,0,0,0,0,0,0,0), 3,3)
   
   mean_y2 = c(0,theta[2],0)
   cov_y2 = matrix(rep(0,3*3),3,3)
-  cov_y2[2,2] = delta[2]
+  cov_y2[2,2] = delta[2]^2
   
   mean_y3 = c(0,0,theta[3])
   cov_y3 = matrix(rep(0,3*3),3,3)
-  cov_y3[3,3] = delta[3]
+  cov_y3[3,3] = delta[3]^2
   
   mean_x = mu*dt
   cov_x = S*sqrt(dt)
@@ -725,19 +743,24 @@ negloglik_3assets_nocommon= function(params, x, dt, n) {
   idx = idx+n 
   
   
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n
@@ -805,22 +828,22 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   mean_y1 = rep(0,n)
   mean_y1[1] = theta[1]
   cov_y1 = matrix(rep(0,n*n),n,n)
-  cov_y1[1,1] = delta[1]
+  cov_y1[1,1] = delta[1]^2
   
   mean_y2 = rep(0,n)
   mean_y2[2] = theta[2]
   cov_y2 = matrix(rep(0,n*n),n,n)
-  cov_y2[2,2] = delta[2]
+  cov_y2[2,2] = delta[2]^2
   
   mean_y3 = rep(0,n)
   mean_y3[3] = theta[3]
   cov_y3 = matrix(rep(0,n*n),n,n)
-  cov_y3[3,3] = delta[3]
+  cov_y3[3,3] = delta[3]^2
   
   mean_y4 = rep(0,n)
   mean_y4[4] = theta[4]
   cov_y4 = matrix(rep(0,n*n),n,n)
-  cov_y4[4,4] = delta[4]
+  cov_y4[4,4] = delta[4]^2
   
   mean_x = mu*dt
   cov_x = S*sqrt(dt)
@@ -875,19 +898,26 @@ negloglik_4assets_nocommon= function(params, x, dt, n) {
   idx = idx+n 
   
   
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
+  
+  # print(S)
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n

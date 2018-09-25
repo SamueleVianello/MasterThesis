@@ -42,8 +42,11 @@ CalibrateMVMerton=function(x, n, dt, trace = 10){
   print(paste("nlminb:", end_time_nlminb - start_time_nlminb))
   print(paste("TOTAL:", end_time_nlminb - start_time_deoptim))
   
-  
-  return(ParametersReconstruction(out_nlminb$par,n=n,common = FALSE))
+  res = ParametersReconstruction(out_nlminb$par,n=n,common = FALSE)
+  res[["message"]] = out_nlminb$message
+  res[["objective_function"]] = out_nlminb$objective
+  res[["total_time"]] = end_time_nlminb - start_time_deoptim
+  return(res)
 }
 
 
@@ -60,8 +63,10 @@ BoundsCreator= function(n, n_common=1 ){
   max_lambda = 100
   min_theta = -1
   max_theta = -0.1 
-  min_var = 1e-4
-  max_var = 10
+  min_sigma = 1e-5
+  max_sigma = 10
+  min_corr = -1
+  max_corr = 1
   min_alpha = -1
   max_alpha = 1
   
@@ -77,10 +82,15 @@ BoundsCreator= function(n, n_common=1 ){
   up[idx:(idx+n-1)] = rep(max_mu,n)
   idx = idx+n 
   
-  # covariance matrix of continuous part
-  N_var = n*(n+1)/2
-  low[idx:(idx + N_var -1)] = rep(min_var,N_var)
-  up[idx:(idx + N_var -1)] = rep(max_var,N_var)
+  # diffusion coefficients
+  low[idx:(idx+n-1)] = rep(min_sigma,n)
+  up[idx:(idx+n-1)] = rep(max_sigma,n)
+  idx = idx+n 
+  
+  # correlations 
+  N_var = n*(n-1)/2
+  low[idx:(idx + N_var -1)] = rep(min_corr,N_var)
+  up[idx:(idx + N_var -1)] = rep(max_corr,N_var)
   idx = idx + N_var
   
   # means of idiosyncratic term
@@ -88,9 +98,9 @@ BoundsCreator= function(n, n_common=1 ){
   up[idx:(idx+n-1)] = rep(max_theta,n)
   idx = idx+n
   
-  # variance of idyosincratic term
-  low[idx:(idx+n-1)] = rep(min_var,n)
-  up[idx:(idx+n-1)] = rep(max_var,n)
+  # standar deviation of idyosincratic term
+  low[idx:(idx+n-1)] = rep(min_sigma,n)
+  up[idx:(idx+n-1)] = rep(max_sigma,n)
   idx = idx+n
   
   # lambda of idyosincratic poissons
@@ -134,19 +144,24 @@ ParametersReconstruction = function(params, n, common = TRUE){
   idx = idx+n 
   
   
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
+      }
+      else
+        corr[i,j]=1
     }
-  }
-  idx = idx + n*(n+1)/2
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
   
   theta = params[idx:(idx+n-1)]
   idx = idx+n
@@ -170,11 +185,11 @@ ParametersReconstruction = function(params, n, common = TRUE){
     alpha = params[idx:(idx+n-1)]
     idx = idx+n
     
-    return(list( mu = mu, S = S, theta = theta, delta = delta, lambda =lambda,
-                 theta_z = theta_z, delta_z = delta_z, lambda_z = lambda_z, alpha = alpha))
+    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda,
+                 theta_z = theta_z, delta_z = delta_z, lambda_z = lambda_z, alpha = alpha, S = S))
   }
   
   else{
-    return(list( mu = mu, S = S, theta = theta, delta = delta, lambda =lambda))
+    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda, S = S))
   }
 }
