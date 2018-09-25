@@ -31,7 +31,7 @@ plot(btc,pan_us, pch=20)
 ############## Significance of correlation ##############
 
 
-PermutationTestCorr = function(x,y=0, N=5000){
+PermutationTestCorr = function(x,y=0, N=2000){
   # Two sided permutation test for correlation
   # H0: rho = 0   vs    H1: rho!=0
   
@@ -65,5 +65,38 @@ PermutationTestCorr = function(x,y=0, N=5000){
 cor(btc,sp500)
 
 PermutationTestCorr(btc,sp500)
-rcorr(btc,sp500, type = "pearson")
+rcorr(btc,sp500, type = "pearson")$P['x','y']
+
+# Notice that Spearman is a non parametric test
+
+p_values= data.frame(type = c("Pearson", "Permutation", "Spearman"))
+for(i in 2:(dim(my_returns)[2]%/%2)){
+  cors = c(PermutationTestCorr(btc,my_returns[,2*i]),
+           rcorr(btc,my_returns[,2*i], type = "pearson")$P['x','y'],
+           rcorr(btc,my_returns[,2*i], type = "spearman")$P['x','y'])
+  p_values[colnames(my_returns)[2*i]] = cors
+}
+
+p_values
+
+
+
+
+################## Rolling Correlation ###################################
+
+earliest = min(btc_date)
+latest = max(btc_date)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
