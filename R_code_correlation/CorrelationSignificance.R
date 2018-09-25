@@ -31,13 +31,15 @@ plot(btc,pan_us, pch=20)
 ############## Significance of correlation ##############
 
 
-PermutationTestCorr = function(x,y=0, N=1000){
+PermutationTestCorr = function(x,y=0, N=5000){
   # Two sided permutation test for correlation
   # H0: rho = 0   vs    H1: rho!=0
   
-  if (dim(x)[2] == 2){
-    y=x[,2]
-    x=x[,1]
+  if (!is.null(dim(x)[2])){
+    if ( dim(x)[2] == 2){
+      y=x[,2]
+      x=x[,1]
+    }
   }
   else if (length(x)!=length(y)){
     stop("Error: samples should have same size.")
@@ -49,7 +51,7 @@ PermutationTestCorr = function(x,y=0, N=1000){
   
   larger = 0
   for(i in 1:N){
-    y_perm = y[sample(N,N)]
+    y_perm = y[sample(n,n)]
     r_perm = cor(x,y_perm)
     if (abs(r_sample)<abs(r_perm))
       larger = larger+1
@@ -60,4 +62,8 @@ PermutationTestCorr = function(x,y=0, N=1000){
   return(p)
 } 
 
+cor(btc,sp500)
+
+PermutationTestCorr(btc,sp500)
+rcorr(btc,sp500, type = "pearson")
 
