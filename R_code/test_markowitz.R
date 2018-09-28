@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 source("MarkowitzMeanVariancePortfolio.R")
 load("returns.Rda")
 load("data.Rda")
 load("results.Rda")
 
+=======
+source("MeanVariancePortfolio.R")
+>>>>>>> Added test file.
 
 r =matrix( c(0.03,0.05,0.08),ncol = 1)# vector of returns
 sd= diag(c(0.12,0.1,0.2))
@@ -38,6 +42,7 @@ points(diag(sd),r,col='blue')
 
 
 EfficientFrontier(r,S,full = FALSE)
+<<<<<<< HEAD
 
 ##########################################
 #### test on our  calibrated assets ######
@@ -71,3 +76,5 @@ w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.
 
 cbind(w, c(0,w_no_btc))
 
+=======
+>>>>>>> Added test file.
