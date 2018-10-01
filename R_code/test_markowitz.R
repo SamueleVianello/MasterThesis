@@ -1,12 +1,18 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Updated with complete calibration results
 source("MarkowitzMeanVariancePortfolio.R")
 load("returns.Rda")
 load("data.Rda")
 load("results.Rda")
 
+<<<<<<< HEAD
 =======
 source("MeanVariancePortfolio.R")
 >>>>>>> Added test file.
+=======
+>>>>>>> Updated with complete calibration results
 
 r =matrix( c(0.03,0.05,0.08),ncol = 1)# vector of returns
 sd= diag(c(0.12,0.1,0.2))
@@ -43,6 +49,7 @@ points(diag(sd),r,col='blue')
 
 EfficientFrontier(r,S,full = FALSE)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 ##########################################
 #### test on our  calibrated assets ######
@@ -57,13 +64,23 @@ expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_thet
 colSums(results$full_mu)/6 * 
 
 
+=======
+
+## test on our assets ##
+
+expected_return_sample = colMeans(my_returns[,2*(1:14)])
+>>>>>>> Updated with complete calibration results
 #SS = cov(my_returns[,2*(1:14)])
 SS = results$covariance
 
 res1 = EfficientFrontier(expected_return_sample,SS,full = FALSE, plot = FALSE)
 res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14],full = FALSE, plot = FALSE)
 
+<<<<<<< HEAD
 plot(res1$sigma,res1$expected_return, type = 'l',col='green', ylim = c(min(c(res1$expected_return,expected_return_sample)), max(res1$expected_return)))
+=======
+plot(res1$sigma,res1$expected_return, type = 'l',col='green')
+>>>>>>> Updated with complete calibration results
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
@@ -71,6 +88,7 @@ grid()
 
 target = 0.002
 
+<<<<<<< HEAD
 w = OptimalAllocation(expected_return_sample,SS, sd = 0.04)
 w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.04)
 
@@ -78,3 +96,10 @@ cbind(w, c(0,w_no_btc))
 
 =======
 >>>>>>> Added test file.
+=======
+w1 = OptimalAllocation(expected_return_sample,SS, sd = 0.04)
+w2 = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.04)
+
+cbind(w1, c(0,w2))
+
+>>>>>>> Updated with complete calibration results
