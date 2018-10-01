@@ -195,8 +195,17 @@ w_matrix = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
 
 beg <- Sys.time()
 
+names = colnames(my_returns[,2*(1:14)])
+mus = matrix(rep(0,21*14),21,14)
+colnames(mus) = names
+thetas = matrix(rep(0,21*14),21,14)
+colnames(thetas) = names
+deltas = matrix(rep(0,21*14),21,14)
+colnames(deltas) = names
+lambdas = matrix(rep(0,21*14),21,14)
+colnames(lambdas) = names
 
-
+ctr = 1
 for (i in 1:(N_assets%/% 2 -1)){
   for (j in (i+1):(N_assets%/% 2)){
     idx =c(idx_matrix[i,],idx_matrix[j,])
@@ -205,6 +214,12 @@ for (i in 1:(N_assets%/% 2 -1)){
       w_matrix[idx,idx]+1
     calibrated = CalibrateMVMerton(x=cbind(my_returns[,2*idx[1]][1:N],my_returns[,2*idx[2]][1:N],my_returns[,2*idx[3]][1:N],my_returns[,2*idx[4]][1:N]),
                                   n=4, dt = dt )
+    
+    mus[ctr,idx] = calibrated$mu
+    thetas[ctr,idx] = calibrated$theta
+    deltas[ctr,idx] = calibrated$delta
+    lambdas[ctr,idx] = calibrated$lambda
+    ctr = ctr+1
     
     SS = calibrated$S
     final_cov[idx,idx]= final_cov[idx,idx] + SS
@@ -227,7 +242,8 @@ cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix
 
 end-beg
 
-results = list(covariance = covariance, correlation = correlation)
+results = list(covariance = covariance, correlation = correlation, 
+               full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas)
 save(results, file= "results.Rda")
 #######
 # paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")

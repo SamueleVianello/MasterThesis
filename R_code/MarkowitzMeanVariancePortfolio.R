@@ -19,13 +19,13 @@ EfficientFrontier = function(r,S,full=TRUE,plot=TRUE, N=100){
   c = drop(t(r)%*% invS %*% r)
   d = drop(a*c - b^2)
   
-  yy= seq(from = 0, to = 0.1,length.out = N+1)
+  yy= seq(from = 0, to = 0.01,length.out = N+1)
   xx = sqrt( (a*yy^2 - 2*b*yy + c)/d)
   
   if (!full){
     min_sigma = min(xx)
     idx = which(yy>=yy[which(xx==min_sigma)])
-    print(idx)
+    # print(idx)
     xx= xx[idx]
     yy= yy[idx]
   }
@@ -34,12 +34,13 @@ EfficientFrontier = function(r,S,full=TRUE,plot=TRUE, N=100){
     min_y = min(c(yy,r))
     max_y = max(c(yy,r))
     plot(xx,yy,type ='l', ylim = c(min_y,max_y))
-    points(diag(sd),r,col='blue',pch='+')
+    points(sqrt(diag(S)),r,col='blue',pch='+')
     #legend(c("Efficient Frontier","Single Assets"))
   }
   res = list(sigma = xx, expected_return=yy)
   return(res)
 }
+
 
 
 
