@@ -19,7 +19,7 @@ EfficientFrontier = function(r,S,full=TRUE,plot=TRUE, N=100){
   c = drop(t(r)%*% invS %*% r)
   d = drop(a*c - b^2)
   
-  yy= seq(from = 0, to = 0.01,length.out = N+1)
+  yy= seq(from = -0.1, to = 3.5,length.out = N+1)
   xx = sqrt( (a*yy^2 - 2*b*yy + c)/d)
   
   if (!full){

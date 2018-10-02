@@ -9,7 +9,7 @@
 # In addition, there is a helper function to extract and group 
 # each parameter from a single parameter vector (ParametersReconstruction)
 
-
+library(mvtnorm)
 
 
 
@@ -336,8 +336,8 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
     stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
   }
   
-  pdf=(1-ldt)*dnorm(x, mean = mu, sigma = sqrt(S))+
-      ldt *dnorm(x, mean = mu+theta, sigma = sqrt(S + delta))
+  pdf=(1-ldt)*dnorm(x, mean = mu*dt, sd = sqrt(S*dt))+
+      ldt *dnorm(x, mean = mu*dt+theta, sd = sqrt(S*dt + delta))
 
   return(pdf)
 }
@@ -350,33 +350,12 @@ negloglik_1asset_nocommon= function(params, x, dt, n) {
   ## add check on inputs
   
   # reconstruction of parameters:
-  idx =1
-  mu = params[idx:(idx+n-1)]
-  idx = idx+n 
+  mu=params[1]
+  S = params[2]^2
+  theta = params[3]
+  delta = params[4]^2
+  lambda = params[5]
   
-  
-  S = matrix(rep(0,n*n), ncol = n)
-  i=1
-  j=1
-  for(k in 1:(n*(n+1)/2)){
-    S[i,j] = params[idx+k-1]
-    S[j,i] =  S[i,j]
-    j=j+1
-    if(j == n+1){
-      i=i+1
-      j=i
-    }
-  }
-  idx = idx + n*(n+1)/2
-  
-  theta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  delta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  lambda = params[idx:(idx+n-1)]
-  idx = idx+n
   
   # print(mu)
   # print(S)
@@ -384,8 +363,7 @@ negloglik_1asset_nocommon= function(params, x, dt, n) {
   # print(delta)
   # print(lambda)
   # print(alpha)
-  if( (idx-1)!=length(params))
-    stop("Error in parameter reconstruction: number of parameters is wrong.")
+
   
   
   # computing pdf on each point and adding
@@ -396,6 +374,8 @@ negloglik_1asset_nocommon= function(params, x, dt, n) {
   if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
     nll = 1e10
   }
+  
+  #print("ONEASSETDENSITY")
   return(nll)
 }
 
@@ -444,7 +424,7 @@ MultivariateMertonPdf_2assets = function(x, dt, mu, S, theta, delta, lambda, the
   cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
   mean_x = mu*dt
-  cov_x = S*sqrt(dt)
+  cov_x = S*(dt)
   
 
   #000
@@ -583,7 +563,7 @@ MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
   mean_x = mu*dt
-  cov_x = S*sqrt(dt)
+  cov_x = S*(dt)
   
   
   #000
@@ -707,7 +687,7 @@ MultivariateMertonPdf_3assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y3[3,3] = delta[3]^2
   
   mean_x = mu*dt
-  cov_x = S*sqrt(dt)
+  cov_x = S*(dt)
   
   
   #000
@@ -846,7 +826,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4[4,4] = delta[4]^2
   
   mean_x = mu*dt
-  cov_x = S*sqrt(dt)
+  cov_x = S*(dt)
   
   
   #0000
