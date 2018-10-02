@@ -39,16 +39,26 @@ points(diag(sd),r,col='blue')
 
 EfficientFrontier(r,S,full = FALSE)
 
-## test on our assets ##
+##########################################
+#### test on our  calibrated assets ######
+##########################################
+attach(my_returns)
 
-expected_return_sample = colMeans(my_returns[,2*(1:14)])
+# expected_return_sample = colMeans(my_returns[,2*(1:14)])
+
+# yearly
+expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6 
+
+colSums(results$full_mu)/6 * 
+
+
 #SS = cov(my_returns[,2*(1:14)])
 SS = results$covariance
 
 res1 = EfficientFrontier(expected_return_sample,SS,full = FALSE, plot = FALSE)
 res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14],full = FALSE, plot = FALSE)
 
-plot(res1$sigma,res1$expected_return, type = 'l',col='green')
+plot(res1$sigma,res1$expected_return, type = 'l',col='green', ylim = c(min(c(res1$expected_return,expected_return_sample)), max(res1$expected_return)))
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
@@ -56,8 +66,8 @@ grid()
 
 target = 0.002
 
-w1 = OptimalAllocation(expected_return_sample,SS, sd = 0.04)
-w2 = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.04)
+w = OptimalAllocation(expected_return_sample,SS, sd = 0.04)
+w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.04)
 
-cbind(w1, c(0,w2))
+cbind(w, c(0,w_no_btc))
 
