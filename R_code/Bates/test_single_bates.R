@@ -43,12 +43,12 @@ cfHeston(om = u,S = S_0,tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k
 
 
 
-f=function(x, S,tau ,r , q ,v0,vT,rho,k,sigma){
+f=function(x, S,S_0,tau ,r , q ,v0,vT,rho,k,sigma){
   return(Re(cfHeston(om = x,S = S_0,tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta)
             * exp(-1i*log(S)*x)))
 }
 
-integrate(f = f, S = 1,tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
+integrate(f = f, S = 1,S_0=S_0,tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
           lower = 0, upper=50)
 
 
@@ -57,7 +57,7 @@ integrate(f = f, S = 1,tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k 
 
 
 
-my_cfHeston=function (om, z, tau, r, v0, vT, rho, k, sigma)
+my_cfHeston=function (om, x_0, tau, r, v0, vT, rho, k, sigma)
 {
   if (sigma < 1e-08) 
     sigma <- 1e-08
@@ -65,7 +65,7 @@ my_cfHeston=function (om, z, tau, r, v0, vT, rho, k, sigma)
   
   g <- (k - rho * sigma * (0+1i) * om - d)/(k - rho * sigma * (0+1i) * om + d)
   
-  cf1 <- (0+1i) * om * (z + (r) * tau) 
+  cf1 <- (0+1i) * om * (x_0 + (r) * tau) 
   
   cf2 <- vT * k/(sigma^2) * ((k - rho * sigma * (0+1i) * om - d) * tau - 2 * log((1 - g * exp(-d * tau))/(1 - g)))
   
@@ -73,9 +73,9 @@ my_cfHeston=function (om, z, tau, r, v0, vT, rho, k, sigma)
   exp(cf1 + cf2 + cf3)
 }
 
-f2=function(x, z,tau ,r , q ,v0,vT,rho,k,sigma){
-  return(Re(my_cfHeston(om = x,z = z,tau = t,r = r,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta)
-            * exp(-1i*z*x)))
+f2=function(u, x, x_0, tau ,r , q ,v0,vT,rho,k,sigma){
+  return(Re(my_cfHeston(om = u, x_0=x_0 ,tau = t,r = r,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta)
+            * exp(-1i*x*u)))
 }
 
 
@@ -83,11 +83,30 @@ xx = seq(from=-10, to = 10, by =20/1000)
 yy=rep(0,length(xx))
 yy2=rep(0,length(xx))
 for( i in 1:length(xx)){
-  yy[i] = integrate(f = f, S = exp(xx[i]),tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
+  yy[i] = integrate(f = f, S = exp(xx[i]),S_0=S_0, tau = t,r = r, q = 0,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
                     lower = 0, upper=50)$value/pi
-  # yy2[i]= integrate(f = f2, z = (xx[i]),tau = t,r = r,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
-  #                    lower = 0, upper=50)$value/pi
+  yy2[i]= integrate(f = f2, x = (xx[i]),x_0 = log(S_0), tau = t,r = r,v0 = sigma_0^2,vT = eta,rho = rho,k = k,sigma = eta,
+                     lower = 0, upper=50)$value/pi
 }
 plot(xx,yy,type='l')
+grid()
 lines(xx,yy2,col='blue')
 sum(yy*(xx[2]-xx[1]))
+
+yy3=pdfHeston(xx, x_0=log(S_0),sigma_0, r, k,eta, theta, rho)
+
+#######
+
+param = c(r,k,eta,theta,rho)
+negloglikHeston(param, x=xx,x_0=log(S_0),sigma_0 = sigma_0, dt =t)
+
+
+############
+attach(my_returns)
+
+
+
+
+
+
+
