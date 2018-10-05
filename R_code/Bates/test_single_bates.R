@@ -130,18 +130,48 @@ params_H2$objective_function
 dev.off()
 
 ##################
-# Why is bates CURVY??
-xx= seq(from=-30,to=30,length.out = 1000)
+# Why is bates CURVY?? []
+xx= seq(from=-5,to=5, length.out = 1000)
 
 yyb = pdfBates(x=xx, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
                r = 0.1692278,  k = 1.6296841, eta =0.1242986, theta = 0.6033132,rho = -0.5870094,
-               lambda = 0.7570830,mu_j = 0.7912934, sigma_j = 0.00001)
+               lambda = 0.7570830, mu_j = 0.7912934, sigma_j = 0.00001)
 
+
+# yyh = pdfHeston(x=xx, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+#                r = 0.1692278,  k = 1.6296841, eta =0.1242986, theta = 0.6033132,rho = -0.5870094)
 plot(xx,yyb, type = 'l', col='green')
-grid()
 
+for(i in (1:10)*10){
+  yyb = pdfBates(x=xx, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+                 r = 0.1692278,  k = 1.6296841, eta =0.1242986, theta = 0.6033132,rho = -0.5870094,
+                 lambda = 0.7570830, mu_j = 0.7912934, sigma_j = 0.00001, upper = i)
+  lines(xx,yyb,col=rainbow(10)[i%/%10])
+}
+lines(xx,yyh,col='blue')
+grid()
 sum(yyb*(xx[2]-xx[1]))
 
+# increasing upper extremum does nothing to get rid of oscillations
+
+
+
+xx = seq(from=-5,to=5, length.out = 10)
+
+uu= seq(from=0,to=10, length.out = 1000)
+ycfb=my_cfBates(uu,x_0 = test_x_0, v0 = test_sigma_0^2, tau = rep(test_dt[1],length(uu)),
+                r = 0.1692278,  k = 1.6296841, vT =0.1242986, sigma = 0.6033132,rho = -0.5870094,
+                lambda = 0.7570830, muJ = 0.7912934, vJ = 0.00001^2) * exp(-1i*xx[1]*uu)
+
+plot(uu,Re(ycfb),type='l')
+grid()
+for(i in 2:length(xx)){
+  ycfb=my_cfBates(uu,x_0 = test_x_0, v0 = test_sigma_0^2, tau = rep(test_dt[1],length(uu)),
+                  r = 0.1692278,  k = 1.6296841, vT =0.1242986, sigma = 0.6033132,rho = -0.5870094,
+                  lambda = 0.7570830, muJ = 0.7912934, vJ = 0.00001^2) * exp(-1i*xx[i]*uu)
+  lines(uu,Re(ycfb),col=rainbow(10)[i])
+  print(i)
+}
 
 
 

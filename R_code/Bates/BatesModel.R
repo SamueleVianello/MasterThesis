@@ -14,7 +14,7 @@ library(pracma)
 #########################################################
 
 
-pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=100, check_feller=TRUE){
+pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50, check_feller=TRUE){
   l= length(x)
   if(length(dt)!=l) stop("Time intervals and returns vectors should have same length.")
   
@@ -104,24 +104,24 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt){
 ###################### BATES ############################
 #########################################################
 
-pdfBates = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho,lambda, mu_j, sigma_j, lower=0, upper=10){
+pdfBates = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho,lambda, mu_j, sigma_j, lower=0, upper=50){
   l= length(x)
   if(length(dt)!=l) stop("Time intervals and returns vectors should have same length.")
   
   y= rep(0,l)
   for(i in 1:l){
-    y[i] = integrate(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i], r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-                     lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
-                     lower = lower, upper=upper,abs.tol = 1e-5)$value/pi
+    # y[i] = integrate(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i], r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+    #                  lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
+    #                  lower = lower, upper=upper,abs.tol = 1e-6)$value/pi
     
     # print("Using gauss kronrod.")
     # y[i] = gauss_kronrod(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i], r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
     #                  lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
     #                  a = lower, b=upper)$value/pi
 
-    # y[i] = clenshaw_curtis(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-    #                        lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
-    #                        a =lower, b=upper, n=2**10)/pi
+    y[i] = clenshaw_curtis(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+                           lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
+                           a =lower, b=upper, n=2**10)/pi
 
     if(is.infinite(y[i])) stop(paste("Integral is infinite at ", i))
     
