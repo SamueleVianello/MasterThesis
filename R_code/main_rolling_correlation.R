@@ -130,7 +130,9 @@ plot(end_times, roll_pvalue[,'eurostoxx'],type = 'b',ylim = c(0,1),ylab = "euros
 lines(end_times_3y,roll_pvalue_3y[,'eurostoxx'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
-
+# dev.copy2pdf(file="rolling_stocks.pdf")
+# 
+# dev.off()
 
 
 
@@ -178,6 +180,8 @@ plot(end_times, roll_pvalue[,'metal'],type = 'b',ylim = c(0,1),ylab = "metal")
 lines(end_times_3y,roll_pvalue_3y[,'metal'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
+# dev.copy2pdf(file="rolling_commodities.pdf")
+# dev.off()
 
 
 
@@ -226,6 +230,9 @@ plot(end_times, roll_pvalue[,'jpy'],type = 'b',ylim = c(0,1),ylab = "jpy")
 lines(end_times_3y,roll_pvalue_3y[,'jpy'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
+dev.copy2pdf(file="rolling_fx.pdf")
+
+dev.off()
 
 
 
@@ -255,4 +262,7 @@ plot(end_times, roll_pvalue[,'pan_us'],type = 'b',ylim = c(0,1),ylab = "pan_us")
 lines(end_times_3y,roll_pvalue_3y[,'pan_us'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
+dev.copy2pdf(file="rolling_bonds.pdf")
+
+dev.off()
 
