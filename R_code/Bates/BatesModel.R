@@ -8,6 +8,7 @@
 
 library(cubature)
 library(pracma)
+library(gaussquad)
 
 #########################################################
 ###################### HESTON ###########################
@@ -31,6 +32,9 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
     
     y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
                          a =lower, b=upper, n=2**8)/pi
+    
+    
+    
     # print(y[i])
     if(is.nan(y[i])|| y[i]<1e-8 ){
       y[i]=1e-8
@@ -46,7 +50,6 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
 
 my_cfHeston= function (om, x_0, tau, r, v0, vT, rho, k, sigma) 
 {
-  
   if (sigma < 1e-08) 
     sigma <- 1e-08
   
@@ -69,7 +72,6 @@ my_cfHeston= function (om, x_0, tau, r, v0, vT, rho, k, sigma)
     print(paste(om,x_0,tau,r,v0,vT,rho,k,sigma))
     print(paste("exp1=", cf1, ", exp2=",cf2, ", exp3=",cf3, "d=",d, "g=",g))
   }
-  
   return(exp(cf1 + cf2 + cf3))
 }
 
@@ -83,9 +85,18 @@ integrand_H = function(u, x, x_0, tau ,r,v0,vT,rho,k,sigma){
 }
 
 # Neg logLikelihood function
-negloglikHeston = function(params, x, x_0, sigma_0, dt){
-  pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                  r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
+negloglikHeston = function(params, x, x_0, sigma_0, dt, model="heston_ab"){
+  if (model=='heston'){
+    # using k and eta
+    pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                    r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
+  }
+  else if(model=="heston_ab"){
+    # using alpha and beta
+    pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                    r = params[1],k=params[3], eta=params[2]/params[3], theta = params[4], rho = params[5])
+  }
+  
 
   to_sum = log(pdfs)
   # print(cbind(pdfs,to_sum))
@@ -99,12 +110,28 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt){
   return(nll)
 }
 
+loglikHeston = function(params, x, x_0, sigma_0, dt){
+  pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                  r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
+  
+  to_sum = log(pdfs)
+  # print(cbind(pdfs,to_sum))
+  nll = sum(to_sum) 
+  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+    nll = 1e10
+  }
+  # FELLER CONDITION
+  # 2*k*eta > theta^2
+  # print(2*params[2]*params[3]>params[4]^2)
+  return(nll)
+}
+
 
 #########################################################
 ###################### BATES ############################
 #########################################################
 
-pdfBates = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho,lambda, mu_j, sigma_j, lower=0, upper=50){
+pdfBates = function(x, x_0, dt, sigma_0, r, k,eta, theta, rho,lambda, mu_j, sigma_j, lower=0, upper=50){
   l= length(x)
   if(length(dt)!=l) stop("Time intervals and returns vectors should have same length.")
   
@@ -121,7 +148,12 @@ pdfBates = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho,lambda, mu_j, sigma
 
     y[i] = clenshaw_curtis(f = integrand_B, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
                            lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
-                           a =lower, b=upper, n=2**10)/pi
+                           a =lower, b=upper, n=2**8)/pi
+    
+    # rulez =glaguerre.quadrature.rules(30, alpha =0.5)[[30]]
+    # y[i]= glaguerre.quadrature(functn = integrand_B,alpha =0.5, rule = rulez,x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+    #                              lambda = lambda, mu_j = mu_j, sigma_j = sigma_j,
+    #                              lower = lower,upper = Inf)/pi
 
     if(is.infinite(y[i])) stop(paste("Integral is infinite at ", i))
     
@@ -143,10 +175,20 @@ integrand_B = function(u, x, x_0, tau ,r ,v0,vT,rho,k,sigma,lambda, mu_j, sigma_
 }
 
 # Neg logLikelihood function
-negloglikBates = function(params, x, x_0, sigma_0, dt){
-  pdfs= pdfBates(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                  r = params[1],k=params[2],eta=params[3],theta = params[4],rho = params[5],
-                  lambda=params[6],mu_j= params[7], sigma_j=params[8])
+negloglikBates = function(params, x, x_0, sigma_0, dt, model="bates_ab"){
+  if (model=="bates"){
+    # using k and eta
+    pdfs= pdfBates(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                   r = params[1],k=params[2],eta=params[3],theta = params[4],rho = params[5],
+                   lambda=params[6],mu_j= params[7], sigma_j=params[8])
+  }
+  else if(model=="bates_ab"){
+    # using alpha and beta
+    pdfs= pdfBates(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                   r = params[1],k=params[3],eta=params[2]/params[3],theta = params[4],rho = params[5],
+                   lambda=params[6],mu_j= params[7], sigma_j=params[8])
+  }
+
   
   to_sum = log(pdfs)
   # print(cbind(pdfs,to_sum))
@@ -169,7 +211,7 @@ my_cfBates= function (om, x_0, tau, r, v0, vT, rho, k, sigma, lambda, muJ, vJ)
     sigma <- 1e-08
   #sigma <- max(sigma, 1e-04)
   
-  om[which(om==0)]= 1e-8
+  om[which(om==0)]= 1e-9
   om1i <- om * (0+1i)
   
   d <- sqrt((rho * sigma * om1i - k)^2 + sigma^2 * (om1i + om^2))
