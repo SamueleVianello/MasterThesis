@@ -63,13 +63,13 @@ BoundsCreator= function(n=1, model = "heston_ab"){
   max_corr = 1
 
   if (model=="heston"|| model=="heston_ab"){
-    # r, k, eta, theta, rho
-    low = c(min_mu,0,min_sigma,min_sigma,min_corr)
+    # r, a, b, theta, rho
+    low = c(min_mu,0.00001,min_sigma,min_sigma,min_corr)
     up = c(max_mu,max_mu,max_sigma,1,max_corr)
   }
   else if(model=="bates"||model=="bates_ab") {
     # r, k, eta, theta, rho, lambda, mu_j, sigma_j 
-    low = c(min_mu,0,min_sigma,min_sigma,min_corr,min_lambda, min_mu, min_sigma)
+    low = c(min_mu,0.00001,min_sigma,min_sigma,min_corr,min_lambda, min_mu, min_sigma)
     up = c(max_mu,max_mu,max_sigma,1,max_corr, max_lambda, max_mu, max_sigma)
   }
   return(list(lower = low, upper = up))

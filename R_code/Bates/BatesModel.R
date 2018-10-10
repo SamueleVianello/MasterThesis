@@ -8,7 +8,7 @@
 
 library(cubature)
 library(pracma)
-library(gaussquad)
+#library(gaussquad)
 
 #########################################################
 ###################### HESTON ###########################
