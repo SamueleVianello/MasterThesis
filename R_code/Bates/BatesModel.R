@@ -41,9 +41,6 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
     }
   }
   
-  # # include feller condition
-  if (check_feller)
-    if(2*k*eta<theta^2) y= rep(1e8,l)
   return(y)
 }
 
@@ -85,28 +82,33 @@ integrand_H = function(u, x, x_0, tau ,r,v0,vT,rho,k,sigma){
 }
 
 # Neg logLikelihood function
-negloglikHeston = function(params, x, x_0, sigma_0, dt, model="heston_ab"){
-  if (model=='heston'){
-    # using k and eta
-    pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                    r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
-  }
-  else if(model=="heston_ab"){
-    # using alpha and beta
-    pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                    r = params[1],k=params[3], eta=params[2]/params[3], theta = params[4], rho = params[5])
+negloglikHeston = function(params, x, x_0, sigma_0, dt, model="heston_ab", check_feller=TRUE){
+  if (check_feller){
+    # feller not satisfied
+    if(2*k*eta<theta^2) {nll= 1e8}
+    else{
+      if (model=='heston'){
+        # using k and eta
+        # # include feller condition
+        pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                        r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
+      }
+      else if(model=="heston_ab"){
+        # using alpha and beta
+        pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                        r = params[1],k=params[3], eta=params[2]/params[3], theta = params[4], rho = params[5])
+      }
+      
+      to_sum = log(pdfs)
+      # print(cbind(pdfs,to_sum))
+      nll = -sum(to_sum) 
+    }
   }
   
-
-  to_sum = log(pdfs)
-  # print(cbind(pdfs,to_sum))
-  nll = -sum(to_sum) 
     if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
       nll = 1e10
     }
-  # FELLER CONDITION
-  # 2*k*eta > theta^2
-  # print(2*params[2]*params[3]>params[4]^2)
+
   return(nll)
 }
 
