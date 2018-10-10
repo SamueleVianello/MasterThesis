@@ -4,7 +4,7 @@
 
 # need cumulative returns X_t =  log (S_t/S_0)
 
-CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, model="heston_ab"){
+CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, model="heston_ab", feller = TRUE){
   
   library(DEoptim)
   source("BatesModel.R")
@@ -22,7 +22,7 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
     start_time_deoptim <- Sys.time()
     outDE <- DEoptim(obj,
                      lower = bounds$lower, upper = bounds$upper, control = control_list_deoptim,
-                      x=x, x_0 = x_0, sigma_0=sigma_0, dt = dt, model=model)
+                      x=x, x_0 = x_0, sigma_0=sigma_0, dt = dt, model=model, check_feller = feller)
     end_time_deoptim <- Sys.time()
   
     initial=outDE$optim$bestmem
@@ -33,7 +33,7 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
   
   start_time_nlminb <- Sys.time()
   out_nlminb = nlminb(initial,objective = obj,lower = bounds$lower, upper = bounds$upper,
-                      x=x, x_0 = x_0, sigma_0=sigma_0,dt = dt,
+                      x=x, x_0 = x_0, sigma_0=sigma_0,dt = dt, model=model,  check_feller = feller,
                       control=list(eval.max = 1000,iter.max = 100, trace = trace))
   print(out_nlminb)
   end_time_nlminb <- Sys.time()
@@ -77,9 +77,11 @@ BoundsCreator= function(n=1, model = "heston_ab"){
 
 ParametersReconstruction = function(params, model="heston"){
   if(model =="heston"){
+    print("Model is heston")
     return(list(r=params[1],k=params[2],eta=params[3],theta=params[4],rho=params[5]))
   }
   else if (model =="heston_ab"){
+    print("Model is heston_ab")
     return(list(r=params[1],k=params[3],eta=params[2]/params[3],theta=params[4],rho=params[5]))
   }
   else if (model == "bates"){

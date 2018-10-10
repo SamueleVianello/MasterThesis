@@ -192,16 +192,13 @@ for(i in 2:length(xx)){
 
 
 
-
-
-#**** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA ****
-#**** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA ****
-#**** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA ****
-
-library(GenSA)
+# GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN ***
+# GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN ***
+# GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN ***
+# GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN *** GAUSSIAN ***
 # test on gaussian generated values
 set.seed(1234)
-N_test=1000
+N_test=200
 test_x = rnorm(N_test, mean = 0.01, sd = 0.6)
 
 test_dt = rep(1, N_test)
@@ -209,22 +206,22 @@ test_dt = rep(1, N_test)
 test_sigma_0 = 0.3
 test_x_0 = 0.02
 
+
 initial = runif(5,min=-1)
 bounds=BoundsCreator(n=1, model="heston_ab") 
 
-params_H1 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, model = "heston_ab")
+start_time <- Sys.time()
+params_H1 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
+                           model = "heston")
+params_H2 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
+                           model = "heston_ab")
+params_H1_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+                               model = "heston", feller = FALSE)
+params_H2_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+                               model = "heston_ab", feller = FALSE)
+end_time <- Sys.time()
 
-params_sa= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
-                 control = c(max.time=180, maxit=20,verbose=TRUE,simple.function=TRUE),
-                 x = test_x, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = test_dt)
-params_sa$par
-
-out_nlminb = nlminb(start = params_sa$par, objective = negloglikHeston, lower = bounds$lower, upper = bounds$upper,
-                    x=test_x, x_0 = test_x_0, sigma_0=test_sigma_0, dt = test_dt,
-                    control=list(eval.max = 1000,iter.max = 100, trace = 1))
-
-out_nlminb$par
-par_2 = ParametersReconstruction(out_nlminb$par, model = "heston_ab")
+end_time-start_time
 
 
 xx= seq(from=-3,to=3,by=1/50)
@@ -237,21 +234,99 @@ yy1=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],l
               r = params_H1$r, k = params_H1$k, eta = params_H1$eta, theta = params_H1$theta, rho = params_H1$rho)
 lines(xx,yy1,col='blue',type='l')
 yy2=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
-             r = par_2$r, k = par_2$k, eta = par_2$eta, theta = par_2$theta, rho = par_2$rho)
-lines(xx,yy2,col='green')
+             r = params_H2$r, k = params_H2$k, eta = params_H2$eta, theta = params_H2$theta, rho = params_H2$rho)
+lines(xx,yy2,col='red')
+
+yy3=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H1_noF$r, k = params_H1_noF$k, eta = params_H1_noF$eta, theta = params_H1_noF$theta, rho = params_H1_noF$rho)
+lines(xx,yy3,col='aquamarine',type='l')
+
+yy4=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H2_noF$r, k = params_H2_noF$k, eta = params_H2_noF$eta, theta = params_H2_noF$theta, rho = params_H2_noF$rho)
+lines(xx,yy4,col='orange',type='l')
 
 
-legend("topright", legend = c("Gaussian sim","Heston","Heston 2"),col=c('black', 'blue','green'),
+legend("topright", legend = c("Gaussian sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF"),col=c('black', 'blue',"red","aquamarine", "orange"),
        lwd=3,lty=c(1,1,1),cex=0.75)
 params_H1$objective_function
 #params_H2$objective_function
 
+res = cbind(c(params_H1$r,params_H1$k, params_H1$eta, params_H1$theta, params_H1$rho),
+      c(params_H2$r,params_H2$k, params_H2$eta, params_H2$theta, params_H2$rho),
+      c(params_H1_noF$r,params_H1_noF$k, params_H1_noF$eta, params_H1_noF$theta, params_H1_noF$rho),
+      c(params_H2_noF$r,params_H2_noF$k, params_H2_noF$eta, params_H2_noF$theta, params_H2_noF$rho))
+colnames(res)= c("Gaussian sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF")
+rownames(res)=c("r","k","eta","theta","rho")
 
 
-negloglikHeston(params = out_nlminb$par,
-                  x = test_x, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = test_dt)
 
-# optimization using GenSA appears to be good but quite time consuming
+
+
+# tet on a skewed distribution
+
+
+set.seed(1234)
+N_test=100
+test_x = rexp(N_test,rate = 1.5)
+
+test_dt = rep(1, N_test)
+
+test_sigma_0 = 0.3
+test_x_0 = 0.02
+
+
+initial = runif(5,min=-1)
+bounds=BoundsCreator(n=1, model="heston_ab") 
+
+start_time <- Sys.time()
+params_H1 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
+                           model = "heston")
+params_H2 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
+                           model = "heston_ab")
+params_H1_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+                               model = "heston", feller = FALSE)
+params_H2_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+                               model = "heston_ab", feller = FALSE)
+end_time <- Sys.time()
+
+end_time-start_time
+
+
+xx= seq(from=-3,to=3,by=1/50)
+
+windows(width=10, height=8)
+hist(test_x, freq = FALSE,breaks = seq(-3,3, length.out = 30))
+lines(xx,dnorm(xx,mean=mean(test_x), sd=sd(test_x)), type='l', ylim = c(0,1))
+
+yy1=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H1$r, k = params_H1$k, eta = params_H1$eta, theta = params_H1$theta, rho = params_H1$rho)
+lines(xx,yy1,col='blue',type='l')
+yy2=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H2$r, k = params_H2$k, eta = params_H2$eta, theta = params_H2$theta, rho = params_H2$rho)
+lines(xx,yy2,col='red')
+
+yy3=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H1_noF$r, k = params_H1_noF$k, eta = params_H1_noF$eta, theta = params_H1_noF$theta, rho = params_H1_noF$rho)
+lines(xx,yy3,col='aquamarine',type='l')
+
+yy4=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
+              r = params_H2_noF$r, k = params_H2_noF$k, eta = params_H2_noF$eta, theta = params_H2_noF$theta, rho = params_H2_noF$rho)
+lines(xx,yy4,col='orange',type='l')
+
+
+legend("topright", legend = c("Exp sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF"),col=c('black', 'blue',"red","aquamarine", "orange"),
+       lwd=3,lty=c(1,1,1),cex=0.75)
+params_H1$objective_function
+#params_H2$objective_function
+
+res = cbind(c(params_H1$r,params_H1$k, params_H1$eta, params_H1$theta, params_H1$rho),
+            c(params_H2$r,params_H2$k, params_H2$eta, params_H2$theta, params_H2$rho),
+            c(params_H1_noF$r,params_H1_noF$k, params_H1_noF$eta, params_H1_noF$theta, params_H1_noF$rho),
+            c(params_H2_noF$r,params_H2_noF$k, params_H2_noF$eta, params_H2_noF$theta, params_H2_noF$rho))
+colnames(res)= c("Exp sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF")
+rownames(res)=c("r","k","eta","theta","rho")
+
+
 
 # trying on real data:
 
@@ -441,5 +516,18 @@ plot(time_intervals[1:dn], cum_returns_eurostoxx[1:dn], type='l')
 
 
 
+
+########### extra 
+# params_sa= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
+#                  control = c(max.time=180,verbose=TRUE,simple.function=TRUE),
+#                  x = test_x, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = test_dt)
+# params_sa$par
+# 
+# out_nlminb = nlminb(start = initial, objective = negloglikHeston, lower = bounds$lower, upper = bounds$upper,
+#                     x=test_x, x_0 = test_x_0, sigma_0=test_sigma_0, dt = test_dt, model = "heston",
+#                     control=list(eval.max = 1000,iter.max = 100, trace = 1))
+# 
+# out_nlminb$par
+# par_2 = ParametersReconstruction(out_nlminb$par, model = "heston_ab")
 
 

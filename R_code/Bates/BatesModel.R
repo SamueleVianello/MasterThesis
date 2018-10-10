@@ -15,7 +15,7 @@ library(pracma)
 #########################################################
 
 
-pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50, check_feller=TRUE){
+pdfHeston = function(x,x_0, dt, sigma_0, r, k, eta, theta, rho, lower=0, upper=50){
   l= length(x)
   if(length(dt)!=l) stop("Time intervals and returns vectors should have same length.")
   
@@ -31,7 +31,7 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
     #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
     
     y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-                         a =lower, b=upper, n=2**10)/pi
+                         a =lower, b=upper, n=2**8)/pi
     
     
     
@@ -82,27 +82,55 @@ integrand_H = function(u, x, x_0, tau ,r,v0,vT,rho,k,sigma){
 }
 
 # Neg logLikelihood function
-negloglikHeston = function(params, x, x_0, sigma_0, dt, model="heston_ab", check_feller=TRUE){
+negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE){
+  
+  r = params[1]
+  k =ifelse(model=="heston", params[2], params[3])
+  eta = ifelse(model=="heston", params[3], params[2]/params[3])
+  theta = params[4]
+  rho = params[5]
+  
+  # if (model == "heston"){
+  #   #print("Heston")
+  #   k = params[2]
+  #   eta = params[3]
+  # }
+  # else if (model=="heston_ab"){
+  #   #print("Heston_ab")
+  #   k = params[3]
+  #   eta = params[2]/params[3]
+  # }
+  # 
+  # #####cancellare!!##
+  # k = params[2]
+  # eta = params[3]
+  # ##################
+  
+  
   if (check_feller){
-    # feller not satisfied
-    if(2*k*eta<theta^2) {nll= 1e8}
+    # Check feller
+    if(2*k*eta<theta^2) {
+      # print("bad Feller")
+      nll= 1e8
+      }
     else{
-      if (model=='heston'){
-        # using k and eta
-        # # include feller condition
-        pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                        r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
-      }
-      else if(model=="heston_ab"){
-        # using alpha and beta
-        pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                        r = params[1],k=params[3], eta=params[2]/params[3], theta = params[4], rho = params[5])
-      }
+      pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                      r = r, k=k, eta=eta, theta = theta, rho = rho)
       
       to_sum = log(pdfs)
       # print(cbind(pdfs,to_sum))
       nll = -sum(to_sum) 
     }
+  }
+  
+  # dont check feller
+  else{
+    pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
+                    r = r, k=k, eta=eta, theta = theta, rho = rho)
+    
+    to_sum = log(pdfs)
+    # print(cbind(pdfs,to_sum))
+    nll = -sum(to_sum) 
   }
   
     if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
