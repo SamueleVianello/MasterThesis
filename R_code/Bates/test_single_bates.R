@@ -190,34 +190,6 @@ for(i in 2:length(xx)){
 
 
 
-param = c(r,k,eta,theta,rho,lambda, mu_j, sigma_j)
-
-sigma_0 = sd(btc[1:25])*sqrt(255)
-x_0 = log(my_data$BITCOIN[dim(my_data)[1]])
-
-dn=10
-negloglikHeston(params = param[1:5], x = cum_returns_btc[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn])
-
-neglog=0
-for(i in 1:10){
-  neglog=neglog+negloglikHeston(params = param[1:5], x = cum_returns_btc[i], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[i])
-}
-
-neglog
-
-
-
-# 
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -227,20 +199,7 @@ neglog
 #**** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA **** GEN SA ****
 
 library(GenSA)
-initial = c(0.2, 0.9, sigma_0^2, 0.2, runif(1,min=-1))
-dn=255*2
-params_sa= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper,par = initial,control = c(max.time=300, maxit=200,verbose=TRUE),
-                  x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn])
-params_sa$par
-
-out_nlminb = nlminb(start = params_sa$par, objective = negloglikHeston, lower = bounds$lower, upper = bounds$upper,
-                    x=cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0=sigma_0, dt = time_intervals[1:dn],
-                    control=list(eval.max = 1000,iter.max = 100, trace = 10))
-out_nlminb$par
-
-plot(time_intervals[1:dn], cum_returns_eurostoxx[1:dn], type='l')
-
-
+# test on gaussian generated values
 set.seed(1234)
 N_test=1000
 test_x = rnorm(N_test, mean = 0.01, sd = 0.6)
@@ -250,8 +209,9 @@ test_dt = rep(1, N_test)
 test_sigma_0 = 0.3
 test_x_0 = 0.02
 
-
 initial = runif(5,min=-1)
+bounds=BoundsCreator(n=1, model="heston_ab") 
+
 params_H1 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, model = "heston_ab")
 
 params_sa= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
@@ -310,7 +270,6 @@ time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(bt
 
 N = length(cum_returns_eurostoxx)
 dn=100
-
 
 x_0 = log(my_data$EUROSTOXX50[N])
 sigma_0 = sd( cum_returns_eurostoxx[1:25])

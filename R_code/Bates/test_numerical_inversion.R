@@ -26,6 +26,9 @@ eta=params[2]/params[3]
 theta=params[4]
 rho=params[5]
 
+# feller condition
+print(paste("Feller condition: ", 2*k*eta > theta^2))
+
 x_0 =.32
 sigma_0 = 0.5
 
@@ -52,12 +55,15 @@ lines(xx,yy_heston, col='green')
 
 ###
 
-params = c(-0.734311, 1.00000e-05, 0.0148842,  1.00000,-1.00000)
+params = c(-0.734311, 1.00000e-05, 0.0148842,  1.00000,-.99900000)
 r=params[1]
 k= params[3]
 eta=params[2]/params[3]
 theta=params[4]
 rho=params[5]
+
+# feller condition
+print(paste("Feller condition: ", 2*k*eta > theta^2))
 
 cum_returns_eurostoxx = cumsum(rev(eurostoxx))
 time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(btc_date)]) + 1)/365 ))
@@ -81,3 +87,5 @@ for(i in 1:length(xx)){
 
 plot(xx,yy_trap)
 lines(xx,yy_heston, col='green')
+
+

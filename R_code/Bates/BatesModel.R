@@ -31,7 +31,7 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
     #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
     
     y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-                         a =lower, b=upper, n=2**8)/pi
+                         a =lower, b=upper, n=2**10)/pi
     
     
     
@@ -42,8 +42,8 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k,eta, theta, rho, lower=0, upper=50
   }
   
   # # include feller condition
-  # if (check_feller)
-  #   if(2*k*eta<theta^2) y= rep(1e8,l)
+  if (check_feller)
+    if(2*k*eta<theta^2) y= rep(1e8,l)
   return(y)
 }
 
