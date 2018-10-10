@@ -19,10 +19,11 @@ my_trap_inversion= function(cf, x, N_nodes,M_upper,...){
 source("BatesModel.R")
 
 #### On parameters calibrated on a gaussian
-params = c(0.1534220, 0.9592630, 1.4682972, 0.0000100, 0.8181014)
+# params = c(0.1534220, 0.9592630, 1.4682972, 0.0000100, 0.8181014)
+params = c(-0.0519, 0.488,0.282,0.524,-0.435)
 r=params[1]
-k= params[3]
-eta=params[2]/params[3]
+k= params[2]
+eta=params[3]
 theta=params[4]
 rho=params[5]
 
@@ -32,22 +33,22 @@ print(paste("Feller condition: ", 2*k*eta > theta^2))
 x_0 =.32
 sigma_0 = 0.5
 
-xx = seq(-2,2, length.out=100)
-dt = rep(1,length(xx))
 
+xx = seq(-2+x_0,2+x_0, length.out=100)
+dt = rep(1,length(xx))
 
 yy_trap = xx*0
 yy_heston = pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = dt,
                                 r = r, k = k, eta = eta, theta = theta, rho = rho)
 for(i in 1:length(xx)){
-  yy_trap[i]= my_trap_inversion(cf = my_cfHeston, x = xx[i], N_nodes = 1000, M_upper = 10, 
+  yy_trap[i]= my_trap_inversion(cf = my_cfHeston, x = xx[i], N_nodes = 10000, M_upper = 10, 
                                 x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
 }
 
 plot(xx,yy_trap)
 grid()
 lines(xx,yy_heston, col='green')
-# seems to work ok
+
 
 
 

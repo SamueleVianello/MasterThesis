@@ -255,7 +255,7 @@ res = cbind(c(params_H1$r,params_H1$k, params_H1$eta, params_H1$theta, params_H1
       c(params_H2$r,params_H2$k, params_H2$eta, params_H2$theta, params_H2$rho),
       c(params_H1_noF$r,params_H1_noF$k, params_H1_noF$eta, params_H1_noF$theta, params_H1_noF$rho),
       c(params_H2_noF$r,params_H2_noF$k, params_H2_noF$eta, params_H2_noF$theta, params_H2_noF$rho))
-colnames(res)= c("Gaussian sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF")
+colnames(res)= c("Heston","Heston_ab","Heston_noF","Heston_ab_noF")
 rownames(res)=c("r","k","eta","theta","rho")
 
 
@@ -266,10 +266,10 @@ rownames(res)=c("r","k","eta","theta","rho")
 
 
 set.seed(1234)
-N_test=100
+N_test=200
 test_x = rexp(N_test,rate = 1.5)
 
-test_dt = rep(1, N_test)
+test_dt = rep(0.5, N_test)
 
 test_sigma_0 = 0.3
 test_x_0 = 0.02
@@ -292,11 +292,11 @@ end_time <- Sys.time()
 end_time-start_time
 
 
-xx= seq(from=-3,to=3,by=1/50)
+xx= seq(from=-3,to=5,by=1/50)
 
 windows(width=10, height=8)
-hist(test_x, freq = FALSE,breaks = seq(-3,3, length.out = 30))
-lines(xx,dnorm(xx,mean=mean(test_x), sd=sd(test_x)), type='l', ylim = c(0,1))
+hist(test_x, freq = FALSE, breaks = seq(-2,5, length.out = 30), ylim = c(0,1.3))
+lines(xx,dexp(xx,rate = 1.5), type='l')
 
 yy1=pdfHeston(x=xx,x_0 = test_x_0, sigma_0 = test_sigma_0, dt = rep(test_dt[1],length(xx)),
               r = params_H1$r, k = params_H1$k, eta = params_H1$eta, theta = params_H1$theta, rho = params_H1$rho)
@@ -316,16 +316,19 @@ lines(xx,yy4,col='orange',type='l')
 
 legend("topright", legend = c("Exp sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF"),col=c('black', 'blue',"red","aquamarine", "orange"),
        lwd=3,lty=c(1,1,1),cex=0.75)
-params_H1$objective_function
-#params_H2$objective_function
+
+sum(yy1*rep(xx[2]-xx[1], length(yy1)))
+sum(yy2*rep(xx[2]-xx[1], length(yy1)))
+sum(yy3*rep(xx[2]-xx[1], length(yy1)))
+sum(yy4*rep(xx[2]-xx[1], length(yy1)))
 
 res = cbind(c(params_H1$r,params_H1$k, params_H1$eta, params_H1$theta, params_H1$rho),
             c(params_H2$r,params_H2$k, params_H2$eta, params_H2$theta, params_H2$rho),
             c(params_H1_noF$r,params_H1_noF$k, params_H1_noF$eta, params_H1_noF$theta, params_H1_noF$rho),
             c(params_H2_noF$r,params_H2_noF$k, params_H2_noF$eta, params_H2_noF$theta, params_H2_noF$rho))
-colnames(res)= c("Exp sim","Heston","Heston_ab","Heston_noF","Heston_ab_noF")
+colnames(res)= c("Heston","Heston_ab","Heston_noF","Heston_ab_noF")
 rownames(res)=c("r","k","eta","theta","rho")
-
+res
 
 
 # trying on real data:
@@ -339,6 +342,7 @@ rownames(res)=c("r","k","eta","theta","rho")
 
 attach(my_returns)
 
+
 # EUROSTOXX ** EUROSTOXX ** EUROSTOXX ** EUROSTOXX ** EUROSTOXX ** EUROSTOXX ** 
 cum_returns_eurostoxx = cumsum(rev(eurostoxx))
 time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(btc_date)]) + 1)/365 ))
@@ -350,30 +354,27 @@ x_0 = log(my_data$EUROSTOXX50[N])
 sigma_0 = sd( cum_returns_eurostoxx[1:25])
 initial =  c(0.02, 0.4,0.3, 0.2, -0.3)
 
-# choosing optimization 
 params_1 = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1,model = "heston_ab", deoptim = TRUE, initial = initial)
+                          trace = 1,model = "heston", deoptim = TRUE, initial = initial, feller = TRUE)
 
-bounds=BoundsCreator(n=1, model="heston_ab") 
-params_SA = GenSA(fn = negloglikHeston, x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn], model="heston_ab",
-                              par = initial,lower = bounds$lower, upper = bounds$upper,
-                  control = c(max.time=180, maxit=20,verbose=TRUE,simple.function=TRUE))
+params_2 = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
+                          trace = 1,model = "heston_ab", deoptim = TRUE, initial = initial, feller= TRUE)
 
-params_SA$par
-out_nlminb = nlminb(start = params_SA$par, objective = negloglikHeston, lower = bounds$lower, upper = bounds$upper,
-                    x=cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0=sigma_0, dt =  time_intervals[1:dn],
-                    control=list(eval.max = 1000,iter.max = 100, trace = 1))
 
-out_nlminb$par
-par_2 = ParametersReconstruction(out_nlminb$par, model = "heston_ab")
-par_2
+xx= seq(from=-3+x_0,to=3+x_0,by=1/100)
+yy1=pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = rep( time_intervals[dn],length(xx)),
+              r = params_1$r, k = params_1$k, eta = params_1$eta, theta = params_1$theta, rho = params_1$rho)
+plot(xx,yy1,col='blue',type='l')
 
-xx= seq(from=-3,to=3,by=1/50)
-yy2=pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = rep( time_intervals[dn],length(xx)),
-              r = par_2$r, k = par_2$k, eta = par_2$eta, theta = par_2$theta, rho = par_2$rho)
-plot(xx,yy2,col='green',type='l')
+yy2 = pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = rep( time_intervals[dn],length(xx)),
+                r = params_2$r, k = params_2$k, eta = params_2$eta, theta = params_2$theta, rho = params_2$rho)
+
+lines(xx,yy2,col='green')
 
 plot(time_intervals[1:dn], cum_returns_eurostoxx[1:dn], type='l')
+
+
+
 
 
 
