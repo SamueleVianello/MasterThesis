@@ -1,5 +1,36 @@
 library(mondate)
-source("CorrelationSignificance.R")
+# source("main_correlation_significance.R")
+
+PermutationTestCorr = function(x,y=0, N=2000){
+  # Two sided permutation test for correlation
+  # H0: rho = 0   vs    H1: rho!=0
+  
+  if (!is.null(dim(x)[2])){
+    if ( dim(x)[2] == 2){
+      y=x[,2]
+      x=x[,1]
+    }
+  }
+  else if (length(x)!=length(y)){
+    stop("Error: samples should have same size.")
+  }
+  
+  n = length(x)
+  
+  r_sample= cor(x,y)
+  
+  larger = 0
+  for(i in 1:N){
+    y_perm = y[sample(n,n)]
+    r_perm = cor(x,y_perm)
+    if (abs(r_sample)<abs(r_perm))
+      larger = larger+1
+  }
+  
+  # p-value is the percentage of r_perm absolutely greater than r_sample
+  p = larger/N
+  return(p)
+} 
 
 
 earliest = min(btc_date)
@@ -34,9 +65,10 @@ for (i in 1:n_wind){
   
   p_values= rep(NA,n_assets-1)
   for(j in 2:n_assets){
-    p_values[j-1] = rcorr(btc[idx],my_returns[idx,2*j], type = "pearson")$P['x','y']
+    # # Using Pearsons
+    # p_values[j-1] = rcorr(btc[idx],my_returns[idx,2*j], type = "pearson")$P['x','y']
+    p_values[j-1] = PermutationTestCorr(btc[idx],my_returns[idx,2*j])
   }
-
   roll_pvalue[i,] = p_values
 
 }
@@ -49,6 +81,12 @@ roll_pvalue_3y = roll_pvalue
 end_times_3y = end_times
 beg_times_3y = beg_times
 
+
+###da cancellare
+p_bonf_3y = roll_pvalue_3y*0
+for (i in 1:ncol(p_bonf)) {
+  p_bonf_3y[,i]=p.adjust(roll_pvalue_3y[,i],method = "bonf")
+}
 
 #########
 
@@ -81,7 +119,9 @@ for (i in 1:n_wind){
   
   p_values= rep(NA,n_assets-1)
   for(j in 2:n_assets){
-    p_values[j-1] = rcorr(btc[idx],my_returns[idx,2*j], type = "pearson")$P['x','y']
+    # # Using Pearsons
+    # p_values[j-1] = rcorr(btc[idx],my_returns[idx,2*j], type = "pearson")$P['x','y']
+    p_values[j-1] = PermutationTestCorr(btc[idx],my_returns[idx,2*j])
   }
   
   roll_pvalue[i,] = p_values
@@ -91,27 +131,33 @@ for (i in 1:n_wind){
 colnames(roll_corr)= colnames(my_returns[2*(2:(n_assets))])
 colnames(roll_pvalue)= colnames(my_returns[2*(2:(n_assets))])
 
+p_bonf_18m = roll_pvalue*0
+for (i in 1:ncol(p_bonf)) {
+  p_bonf_18m[,i]=p.adjust(roll_pvalue[,i],method = "bonf")
+}
+
 ########
 
 
-
+y_min = -0.2
+y_max =  0.2
 
 # plot against stock indices
 x11()
 layout(matrix(c(1,2,3,1,2,3,4,5,6),nrow= 3,ncol=3, byrow=TRUE))
-plot(end_times, roll_corr[,'bric'], type = 'l', ylab = "Bric")
+plot(end_times, roll_corr[,'bric'], type = 'l', ylab = "Bric", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'bric'], type = 'l', ylab = "Bric",col='blue')
 title("BRIC")
 grid()
 
-plot(end_times, roll_corr[,'sp500'], type = 'l',ylab = "sp500")
+plot(end_times, roll_corr[,'sp500'], type = 'l',ylab = "sp500", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
 lines(end_times_3y, roll_corr_3y[,'sp500'], type = 'l', ylab = "sp500",col='blue')
 title("SP500")
 grid()
 
-plot(end_times, roll_corr[,'eurostoxx'], type = 'l',ylab = "eurostoxx")
+plot(end_times, roll_corr[,'eurostoxx'], type = 'l',ylab = "eurostoxx", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'eurostoxx'], type = 'l', ylab = "eurostoxx",col='blue')
 title("EUROSTOXX")
@@ -139,25 +185,25 @@ abline(h = .05,col = 'grey')
 # plot against commodities
 x11()
 layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE))
-plot(end_times, roll_corr[,'gold'], type = 'l', ylab = "gold")
+plot(end_times, roll_corr[,'gold'], type = 'l', ylab = "gold", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'gold'], type = 'l', ylab = "gold",col='blue')
 title("gold")
 grid()
 
-plot(end_times, roll_corr[,'wti'], type = 'l',ylab = "wti")
+plot(end_times, roll_corr[,'wti'], type = 'l',ylab = "wti", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
 lines(end_times_3y, roll_corr_3y[,'wti'], type = 'l', ylab = "wti",col='blue')
 title("wti")
 grid()
 
-plot(end_times, roll_corr[,'grain'], type = 'l',ylab = "grain")
+plot(end_times, roll_corr[,'grain'], type = 'l',ylab = "grain", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'grain'], type = 'l', ylab = "grain",col='blue')
 title("grain")
 grid()
 
-plot(end_times, roll_corr[,'metal'], type = 'l',ylab = "metal")
+plot(end_times, roll_corr[,'metal'], type = 'l',ylab = "metal", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'metal'], type = 'l', ylab = "metal",col='blue')
 title("metal")
@@ -189,25 +235,25 @@ abline(h = .05,col = 'grey')
 # plot against fx
 x11()
 layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE))
-plot(end_times, roll_corr[,'eur'], type = 'l', ylab = "eur")
+plot(end_times, roll_corr[,'eur'], type = 'l', ylab = "eur", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'eur'], type = 'l', ylab = "eur",col='blue')
 title("eur")
 grid()
 
-plot(end_times, roll_corr[,'gbp'], type = 'l',ylab = "gbp")
+plot(end_times, roll_corr[,'gbp'], type = 'l',ylab = "gbp", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
 lines(end_times_3y, roll_corr_3y[,'gbp'], type = 'l', ylab = "gbp",col='blue')
 title("gbp")
 grid()
 
-plot(end_times, roll_corr[,'chf'], type = 'l',ylab = "chf")
+plot(end_times, roll_corr[,'chf'], type = 'l',ylab = "chf", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'chf'], type = 'l', ylab = "chf",col='blue')
 title("chf")
 grid()
 
-plot(end_times, roll_corr[,'jpy'], type = 'l',ylab = "jpy")
+plot(end_times, roll_corr[,'jpy'], type = 'l',ylab = "jpy", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'jpy'], type = 'l', ylab = "jpy",col='blue')
 title("jpy")
@@ -239,13 +285,13 @@ dev.off()
 # plot against bond indices
 x11()
 layout(matrix(c(1,2,1,2,3,4),nrow= 3,ncol=2, byrow=TRUE))
-plot(end_times, roll_corr[,'pan_euro'], type = 'l', ylab = "pan_euro")
+plot(end_times, roll_corr[,'pan_euro'], type = 'l', ylab = "pan_euro", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'pan_euro'], type = 'l', ylab = "pan_euro",col='blue')
 title("pan_euro")
 grid()
 
-plot(end_times, roll_corr[,'pan_us'], type = 'l',ylab = "pan_us")
+plot(end_times, roll_corr[,'pan_us'], type = 'l',ylab = "pan_us", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
 lines(end_times_3y, roll_corr_3y[,'pan_us'], type = 'l', ylab = "pan_us",col='blue')
 title("pan_us")
