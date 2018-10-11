@@ -13,7 +13,7 @@ S = sd%*%corr%*%sd# covariance matrix
 invS = solve(S)
 e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector 
 
-expected_return = 0.4
+expected_return = 0.04
   
 a = drop(t(e)%*% invS %*% e)
 b = drop(t(e)%*% invS %*% r)
@@ -37,7 +37,32 @@ plot(yy,xx,type ='l')
 points(diag(sd),r,col='blue')
 
 
-EfficientFrontier(r,S,full = FALSE)
+EfficientFrontier(r,S,full = TRUE)
+
+
+# test with no short sales
+
+
+library(quadprog)
+
+D = 2*S
+d = matrix(rep(0,length(r)),ncol = 1)
+
+A = rbind(t(r),rep(1,length(r)),
+          diag(length(r)))
+A
+b= c(expected_return, 1, rep(0,length(r)))
+
+sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
+
+
+
+res = EfficientFrontier_constr(r,S, plot=FALSE)
+res$sigma
+res$expected_return
+
+lines(res$sigma,res$expected_return, type = 'l', col='red')
+
 
 ##########################################
 #### test on our  calibrated assets ######

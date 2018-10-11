@@ -10,7 +10,6 @@ EfficientFrontier = function(r,S,full=TRUE,plot=TRUE, N=100){
   # plot: if TRUE the frontier is plotted
   # N: how many expected returns to take into consideration to plot frontier
   
-  
   invS = solve(S)
   e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector 
   
@@ -19,7 +18,7 @@ EfficientFrontier = function(r,S,full=TRUE,plot=TRUE, N=100){
   c = drop(t(r)%*% invS %*% r)
   d = drop(a*c - b^2)
   
-  yy= seq(from = -0.1, to = 3.5,length.out = N+1)
+  yy= seq(from = -0.1, to = 0.2,length.out = N+1)
   xx = sqrt( (a*yy^2 - 2*b*yy + c)/d)
   
   if (!full){
@@ -100,3 +99,54 @@ OptimalAllocation= function(r,S, expected_return = NA, sd = NA){
   
   return(w_opt)
 }
+
+
+
+EfficientFrontier_constr = function(r,S,full=TRUE,plot=TRUE, N=100){
+  # INPUT 
+  # r: expected returns of the assets
+  # S: covariance matrix of the asset returns
+  # full: computes only upper section of frontier if FALSE
+  # plot: if TRUE the frontier is plotted
+  # N: how many expected returns to take into consideration to plot frontier
+  
+  library(quadprog)
+  
+  
+  
+  D = 2*S
+  d = matrix(rep(0,length(r)),ncol = 1)
+  A = rbind(t(r),rep(1,length(r)),
+            diag(length(r)))
+  
+  
+  sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
+  
+  yy= seq(from = min(r), to = max(r),length.out = N+1)
+  b= c(yy[1], 1, rep(0,length(r)))
+  xx = rep(0,length(yy))
+  for (i in 1:(N+1)) {
+    b = c(yy[i], 1, rep(0,length(r)))
+    sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
+    xx[i] = sqrt(sol$value)
+  }
+  
+  # if (!full){
+  #   min_sigma = min(xx)
+  #   idx = which(yy>=yy[which(xx==min_sigma)])
+  #   # print(idx)
+  #   xx= xx[idx]
+  #   yy= yy[idx]
+  # }
+  
+  # if(plot){
+  #   min_y = min(c(yy,r))
+  #   max_y = max(c(yy,r))
+  #   plot(xx,yy,type ='l', ylim = c(min_y,max_y))
+  #   points(sqrt(diag(S)),r,col='blue',pch='+')
+  #   #legend(c("Efficient Frontier","Single Assets"))
+  # }
+  res = list(sigma = xx, expected_return=yy)
+  return(res)
+}
+
