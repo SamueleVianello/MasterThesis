@@ -20,5 +20,7 @@ The results clearly show that the historical correlation between Bitcoin and the
 
 In `main_rolling_correlation.R` I computed the rolling correlations and plotted the relative graphs. I included in each plot also the p-value for their significances.
 
+# 4. Markowitz Efficient Frontier and Portfolios
 
+In `test_markowitz.R` I am developing the plots and weights for the efficient frontier with and without Bitcoin, then the graphs of the allocations. The functions needed to do so are in `MarkowitzMeanVariancePortfolio.R`
 
