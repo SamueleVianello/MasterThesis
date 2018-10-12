@@ -11,10 +11,10 @@ corr= matrix(c(   1,-0.1, 0.4,
                 0.4, 0.3,   1),3,3)
 S = sd%*%corr%*%sd# covariance matrix
 invS = solve(S)
-e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector 
+e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector
 
-expected_return = 0.04
-  
+expected_return = 0.4
+
 a = drop(t(e)%*% invS %*% e)
 b = drop(t(e)%*% invS %*% r)
 c = drop(t(r)%*% invS %*% r)
@@ -74,7 +74,7 @@ expected_return_sample = colMeans(my_returns[,2*(1:14)]) * 255
 SS = cov(my_returns[,2*(1:14)]) * 255
 
 # yearly from model
-# expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6 
+# expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
 # SS = results$covariance
 
 
@@ -89,7 +89,7 @@ points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
 grid()
 
-# target return 
+# target return
 target = 0.2
 
 w = OptimalAllocation(expected_return_sample,SS, expected_return = target)
@@ -101,5 +101,3 @@ res_no_btc = EfficientFrontier_constr(r= expected_return_sample[2:14], S=SS[2:14
 
 lines(res_btc$sigma, res_btc$expected_return, col= 'darkgreen')
 lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
-
-
