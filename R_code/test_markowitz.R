@@ -69,16 +69,16 @@ lines(res$sigma,res$expected_return, type = 'l', col='red')
 ##########################################
 attach(my_returns)
 
-# expected_return_sample = colMeans(my_returns[,2*(1:14)])
+# From sample
+expected_return_sample = colMeans(my_returns[,2*(1:14)]) * 255
+SS = cov(my_returns[,2*(1:14)]) * 255
 
-# yearly
-expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6 
+# yearly from model
+# expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6 
+# SS = results$covariance
 
-colSums(results$full_mu)/6 * 
 
 
-#SS = cov(my_returns[,2*(1:14)])
-SS = results$covariance
 
 res1 = EfficientFrontier(expected_return_sample,SS,full = FALSE, plot = FALSE)
 res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14],full = FALSE, plot = FALSE)
@@ -89,10 +89,17 @@ points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
 grid()
 
-target = 0.002
+# target return 
+target = 0.2
 
-w = OptimalAllocation(expected_return_sample,SS, sd = 0.04)
-w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], sd = 0.04)
-
+w = OptimalAllocation(expected_return_sample,SS, expected_return = target)
+w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], expected_return = target)
 cbind(w, c(0,w_no_btc))
+
+res_btc = EfficientFrontier_constr(r=expected_return_sample, S=SS, full = FALSE, N=200)
+res_no_btc = EfficientFrontier_constr(r= expected_return_sample[2:14], S=SS[2:14,2:14],full = FALSE, N =200)
+
+lines(res_btc$sigma, res_btc$expected_return, col= 'darkgreen')
+lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
+
 

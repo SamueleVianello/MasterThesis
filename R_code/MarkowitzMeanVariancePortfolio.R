@@ -112,32 +112,36 @@ EfficientFrontier_constr = function(r,S,full=TRUE,plot=TRUE, N=100){
   
   library(quadprog)
   
-  
-  
   D = 2*S
   d = matrix(rep(0,length(r)),ncol = 1)
   A = rbind(t(r),rep(1,length(r)),
             diag(length(r)))
   
-  
-  sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
-  
   yy= seq(from = min(r), to = max(r),length.out = N+1)
   b= c(yy[1], 1, rep(0,length(r)))
+  
+  print(min(r))
+  # print(D)
+  # print(d)
+  # print(A)
+  # print(b)
+
   xx = rep(0,length(yy))
   for (i in 1:(N+1)) {
-    b = c(yy[i], 1, rep(0,length(r)))
+    #print(yy[i])
+    b[1] = yy[i]
     sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
     xx[i] = sqrt(sol$value)
   }
   
-  # if (!full){
-  #   min_sigma = min(xx)
-  #   idx = which(yy>=yy[which(xx==min_sigma)])
-  #   # print(idx)
-  #   xx= xx[idx]
-  #   yy= yy[idx]
-  # }
+  if (!full){
+    min_sigma = min(xx)
+    print(min_sigma)
+    idx = which(yy>=yy[which(xx==min_sigma)])
+    print(idx)
+    xx= xx[idx]
+    yy= yy[idx]
+  }
   
   # if(plot){
   #   min_y = min(c(yy,r))
