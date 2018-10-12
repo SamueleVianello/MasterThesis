@@ -16,6 +16,20 @@ my_trap_inversion= function(cf, x, N_nodes,M_upper,...){
 }
 
 
+fourier_cosine = function(cf, x, N,a,b, ...){
+  delta = b-a
+  k = 0:(N-1)
+  F_k = rep(0,N)
+  F_k = Re( cf(k*pi/delta, ...)* exp(-1i*k*pi*a/delta))*2/delta
+  cos_k = cos(k*pi*(x-a)/delta)
+  cos_k[1]=cos_k[1]*0.5
+  
+  res = sum(F_k*cos_k)
+  return(res)
+}
+
+
+
 source("BatesModel.R")
 
 #### On parameters calibrated on a gaussian
@@ -34,23 +48,47 @@ x_0 =.32
 sigma_0 = 0.5
 
 
-xx = seq(-2+x_0,2+x_0, length.out=100)
-dt = rep(1,length(xx))
+xx = seq(-20+x_0,20+x_0, length.out=100)
+dt = rep(10,length(xx))
 
 yy_trap = xx*0
+yy_cos = xx*0
 yy_heston = pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = dt,
                                 r = r, k = k, eta = eta, theta = theta, rho = rho)
 for(i in 1:length(xx)){
-  yy_trap[i]= my_trap_inversion(cf = my_cfHeston, x = xx[i], N_nodes = 10000, M_upper = 10, 
+  yy_trap[i]= my_trap_inversion(cf = my_cfHeston, x = xx[i], N_nodes = 100, M_upper = 10, 
                                 x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+  yy_cos[i]= fourier_cosine(cf = my_cfHeston, x = xx[i], a=-10,b=10, N=100,
+                               x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
 }
 
 plot(xx,yy_trap)
 grid()
 lines(xx,yy_heston, col='green')
+lines(xx, yy_cos, col='blue')
 
 
+t1=Sys.time()
+yy_heston = pdfHeston(x=xx,x_0 = x_0, sigma_0 = sigma_0, dt = dt,
+                      r = r, k = k, eta = eta, theta = theta, rho = rho)
+t2=Sys.time()
+t2-t1
 
+t1=Sys.time()
+for(i in 1:length(xx)){
+  yy_trap[i]= my_trap_inversion(cf = my_cfHeston, x = xx[i], N_nodes = 100, M_upper = 10, 
+                                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+}
+t2=Sys.time()
+t2-t1
+
+t1=Sys.time()
+for(i in 1:length(xx)){
+  yy_cos[i]= fourier_cosine(cf = my_cfHeston, x = xx[i], a=-10,b=10, N=100,
+                            x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+}
+t2=Sys.time()
+t2-t1
 
 
 

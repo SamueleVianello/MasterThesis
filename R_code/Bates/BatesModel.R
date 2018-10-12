@@ -30,10 +30,15 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k, eta, theta, rho, lower=0, upper=5
     # y[i] = quadinf(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = eta,
     #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
     
-    y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-                         a =lower, b=upper, n=2**8)/pi
+    # y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+    #                      a =lower, b=upper, n=2**8)/pi
     
     
+    # y[i]= fourier_cosine(cf = my_cfHeston, x = x[i], a=-10,b=10, N=100,
+    #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+    
+    y[i]= my_trap_inversion(cf = my_cfHeston, x = x[i], N_nodes = 100, M_upper = 10,
+                   x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
     
     # print(y[i])
     if(is.nan(y[i])|| y[i]<1e-8 ){
@@ -74,7 +79,7 @@ my_cfHeston= function (om, x_0, tau, r, v0, vT, rho, k, sigma)
 
 
 integrand_H = function(u, x, x_0, tau ,r,v0,vT,rho,k,sigma){
-  cf= my_cfHeston(om = u, x_0=x_0 ,tau = tau,r = r,v0 = v0,vT = vT,rho = rho,k = k,sigma = sigma)
+  cf= my_cfHeston(om = u, x_0=x_0 ,tau = tau,r = r, v0 = v0, vT = vT, rho = rho, k = k, sigma = sigma)
   expon = exp(-1i*x*u)
   # print(paste("cf= ",cf, ", expon= ",expon))
   # print(paste("HI!",Re(cf*expon)))
@@ -89,6 +94,9 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE
   eta = ifelse(model=="heston", params[3], params[2]/params[3])
   theta = params[4]
   rho = params[5]
+  if (length(params)==6){
+    sigma_0=params[6]
+  }
   
   # if (model == "heston"){
   #   #print("Heston")
@@ -133,9 +141,9 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE
     nll = -sum(to_sum) 
   }
   
-    if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
-      nll = 1e10
-    }
+  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+    nll = 1e10
+  }
 
   return(nll)
 }
