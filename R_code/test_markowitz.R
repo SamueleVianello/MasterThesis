@@ -42,7 +42,6 @@ EfficientFrontier(r,S,full = TRUE)
 
 # test with no short sales
 
-
 library(quadprog)
 
 D = 2*S
@@ -67,37 +66,92 @@ lines(res$sigma,res$expected_return, type = 'l', col='red')
 ##########################################
 #### test on our  calibrated assets ######
 ##########################################
+library(pracma)
+
 attach(my_returns)
+source("MarkowitzMeanVariancePortfolio.R")
 
 # From sample
-expected_return_sample = colMeans(my_returns[,2*(1:14)]) * 255
+expected_return = colMeans(my_returns[,2*(1:14)]) * 255
 SS = cov(my_returns[,2*(1:14)]) * 255
 
 # yearly from model
-# expected_return_sample =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
+# expected_return =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
 # SS = results$covariance
 
 
 
+# unconstrained = short sales are allowed for every asset
+res1 = EfficientFrontier(expected_return,SS)
+res2 = EfficientFrontier(expected_return[2:14],SS[2:14,2:14])
 
-res1 = EfficientFrontier(expected_return_sample,SS,full = FALSE, plot = FALSE)
-res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14],full = FALSE, plot = FALSE)
-
-plot(res1$sigma,res1$expected_return, type = 'l',col='green', ylim = c(min(c(res1$expected_return,expected_return_sample)), max(res1$expected_return)))
+windows(width = 10,height = 8)
+plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(min(c(res1$expected_return,expected_return)), max(res1$expected_return)))
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
-text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
+text(sqrt(diag(SS)),expected_return, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
 grid()
+
+
+
+# constrained = no short sales for given assets
+res_btc = EfficientFrontier(r=expected_return, S=SS, full = FALSE, N=200, no_short_sales = 1:14)
+res_no_btc = EfficientFrontier(r= expected_return[2:14], S=SS[2:14,2:14],full = FALSE, N =200, no_short_sales = 1:13)
+
+lines(res_btc$sigma, res_btc$expected_return, col= 'green')
+lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
+
+legend("bottomleft", legend = c("w/ btc", "w/o btc", "w/ btc w/o short sale","w/o btc w/o short sale"),
+       col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75)
+
+
 
 # target return
 target = 0.2
 
-w = OptimalAllocation(expected_return_sample,SS, expected_return = target)
-w_no_btc = OptimalAllocation(expected_return_sample[2:14],SS[2:14,2:14], expected_return = target)
+w = OptimalAllocation(r=expected_return,S=SS, target_return = target)
+w_no_btc = OptimalAllocation(r=expected_return[2:14],S=SS[2:14,2:14], target_return = target)
+
 cbind(w, c(0,w_no_btc))
 
-res_btc = EfficientFrontier_constr(r=expected_return_sample, S=SS, full = FALSE, N=200)
-res_no_btc = EfficientFrontier_constr(r= expected_return_sample[2:14], S=SS[2:14,2:14],full = FALSE, N =200)
 
-lines(res_btc$sigma, res_btc$expected_return, col= 'darkgreen')
-lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
+targets = seq(0.05,0.25, by = 0.01)
+l=length(targets)
+alloc_btc = zeros(14,l)
+rownames(alloc_btc)=colnames(my_returns[,2*(1:14)])
+alloc_no_btc = zeros(13,l)
+rownames(alloc_no_btc)=colnames(my_returns[,2*(2:14)])
+
+for(i in 1:l){
+  alloc_btc[,i]= OptimalAllocation(r=expected_return,S=SS, target_return = targets[i], no_short_sales = 1:14)
+  alloc_no_btc[,i]= OptimalAllocation(r=expected_return[2:14],S=SS[2:14,2:14], target_return = targets[i],no_short_sales = 1:13)
+}
+
+alloc_btc
+
+
+# ggplot2 library
+library(ggplot2)
+library(RColorBrewer)
+
+# plot(targets,alloc_btc[1,], type='l', col=rainbow(14)[1], ylim = c(-1,1))
+# for(i in 2:14){
+#   lines(targets, alloc_btc[i,], col= rainbow(14)[i])
+# }
+
+
+Asset = rep(rownames(alloc_btc), l)
+Return = rep(targets, each = 14)
+Values = drop(matrix(alloc_btc, nrow = 1))
+
+
+
+
+colorRampPalette(brewer.pal(9, "Spectral"))(14)
+
+data <- data.frame(Asset,Return,Values)
+ggplot(data, aes(x=Return, y=Values, fill=Asset)) + 
+  geom_area(alpha=1 , size=1, colour="black") +
+  ggtitle("Asset allocation without shortsellling")+
+  scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )
+
