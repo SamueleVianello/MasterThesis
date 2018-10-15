@@ -1,18 +1,24 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Updated with complete calibration results
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 source("MarkowitzMeanVariancePortfolio.R")
 load("returns.Rda")
 load("data.Rda")
 load("results.Rda")
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 source("MeanVariancePortfolio.R")
 >>>>>>> Added test file.
 =======
 >>>>>>> Updated with complete calibration results
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 
 r =matrix( c(0.03,0.05,0.08),ncol = 1)# vector of returns
 sd= diag(c(0.12,0.1,0.2))
@@ -21,10 +27,17 @@ corr= matrix(c(   1,-0.1, 0.4,
                 0.4, 0.3,   1),3,3)
 S = sd%*%corr%*%sd# covariance matrix
 invS = solve(S)
+<<<<<<< HEAD
 e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector 
 
 expected_return = 0.04
   
+=======
+e = matrix(rep(1,length(r)),nrow = length(r),ncol = 1) # unit vector
+
+expected_return = 0.4
+
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 a = drop(t(e)%*% invS %*% e)
 b = drop(t(e)%*% invS %*% r)
 c = drop(t(r)%*% invS %*% r)
@@ -48,10 +61,13 @@ points(diag(sd),r,col='blue')
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 EfficientFrontier(r,S,full = FALSE)
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 EfficientFrontier(r,S,full = TRUE)
 
 
@@ -77,7 +93,10 @@ res$expected_return
 
 lines(res$sigma,res$expected_return, type = 'l', col='red')
 
+<<<<<<< HEAD
 >>>>>>> added no short selling function for efficient frontier
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 
 ##########################################
 #### test on our  calibrated assets ######
@@ -87,6 +106,7 @@ library(pracma)
 attach(my_returns)
 source("MarkowitzMeanVariancePortfolio.R")
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # expected_return_sample = colMeans(my_returns[,2*(1:14)])
 
@@ -98,6 +118,8 @@ colSums(results$full_mu)/6 *
 
 =======
 =======
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 # From sample
 expected_return = colMeans(my_returns[,2*(1:14)]) * 255
 SS = cov(my_returns[,2*(1:14)]) * 255
@@ -105,6 +127,7 @@ SS = cov(my_returns[,2*(1:14)]) * 255
 # yearly from model
 # expected_return =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
 # SS = results$covariance
+<<<<<<< HEAD
 >>>>>>> Added constr and unconstr optimal allocation, added plots.
 
 ##########################################
@@ -142,18 +165,27 @@ plot(res1$sigma,res1$expected_return, type = 'l',col='green')
 plot(res1$sigma,res1$expected_return, type = 'l',col='green', ylim = c(min(c(res1$expected_return,expected_return_sample)), max(res1$expected_return)))
 >>>>>>> Preliminary tests on portfolio optimization.
 =======
+=======
+
+
+
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 # unconstrained = short sales are allowed for every asset
 res1 = EfficientFrontier(expected_return,SS)
 res2 = EfficientFrontier(expected_return[2:14],SS[2:14,2:14])
 
 windows(width = 10,height = 8)
 plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(min(c(res1$expected_return,expected_return)), max(res1$expected_return)))
+<<<<<<< HEAD
 >>>>>>> Added constr and unconstr optimal allocation, added plots.
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
 grid()
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 target = 0.002
 
@@ -178,6 +210,8 @@ cbind(w, c(0,w_no_btc))
 
 >>>>>>> Updated with complete calibration results
 =======
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
 
 
 # constrained = no short sales for given assets
@@ -241,4 +275,7 @@ ggplot(data, aes(x=Return, y=Values, fill=Asset)) +
   ggtitle("Asset allocation without shortsellling")+
   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )
 
+<<<<<<< HEAD
 >>>>>>> Added constr and unconstr optimal allocation, added plots.
+=======
+>>>>>>> 9387df364c7056a942a308a836cc64b4c5b77349
