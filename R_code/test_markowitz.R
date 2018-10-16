@@ -79,13 +79,14 @@ SS = cov(my_returns[,2*(1:14)]) * 255
 # expected_return =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
 # SS = results$covariance
 
-
-
 # unconstrained = short sales are allowed for every asset
 res1 = EfficientFrontier(expected_return_sample,SS, max_r = 0.4)
 res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14], max_r = 0.4)
 
+
 #x11()
+
+
 windows(width = 10,height = 8)
 plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(min(c(res1$expected_return,expected_return)), max(res1$expected_return)))
 lines(res2$sigma,res2$expected_return, col = 'red')

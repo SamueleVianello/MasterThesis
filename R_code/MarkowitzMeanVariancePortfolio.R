@@ -7,6 +7,7 @@ EfficientFrontier=function(r,S, no_short_sales=NA, N=100,full=FALSE,plot=FALSE, 
   
   if (is.na(no_short_sales[1])){
     return(EfficientFrontier_unconstr(r=r,S=S,full=full,plot=plot, N=N, max_r = max_r))
+
   }
   else{
     return(EfficientFrontier_constr(r=r,S=S,full=full,plot=plot, N=N, no_short_sales = no_short_sales))
