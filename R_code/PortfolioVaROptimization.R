@@ -1,7 +1,13 @@
 # portfolio VaR optimization 
 
-OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=10){
+OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=10, CVaR =  FALSE){
   library(alabama)
+  if(CVaR){
+    objective = ptf_cvar
+  }
+  else{
+    objective = ptf_var
+  }
   # simulated_returns should be given as a matrix (N_sim * N_assets)
   N_assets = dim(simulated_returns)[2]
   rand_initial = matrix(rep(0,N_assets*N_rep), ncol = N_assets)
@@ -13,7 +19,7 @@ OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=1
     sampled =  runif(N_assets)
     rand_initial = sampled/sum(sampled)
     
-    res = auglag(par = rand_initial, fn=ptf_var, hin = f_ineq, heq =f_eq,
+    res = auglag(par = rand_initial, fn=objective, hin = f_ineq, heq =f_eq,
                  sims=simulated_returns, alpha = alpha, target_return = target_return)
     solution$obj[i]=res$value
     solution$params[i,]=matrix(res$par,ncol = N_assets)
