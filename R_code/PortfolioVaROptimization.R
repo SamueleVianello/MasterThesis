@@ -103,12 +103,13 @@ OptimalAllocationDailyVaR= function(daily_return, alpha, target_return, N_rep=10
     
     res = auglag(par = rand_initial, fn=daily_ptf_cvar, hin = f_ineq_daily, heq =f_eq_daily,
                  sims=daily_return, alpha = alpha, target_return = target_return,
-                 control.outer = list(method = "nlminb"))
+                 control.outer = list(method = "nlminb", trace = FALSE))
     solution$obj[i]=res$value
     solution$params[i,]=matrix(res$par,ncol = N_assets)
     solution$expected_ret[i]=(sum(res$par*expected_asset_return))
     # print(paste("CVaR:", daily_ptf_cvar(w=rand_initial, daily_return = daily_return, alpha = alpha, target_return = target_return),
     #             "expected return:", sum(rand_initial*expected_asset_return)))
+    print(paste("Target return:", target_return, "Iteration:", i))
   }
   
   # print(solution)

@@ -88,10 +88,10 @@ res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14], max_r = 0.4
 
 
 windows(width = 10,height = 8)
-plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(min(c(res1$expected_return,expected_return)), max(res1$expected_return)))
+plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(-0.1, 0.4), xlab = "Volatility", ylab = "Log-Returns")
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
-text(sqrt(diag(SS)),expected_return, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
+text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
 grid()
 
 
@@ -104,18 +104,18 @@ lines(res_btc$sigma, res_btc$expected_return, col= 'green')
 lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
 
 title(main = "Efficient Markowitz Mean Variance Frontier")
-legend("bottomleft", legend = c("w/ btc", "w/o btc", "w/ btc w/o short sale","w/o btc w/o short sale"),
+legend("bottomleft", legend = c("btc", "no btc", "btc no short sale","no btc no short sale"),
        col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75)
 
 
 
-# target return
-target = 0.2
-
-w = OptimalAllocation(r=expected_return_sample,S=SS, target_return = target)
-w_no_btc = OptimalAllocation(r=expected_return_sample[2:14],S=SS[2:14,2:14], target_return = target)
-
-cbind(w, c(0,w_no_btc))
+# # target return
+# target = 0.2
+# 
+# w = OptimalAllocation(r=expected_return_sample,S=SS, target_return = target)
+# w_no_btc = OptimalAllocation(r=expected_return_sample[2:14],S=SS[2:14,2:14], target_return = target)
+# 
+# cbind(w, c(0,w_no_btc))
 
 
 targets = seq(0.05,0.25, by = 0.01)
@@ -155,6 +155,30 @@ colorRampPalette(brewer.pal(9, "Spectral"))(14)
 data <- data.frame(Asset,Return,Values)
 ggplot(data, aes(x=Return, y=Values, fill=Asset)) + 
   geom_area(alpha=1 , size=1, colour="black") +
-  ggtitle("Asset allocation without shortsellling")+
+  ggtitle("Markowitz Optimal Allocation Without Shortsellling")+
+  scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )
+
+
+
+
+
+##################################################
+with_btc = rbind(rep(0,length(alloc_no_btc)), alloc_no_btc)
+
+with_btc[which(with_btc<1e-6)]=0
+
+Asset = rep(rownames(alloc_btc), l)
+Return = rep(targets, each = 14)
+Values = drop(matrix(with_btc, nrow = 1))
+
+
+
+
+colorRampPalette(brewer.pal(9, "Spectral"))(14)
+
+data <- data.frame(Asset,Return,Values)
+ggplot(data, aes(x=Return, y=Values, fill=Asset)) + 
+  geom_area(alpha=1 , size=1, colour="black") +
+  ggtitle("Markowitz Optimal Allocation Without Shortsellling")+
   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )
 
