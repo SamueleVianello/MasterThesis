@@ -9,16 +9,16 @@ library(maxLik)
 ####### SIMPLE PLOT TO SHOW DENSITIES ###
 #########################################
 
-r=-0.8
+r=0.1
 t=1
 S_0 = 1
 sigma_0 = 0.05
-theta =0.8
+theta =0.2
 rho=0.9
 k=2
 eta = 1.5
 lambda=5
-mu_j = -0.1
+mu_j = 0.1
 sigma_j = 0.17
 
 
@@ -48,26 +48,26 @@ param = c(r,k,eta*0.8,22*theta,rho)
 
 qx =rnorm(100, mean = 0.3)
 qdt = rep(t,length(qx))
-negloglikHeston(param, x=qx, x_0=log(S_0), sigma_0 = sigma_0, dt =qdt)
+negloglikHeston(param, x=qx, x_0=log(S_0), sigma_0 = sigma_0, dt =qdt, model = "heston", check_feller = FALSE)
 
 paramB=c(param,lambda,mu_j,sigma_j)
-negloglikBates(paramB, x=qx, x_0=log(S_0), sigma_0 = sigma_0, dt =qdt)
+negloglikBates(paramB, x=qx, x_0=log(S_0), sigma_0 = sigma_0, dt =qdt, model="bates")
 
 
 #################################################################
 ## Test to see how eta and theta influence the distribution
 #################################################################
-n=20
+n=10
 theta_mix = seq(from=0.001, to=10, length.out = n)
 
 
 xx = seq(from=-10, to = 10, by =20/100)
 all_dt = rep(t, length(xx))
 
-plot(0,0, ylim = c(0,0.7),xlim = c(-5,5))
+plot(0,0, ylim = c(0,1.3),xlim = c(-5,5))
 grid()
 for (i in 1:n){
-  th =theta_mix[i]
+  th =(theta_mix)[i]
   # print(th)
   yyH=pdfHeston(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = th,rho = rho)
   yyB=pdfBates(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = th,rho = rho,
@@ -77,13 +77,86 @@ for (i in 1:n){
   lines(xx,yyB,col='blue')
 }
 
+legend("topright", legend = c("Heston", "Bates"),col=c('black', 'blue'),
+       lwd=2,lty=c(1,1),cex=0.75)
+
 # the higher theta, the more leptokurtik it is
 
 
+#################################################################
+## Test to see how the pdf changes in time
+#################################################################
+
+r=1.5
+t=1
+S_0 = 1
+sigma_0 = 0.1
+theta =1.5
+rho=0.9
+k=2
+eta = 0.4
+lambda=5
+mu_j = 0.1
+sigma_j = 0.17
 
 
 
-##########################################
+
+t= seq(from=0.1, to=1, by=0.1)
+
+
+xx = seq(from=-10, to = 10, by =1/100)
+all_dt = rep(t, length(xx))
+
+plot(0,0, ylim = c(0,3),xlim = c(-5,5))
+grid()
+for (i in 1:length(t)){
+  # print(th)
+  yyH=pdfHeston(x=xx,x_0 = log(S_0),dt = rep(t[i], length(xx)), sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = theta,rho = rho)
+  yyB=pdfBates(x=xx,x_0 = log(S_0),dt = rep(t[i], length(xx)), sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = theta,rho = rho,
+               lambda =lambda, mu_j = mu_j, sigma_j = sigma_j)
+  print(paste("Heston:", sum(yyH*(xx[2]-xx[1]))))
+  print(paste("Bates:", sum(yyB*(xx[2]-xx[1]))))
+  lines(xx,yyH)
+  lines(xx,yyB,col='blue')
+}
+title(paste('sigma_0 =', sigma_0,'r =', r, 'k =', k,'eta =', eta, 'theta =', theta,'rho =', rho))
+legend("topright", legend = c("Heston", "Bates"),col=c('black', 'blue'),
+       lwd=2,lty=c(1,1),cex=0.75)
+
+### 3D plot in time
+
+library(rgl)
+# x = values to compute pdf
+# y = time
+# z = values of pdf
+
+
+t= seq(from=0.05, to=1, by=0.05)
+
+origin= matrix(c(0,0,0),ncol=3)
+plot3d(x=origin, xlim = c(-5,5), ylim = c(min(t),max(t), zlim = c(0,2)),forceClipregion = TRUE)
+aspect3d(c(1,1,0.1))
+
+xx = seq(from=-5, to = 5, by =1/100)
+for (i in 1:length(t)){
+  # print(th)
+  zzH=pdfHeston(x=xx,x_0 = log(S_0),dt = rep(t[i], length(xx)), sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = theta,rho = rho)
+  print(paste("Heston:", sum(zzH*(xx[2]-xx[1]))))
+  
+  yy= rep(t[i], length(xx))
+  
+  X = cbind(xx,yy,zzH)
+  lines3d(X, zlim = c(0,2))
+  # yyB=pdfBates(x=xx,x_0 = log(S_0),dt = rep(t[i], length(xx)), sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = theta,rho = rho,
+  #              lambda =lambda, mu_j = mu_j, sigma_j = sigma_j)
+  # print(paste("Bates:", sum(yyB*(xx[2]-xx[1]))))
+}
+
+
+
+
+############################################
 # calibration on gaussian generated data
 ############################################
 set.seed(1234)

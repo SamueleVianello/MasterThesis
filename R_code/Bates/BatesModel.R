@@ -30,15 +30,15 @@ pdfHeston = function(x,x_0, dt, sigma_0, r, k, eta, theta, rho, lower=0, upper=5
     # y[i] = quadinf(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = eta,
     #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
     
-    # y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-    #                      a =lower, b=upper, n=2**8)/pi
+    y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+                         a =lower, b=upper, n=2**8)/pi
     
     
     # y[i]= fourier_cosine(cf = my_cfHeston, x = x[i], a=-10,b=10, N=100,
     #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
     
-    y[i]= my_trap_inversion(cf = my_cfHeston, x = x[i], N_nodes = 100, M_upper = 10,
-                   x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+    # y[i]= my_trap_inversion(cf = my_cfHeston, x = x[i], N_nodes = 100, M_upper = 10,
+    #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
     
     # print(y[i])
     if(is.nan(y[i])|| y[i]<1e-8 ){
