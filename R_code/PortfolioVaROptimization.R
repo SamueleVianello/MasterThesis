@@ -1,4 +1,4 @@
-# portfolio VaR optimization 
+# PORTFOLIO VaR OPTIMIZATION 
 
 OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=10, CVaR =  FALSE){
   library(alabama)
@@ -19,10 +19,12 @@ OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=1
     rand_initial = sampled/sum(sampled)
     
     res = auglag(par = rand_initial, fn=objective, hin = f_ineq, heq =f_eq,
-                 sims=simulated_returns, alpha = alpha, target_return = target_return)
+                 sims=simulated_returns, alpha = alpha, target_return = target_return,
+                 control.outer = list( trace = FALSE))
     solution$obj[i]=res$value
     solution$params[i,]=matrix(res$par,ncol = N_assets)
     solution$expected_ret[i]=(sum(res$par*expected_asset_return))
+    print(paste("Target return:", target_return, "Iteration:", i))
   }
   # print(solution)
   idx = which.min(solution$obj)

@@ -156,6 +156,8 @@ tot_days = dim(percentage_returns)[1]
 last_5y = 255*5
 last_5y_returns = as.matrix(percentage_returns[1:last_5y,])
 
+
+# # Single Test
 # sol_func = OptimalAllocationDailyVaR(daily_return =last_5y_returns, alpha = 0.05, target_return = 1.2^(1/255), N_rep = 10)
 # sol_func
 # 
@@ -307,24 +309,23 @@ ggplot(data_daily, aes(x=Return_daily, y=Values_daily, fill=Asset_daily)) +
 #   scale_y_continuous(breaks=seq(0,1,by=0.1))
 
 
-# Daily CVaR from previous 5 years
-
-l_daily_no_btc=length(daily_returns_no_btc)
-
-# getting rid of low values:
-daily_allocations_cvar[which(daily_allocations_cvar<1e-6)]=0
-
-Asset_daily = rep(asset_names, l_daily_no_btc)
-Return_daily = rep(daily_resulting_returns_cvar_no_btc, each = 14)
-Values_daily = drop(matrix(t(daily_allocations_cvar_no_btc), nrow = 1, byrow = TRUE))
-
-
-# colorRampPalette(brewer.pal(9, "Spectral"))(14)
-
-data_daily <- data.frame(Asset_daily,Return_daily,Values_daily)
-ggplot(data_daily, aes(x=Return_daily, y=Values_daily, fill=Asset_daily)) + 
-  geom_area(alpha=1 , size=1, colour="black") +
-  ggtitle("Daily CVaR allocation")+
-  scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )+
-  scale_y_continuous(breaks=seq(0,1,by=0.1))+
-  scale_x_continuous(sec.axis = ~.^(255))
+# # Daily CVaR from previous 5 years
+# l_daily_no_btc=length(daily_returns_no_btc)
+# 
+# # getting rid of low values:
+# daily_allocations_cvar[which(daily_allocations_cvar<1e-6)]=0
+# 
+# Asset_daily = rep(asset_names, l_daily_no_btc)
+# Return_daily = rep(daily_resulting_returns_cvar_no_btc, each = 14)
+# Values_daily = drop(matrix(t(daily_allocations_cvar_no_btc), nrow = 1, byrow = TRUE))
+# 
+# 
+# # colorRampPalette(brewer.pal(9, "Spectral"))(14)
+# 
+# data_daily <- data.frame(Asset_daily,Return_daily,Values_daily)
+# ggplot(data_daily, aes(x=Return_daily, y=Values_daily, fill=Asset_daily)) + 
+#   geom_area(alpha=1 , size=1, colour="black") +
+#   ggtitle("Daily CVaR allocation")+
+#   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )+
+#   scale_y_continuous(breaks=seq(0,1,by=0.1))+
+#   scale_x_continuous(sec.axis = ~.^(255))
