@@ -20,7 +20,15 @@ The results clearly show that the historical correlation between Bitcoin and the
 
 In `main_rolling_correlation.R` I computed the rolling correlations and plotted the relative graphs. I included in each plot also the p-value for their significances.
 
-# 4. Markowitz Efficient Frontier and Portfolios
+# 4. Markowitz Efficient Frontier and Allocation
 
-In `test_markowitz.R` I am developing the plots and weights for the efficient frontier with and without Bitcoin, then the graphs of the allocations. The functions needed to do so are in `MarkowitzMeanVariancePortfolio.R`
+In `test_markowitz.R` I am developing the plots and weights for the efficient frontier with and without Bitcoin, then the graphs of the allocations. The functions needed to do so are in `MarkowitzMeanVariancePortfolio.R`. Both constrained (=no short-selling) and unconstrained frontiers are implemented.
 
+I also computed the efficient frontier using the CVaR (alternatively the VaR) as the measure of risk in `test_empirical_VaR_optimization.R`, implementing two different approaches to such computations. 
+
+The first is a "bootstrap" technique, where given the sample of daily returns, I built their empirical distribution and then extract 255
+values from it to obtain a year evolution and thus a yearly return. Repeating this step N=10000 times I obtained N different scenarios which are then used to compute the portfolio yearly returns and finally the VaR/CVaR.
+
+The second approach focuses on the daily return and given the last 5 years of observations (approximately 255*5=1275 vectors of daily returns)  the portfolio VaR/CVaR is computed.
+
+Results from each approach are in the `Results` folder.
