@@ -34,7 +34,7 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
       
       
       outSA= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
-                             control = c(max.time=300,verbose=TRUE,simple.function=TRUE),
+                             control = c(max.time=300,verbose=TRUE, simple.function=FALSE),
                              x = x, x_0 = x_0, dt = dt, model= model)
       
       initial=outSA$par
