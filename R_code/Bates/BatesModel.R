@@ -213,7 +213,7 @@ integrand_B = function(u, x, x_0, tau ,r ,v0,vT,rho,k,sigma,lambda, mu_j, sigma_
 }
 
 # Neg logLikelihood function
-negloglikBates = function(params, x, x_0, sigma_0, dt, model="bates_ab"){
+negloglikBates = function(params, x, x_0, sigma_0, dt, model="bates_ab", check_feller){
   if (model=="bates"){
     # using k and eta
     pdfs= pdfBates(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,

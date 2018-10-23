@@ -61,7 +61,7 @@ n=10
 theta_mix = seq(from=0.001, to=10, length.out = n)
 
 
-xx = seq(from=-10, to = 10, by =20/100)
+xx = seq(from=-10, to = 10, by =10/100)
 all_dt = rep(t, length(xx))
 
 plot(0,0, ylim = c(0,1.3),xlim = c(-5,5))
@@ -70,7 +70,7 @@ for (i in 1:n){
   th =(theta_mix)[i]
   # print(th)
   yyH=pdfHeston(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = th,rho = rho)
-  yyB=pdfBates(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = th,rho = rho,
+  yyB=pdfBates(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta,theta = th,rho = rho,
                lambda =lambda, mu_j = mu_j, sigma_j = sigma_j)
   
   lines(xx,yyH)
@@ -422,14 +422,15 @@ cum_returns_eurostoxx = cumsum(rev(eurostoxx))
 time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(btc_date)]) + 1)/365 ))
 
 N = length(cum_returns_eurostoxx)
-dn=255*2
+dn=255*6
 
 # x_0 = log(my_data$EUROSTOXX50[N])
 x_0 = 0
 sigma_0 = sd( rev(eurostoxx)[1:dn])*sqrt(255)
 
-initial_mu = mean(cum_returns_eurostoxx[1:dn]/time_intervals[1:dn])
-initial =  c(0.02789987, 0.4, sigma_0^2, 0.2, -0.3, 0.2)
+# initial_mu = mean(cum_returns_eurostoxx[1:dn]/time_intervals[1:dn])
+initial_mu = mean(rev(eurostoxx)[1:dn])*255
+initial =  c(initial_mu, 4, sigma_0^2, 0.2, -0.3, sigma_0)
 
 
 # res1=c(params_1$r,params_1$k, params_1$eta, params_1$theta, params_1$rho)
@@ -437,18 +438,28 @@ initial =  c(0.02789987, 0.4, sigma_0^2, 0.2, -0.3, 0.2)
 # for(i in 1:100){
 t1=Sys.time()
 params_1 = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1, model = "heston", deoptim = T, initial = initial, feller = F, sigma_is_param = TRUE)
+                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
 # 0.21828180  0.87790103  0.03925139  0.26252176 -0.43957532  0.00001000 -219.2735
 t2=Sys.time()
 t2-t1
 
-
-
+#                       alpha = k*eta       beta=k
+initial =c(initial[1],initial[2]*initial[3],initial[2],initial[4],initial[5],initial[6]) 
 t1=Sys.time()
 params_2 = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1,model = "heston", deoptim = FALSE, initial = initial[1:5], feller= F,sigma_is_param = FALSE)
+                          trace = 1,model = "heston_ab", deoptim = F, initial = initial, feller= F, sigma_is_param = T)
 t2=Sys.time()
 t2-t1
+
+
+
+# t1=Sys.time()
+# params_B = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
+#                           trace = 1,model = "bates", deoptim = F, initial = c(initial,2,0.2,0.1) , feller= F, sigma_is_param = F)
+# t2=Sys.time()
+# t2-t1
+
+
 
 # res1 = cbind(res1,c(params_1$r,params_1$k, params_1$eta, params_1$theta, params_1$rho, params_1$sigma_0, params_1$objective_function) )
 # res2=cbind(res2,c(params_2$r,params_2$k, params_2$eta, params_2$theta, params_2$rho,sigma_0, params_2$objective_function))
@@ -483,38 +494,33 @@ plot(time_intervals[1:dn], cum_returns_eurostoxx[1:dn], type='l')
 
 
 
-cum_returns_btc = cumsum(rev(btc))
-time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(btc_date)]) + 1)/365 ))
-
-sigma_0 = sd(btc[1:25])*sqrt(255)
-x_0 = log(my_data$BITCOIN[dim(my_data)[1]])
+cum_returns_sp500 = cumsum(rev(sp500))
+time_intervals = rev(as.double((as.Date((sp500_date)) - as.Date(sp500_date[length(sp500_date)]) + 1)/365 ))
 
 
+N = length(cum_returns_sp500)
+dn=255*6
+
+# x_0 = log(my_data$EUROSTOXX50[N])
+x_0 = 0
+sigma_0 = sd( rev(sp500)[1:dn])*sqrt(255)
+
+# initial_mu = mean(cum_returns_eurostoxx[1:dn]/time_intervals[1:dn])
+initial_mu = mean(rev(sp500)[1:dn])*255
+initial =  c(initial_mu, 0.4, sigma_0^2, 0.2, -0.3, sigma_0)
 
 
-N = length(cum_returns_btc)
-dn=100
-
-initial = c(0.2, 2, sigma_0^2, 0.2, runif(1,min=-1))
-
-
-
-
-params = CalibrateModel(x = cum_returns_btc[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                        trace = 1,model = "heston_ab", deoptim = TRUE, initial = initial)
-
-params = fminsearch(f = negloglikHeston, x = cum_returns_btc[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],x0 = initial,maxiter = 100,tol = 1e-5)
+# res1=c(params_1$r,params_1$k, params_1$eta, params_1$theta, params_1$rho)
+# res2=c(params_2$r,params_2$k, params_2$eta, params_2$theta, params_2$rho)
+# for(i in 1:100){
+t1=Sys.time()
+params_1 = CalibrateModel(x = cum_returns_sp500[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
+                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
+t2=Sys.time()
+t2-t1
 
 
-
-plot(time_intervals[1:dn], cum_returns_btc[1:dn], type='l')
-# 0.26159197 1.50004615 0.01424088 1.00000000 1.00000000
-
-
-
-
-
-
+plot(time_intervals[1:dn], cum_returns_sp500[1:dn], type='l')
 
 
 

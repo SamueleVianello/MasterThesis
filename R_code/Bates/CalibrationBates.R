@@ -12,11 +12,25 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
   source("BatesModel.R")
   
   bounds = BoundsCreator(model = model, sigma_param = sigma_is_param)
-  if(model =='heston_ab'||model=="heston") {obj=negloglikHeston}
-  else if (model =='bates') {obj=negloglikBates}
-  else{ stop("Choose model between heston or bates")}
+  
+  if(model =='heston_ab'||model=="heston") {
+    obj=negloglikHeston
+    param_length=5
+  }
+  else if (model =='bates'){
+    obj=negloglikBates
+    param_length=8
+  }
+  else{ 
+    stop("Choose model between heston or bates")
+  }
+  
+  control_GenSA = c(maxit=10, verbose=TRUE, simple.function=FALSE)
+            #extra param: maxit=1000, max.time=60, 
+  control_nlminb = list(eval.max = 1000,iter.max = 200, trace = trace)
   
   if (sigma_is_param){
+    param_length = param_length+1
     # First optimization using deoptim
     if(deoptim){
       start_time_deoptim <- Sys.time()
@@ -34,9 +48,9 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
       
       
       outSA= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
-                             control = c(max.time=300,verbose=TRUE, simple.function=FALSE),
+                             control = control_GenSA,
                              x = x, x_0 = x_0, dt = dt, model= model)
-      
+                            # extra control parameters: max.time=300,
       initial=outSA$par
       
       end_time_deoptim <- Sys.time()
@@ -49,7 +63,7 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
     start_time_nlminb <- Sys.time()
     out_nlminb = nlminb(initial,objective = obj,lower = bounds$lower, upper = bounds$upper,
                         x=x, x_0 = x_0,dt = dt, model=model,  check_feller = feller,
-                        control=list(eval.max = 1000,iter.max = 100, trace = trace))
+                        control=control_nlminb)
     print(out_nlminb)
     end_time_nlminb <- Sys.time()
   }
@@ -70,22 +84,22 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
       # 
       # initial=outDE$optim$bestmem
       
-      outSA= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
-                   control = c(max.time=300,verbose=TRUE,simple.function=TRUE),
-                   x = x, x_0 = x_0, dt = dt,sigma_0=sigma_0, model= model)
+      outSA= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial[1:param_length],
+                   control = control_GenSA,
+                   x = x, x_0 = x_0, dt = dt, sigma_0=sigma_0, model= model)
       
       initial=outSA$par
       
       end_time_deoptim <- Sys.time()
     }
     # Second and final optimization using nlminb
-    print("Starting calibration using nlminb...")
+    print("Starting calibration using nlminb, sigma_0 NOT a parameter...")
     
     
     start_time_nlminb <- Sys.time()
-    out_nlminb = nlminb(initial,objective = obj,lower = bounds$lower, upper = bounds$upper,
+    out_nlminb = nlminb(initial[1:param_length],objective = obj,lower = bounds$lower, upper = bounds$upper,
                         x=x, x_0 = x_0, sigma_0=sigma_0,dt = dt, model=model,  check_feller = feller,
-                        control=list(eval.max = 1000,iter.max = 100, trace = trace))
+                        control=control_nlminb)
     print(out_nlminb)
     end_time_nlminb <- Sys.time()
   }
@@ -114,19 +128,43 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
 BoundsCreator= function(n=1, model = "heston_ab", sigma_param){
   # Creates lower and upper boundaries for the DEoptim optimization on the likelihood
   # for a n-multivariate merton process and n_common common jumps
+  eps = 1e-5
+  
   min_mu = -3
   max_mu = 3
-  min_lambda = 0.001
-  max_lambda = 100
-  min_sigma = 1e-5
-  max_sigma = 2
+  min_k = 0
+  max_k = 10
+  min_eta = 1e-5
+  max_eta = 2
+  min_theta = 1e-5
+  max_theta = 2
   min_corr = -1
   max_corr = 1
+  
+  min_lambda = 0.001
+  max_lambda = 100
+  min_muj = -0.5
+  max_muj = 0
+  min_sigma = 1e-5
+  max_sigma = 2
 
-  if (model=="heston"|| model=="heston_ab"){
+  min_alpha = 1e-5
+  max_alpha = 3
+  # beta = k 
+
+  if (model=="heston"){
     # r, a, b, theta, rho
-    low = c(min_mu,0.00001,min_sigma,min_sigma,min_corr)
-    up = c(max_mu,max_mu,max_sigma,1,max_corr)
+    low = c(min_mu,min_k,min_eta,min_theta,min_corr)
+    up = c(max_mu,max_k,max_eta,max_theta,max_corr)
+    
+    if (sigma_param){
+      low= c(low,min_sigma)
+      up = c(up, max_sigma)
+    }
+  }
+  else if ( model=="heston_ab"){
+    low = c(min_mu, min_alpha, min_k, min_theta, min_corr)
+    up =  c(max_mu, max_alpha, max_k, max_theta, max_corr)
     
     if (sigma_param){
       low= c(low,min_sigma)
@@ -135,8 +173,8 @@ BoundsCreator= function(n=1, model = "heston_ab", sigma_param){
   }
   else if(model=="bates"||model=="bates_ab") {
     # r, k, eta, theta, rho, lambda, mu_j, sigma_j 
-    low = c(min_mu,0.00001,min_sigma,min_sigma,min_corr,min_lambda, min_mu, min_sigma)
-    up = c(max_mu,max_mu,max_sigma,1,max_corr, max_lambda, max_mu, max_sigma)
+    low = c(min_mu,min_k,min_eta,min_theta,min_corr,min_lambda, min_muj, min_sigma)
+    up = c(max_mu,max_k,max_eta,max_theta,max_corr, max_lambda, max_muj, max_sigma)
   }
   
 
