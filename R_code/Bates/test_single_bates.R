@@ -523,7 +523,7 @@ plot(time_intervals[1:dn], cum_returns_sp500[1:dn], type='l')
 
 # Any given asset
 
-asset = btc
+asset = sp500
 asset_date = eur_date
 
 cum_returns_asset = cumsum(rev(asset))
@@ -545,7 +545,7 @@ initial =  c(initial_mu, 0.4, sigma_0^2, 0.2, -0.3, sigma_0)
 plot(time_intervals[1:dn], cum_returns_asset[1:dn], type='l')
 t1=Sys.time()
 params_1 = CalibrateModel(x = cum_returns_asset[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1, model = "heston", deoptim = T, initial = initial, feller = F, sigma_is_param = TRUE)
+                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
 t2=Sys.time()
 t2-t1
 

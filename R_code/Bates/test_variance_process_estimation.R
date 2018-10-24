@@ -23,7 +23,7 @@ rolling_variance = function(data, window, skip=1){
 
 attach(my_returns)
 
-asset = eurostoxx
+asset = gold
 
 N=length(asset)
 dn =255*6
@@ -111,8 +111,8 @@ c(k=k,eta=eta,theta=theta)
 
 
 # VASICEK 
-days = 5
-roll_var = rolling_variance(rev(asset)[1:dn],window=days,skip = 1)*255
+days = 21
+roll_var = rolling_variance(rev(asset)[1:dn],window=days,skip = days)*255
 
 
 plot((1:length(roll_var))*days-days+1,roll_var,type='l', col='blue',lwd=2)
@@ -125,16 +125,55 @@ coef_lm = lm(y~x)
 
 points((1:length(coef_lm$fitted.values))*days-days+1,coef_lm$fitted.values, pch = 3)
 
-b0 = coef_lm$coefficients[1]
-b1 = coef_lm$coefficients[2]
+b0 = unname(coef_lm$coefficients[1])
+b1 = unname(coef_lm$coefficients[2])
 
-dt= 1/255
+dt= days/255
 
 
 k = (1-b1)/dt
 eta = b0/(k*dt)
-theta = sqrt(var(coef_lm$residuals)/dt)
+theta_tilda = sqrt(var(coef_lm$residuals)/dt)
 
-c(b0 = b0, b1=b1, var_res = var(coef_lm$residuals), k=k,eta=eta,theta=theta/(sd(asset)*sqrt(255)))
+theta=theta_tilda/(sd(asset)*sqrt(255))
+
+c(b0 = b0, b1=b1, var_res = var(coef_lm$residuals), k=k,eta=eta,theta=theta)
+
+
+
+
+
+
+# using results to calibrate entire model:
+
+
+asset = gold
+asset_name = 'gold'
+asset_date = eur_date
+
+cum_returns_asset = cumsum(rev(asset))
+time_intervals = rev(as.double((as.Date((asset_date)) - as.Date(asset_date[length(asset_date)]) + 1)/365 ))
+
+
+N = length(cum_returns_asset)
+dn=N
+
+# x_0 = log(my_data$EUROSTOXX50[N])
+x_0 = 0
+sigma_0 = sd( rev(asset)[1:dn])*sqrt(255)
+
+# initial_mu = mean(cum_returns_eur[1:dn]/time_intervals[1:dn])
+initial_mu = mean(rev(asset)[1:dn])*255
+initial =  c(initial_mu, 0.4, eta, theta, -0.3, sigma_0)
+
+
+plot(time_intervals[1:dn], cum_returns_asset[1:dn], type='l')
+title(asset_name)
+
+t1=Sys.time()
+params_1 = CalibrateModel(x = cum_returns_asset[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
+                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
+t2=Sys.time()
+t2-t1
 
 

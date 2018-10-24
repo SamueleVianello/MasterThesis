@@ -128,16 +128,26 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
 BoundsCreator= function(n=1, model = "heston_ab", sigma_param){
   # Creates lower and upper boundaries for the DEoptim optimization on the likelihood
   # for a n-multivariate merton process and n_common common jumps
-  eps = 1e-5
+  eps = 1e-5*10
   
   min_mu = -3
-  max_mu = 10
+  max_mu = 3
   min_k = 0.00001
   max_k = 10
   min_eta = 1e-5
   max_eta = 5
   min_theta = 1e-5
   max_theta = 5
+  
+  # min_mu = 0.0265738 -eps
+  # max_mu = 0.0265738 +eps
+  # min_k = 6.158689 -eps
+  # max_k = 6.158689 +eps
+  # min_eta = 0.0307288257 -eps
+  # max_eta = 0.0307288257 +eps
+  # min_theta = 0.56113345 -eps
+  # max_theta = 0.56113345 +eps
+  
   min_corr = -1
   max_corr = 1
   
