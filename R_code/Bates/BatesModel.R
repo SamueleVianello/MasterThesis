@@ -74,7 +74,7 @@ my_cfHeston= function (om, x_0, tau, r, v0, vT, rho, k, sigma)
     print(paste(om,x_0,tau,r,v0,vT,rho,k,sigma))
     print(paste("exp1=", cf1, ", exp2=",cf2, ", exp3=",cf3, "d=",d, "g=",g))
   }
-  return(exp(cf1 + cf2 + cf3))
+  return(res)
 }
 
 
@@ -148,21 +148,21 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE
   return(nll)
 }
 
-loglikHeston = function(params, x, x_0, sigma_0, dt){
-  pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                  r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
-  
-  to_sum = log(pdfs)
-  # print(cbind(pdfs,to_sum))
-  nll = sum(to_sum) 
-  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
-    nll = 1e10
-  }
-  # FELLER CONDITION
-  # 2*k*eta > theta^2
-  # print(2*params[2]*params[3]>params[4]^2)
-  return(nll)
-}
+# loglikHeston = function(params, x, x_0, sigma_0, dt){
+#   pdfs= pdfHeston(x=x,dt=dt, x_0=x_0, sigma_0 = sigma_0,
+#                   r = params[1],k=params[2], eta=params[3], theta = params[4], rho = params[5])
+#   
+#   to_sum = log(pdfs)
+#   # print(cbind(pdfs,to_sum))
+#   nll = sum(to_sum) 
+#   if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+#     nll = 1e10
+#   }
+#   # FELLER CONDITION
+#   # 2*k*eta > theta^2
+#   # print(2*params[2]*params[3]>params[4]^2)
+#   return(nll)
+# }
 
 
 #########################################################

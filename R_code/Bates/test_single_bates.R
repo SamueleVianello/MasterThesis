@@ -100,8 +100,6 @@ mu_j = 0.1
 sigma_j = 0.17
 
 
-
-
 t= seq(from=0.1, to=1, by=0.1)
 
 
@@ -124,6 +122,8 @@ title(paste('sigma_0 =', sigma_0,'r =', r, 'k =', k,'eta =', eta, 'theta =', the
 legend("topright", legend = c("Heston", "Bates"),col=c('black', 'blue'),
        lwd=2,lty=c(1,1),cex=0.75)
 
+
+######################
 ### 3D plot in time
 
 library(rgl)
@@ -350,16 +350,16 @@ test_sigma_0 = 0.3
 test_x_0 = 0.02
 
 
-initial = runif(5,min=-1)
+initial = runif(6,min=-1)
 
 start_time <- Sys.time()
 params_H1 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
                            model = "heston", sigma_is_param = TRUE)
 params_H2 = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE, 
                            model = "heston_ab", sigma_is_param = TRUE)
-params_H1_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+params_H1_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial[1:5], deoptim=TRUE,
                                model = "heston", feller = TRUE, sigma_is_param = FALSE)
-params_H2_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial, deoptim=TRUE,
+params_H2_noF = CalibrateModel(x = test_x, x_0 = test_x_0,sigma_0 = test_sigma_0, dt = test_dt, trace = 1, initial[1:5], deoptim=TRUE,
                                model = "heston_ab", feller = TRUE, sigma_is_param = FALSE)
 end_time <- Sys.time()
 
@@ -510,9 +510,6 @@ initial_mu = mean(rev(sp500)[1:dn])*255
 initial =  c(initial_mu, 0.4, sigma_0^2, 0.2, -0.3, sigma_0)
 
 
-# res1=c(params_1$r,params_1$k, params_1$eta, params_1$theta, params_1$rho)
-# res2=c(params_2$r,params_2$k, params_2$eta, params_2$theta, params_2$rho)
-# for(i in 1:100){
 t1=Sys.time()
 params_1 = CalibrateModel(x = cum_returns_sp500[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
                           trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
@@ -521,6 +518,43 @@ t2-t1
 
 
 plot(time_intervals[1:dn], cum_returns_sp500[1:dn], type='l')
+
+
+
+# Any given asset
+
+asset = btc
+asset_date = eur_date
+
+cum_returns_asset = cumsum(rev(asset))
+time_intervals = rev(as.double((as.Date((asset_date)) - as.Date(asset_date[length(asset_date)]) + 1)/365 ))
+
+
+N = length(cum_returns_asset)
+dn=255*6
+
+# x_0 = log(my_data$EUROSTOXX50[N])
+x_0 = 0
+sigma_0 = sd( rev(asset)[1:dn])*sqrt(255)
+
+# initial_mu = mean(cum_returns_eur[1:dn]/time_intervals[1:dn])
+initial_mu = mean(rev(asset)[1:dn])*255
+initial =  c(initial_mu, 0.4, sigma_0^2, 0.2, -0.3, sigma_0)
+
+
+plot(time_intervals[1:dn], cum_returns_asset[1:dn], type='l')
+t1=Sys.time()
+params_1 = CalibrateModel(x = cum_returns_asset[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
+                          trace = 1, model = "heston", deoptim = T, initial = initial, feller = F, sigma_is_param = TRUE)
+t2=Sys.time()
+t2-t1
+
+
+
+
+
+
+
 
 
 

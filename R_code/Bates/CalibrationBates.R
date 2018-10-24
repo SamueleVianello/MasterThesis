@@ -25,7 +25,7 @@ CalibrateModel=function(x, x_0,sigma_0, dt, trace = 10, initial, deoptim=FALSE, 
     stop("Choose model between heston or bates")
   }
   
-  control_GenSA = c(maxit=10, verbose=TRUE, simple.function=FALSE)
+  control_GenSA = c(maxit=10,max.time=120, verbose=TRUE, simple.function=FALSE)
             #extra param: maxit=1000, max.time=60, 
   control_nlminb = list(eval.max = 1000,iter.max = 200, trace = trace)
   
@@ -131,13 +131,13 @@ BoundsCreator= function(n=1, model = "heston_ab", sigma_param){
   eps = 1e-5
   
   min_mu = -3
-  max_mu = 3
-  min_k = 0
+  max_mu = 10
+  min_k = 0.00001
   max_k = 10
   min_eta = 1e-5
-  max_eta = 2
+  max_eta = 5
   min_theta = 1e-5
-  max_theta = 2
+  max_theta = 5
   min_corr = -1
   max_corr = 1
   
@@ -158,7 +158,7 @@ BoundsCreator= function(n=1, model = "heston_ab", sigma_param){
     up = c(max_mu,max_k,max_eta,max_theta,max_corr)
     
     if (sigma_param){
-      low= c(low,min_sigma)
+      low= c(low, min_sigma)
       up = c(up, max_sigma)
     }
   }
