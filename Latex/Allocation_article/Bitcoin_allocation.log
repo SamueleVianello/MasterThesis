@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.5.12)  24 OCT 2018 19:51
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.5.12)  29 OCT 2018 19:06
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -272,31 +272,33 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 {/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-<frontier_markowitz_all.pdf, id=11, 721.69624pt x 577.15625pt>
-File: frontier_markowitz_all.pdf Graphic file (type pdf)
+<frontier_markowitz_all_percentage.pdf, id=11, 504.88625pt x 504.88625pt>
+File: frontier_markowitz_all_percentage.pdf Graphic file (type pdf)
 
-<use frontier_markowitz_all.pdf>
-Package pdftex.def Info: frontier_markowitz_all.pdf used on input line 175.
-(pdftex.def)             Requested size: 390.0pt x 311.8887pt.
+<use frontier_markowitz_all_percentage.pdf>
+Package pdftex.def Info: frontier_markowitz_all_percentage.pdf used on input li
+ne 175.
+(pdftex.def)             Requested size: 390.0pt x 390.00392pt.
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<allocation_markowitz_btc.pdf, id=12, 361.35pt x 361.35pt>
-File: allocation_markowitz_btc.pdf Graphic file (type pdf)
+<allocation_markowitz_btc_percentage.pdf, id=12, 361.35pt x 361.35pt>
+File: allocation_markowitz_btc_percentage.pdf Graphic file (type pdf)
 
-<use allocation_markowitz_btc.pdf>
-Package pdftex.def Info: allocation_markowitz_btc.pdf used on input line 180.
+<use allocation_markowitz_btc_percentage.pdf>
+Package pdftex.def Info: allocation_markowitz_btc_percentage.pdf used on input 
+line 180.
 (pdftex.def)             Requested size: 390.0pt x 390.00407pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[2] [3 <./frontier_markowitz_all.pdf>] [4 <./allocation_markowitz_btc.pdf>]
+[2] [3 <./frontier_markowitz_all_percentage.pdf>] [4 <./allocation_markowitz_bt
+c_percentage.pdf>]
 LaTeX Font Info:    Try loading font information for OMS+cmr on input line 223.
 
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/base/omscmr.fd
+ (/usr/local/texlive/2015/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
@@ -314,7 +316,7 @@ LaTeX Warning: There were multiply-defined labels.
  ) 
 Here is how much of TeX's memory you used:
  2994 strings out of 493089
- 38837 string characters out of 6134842
+ 38947 string characters out of 6134842
  105561 words of memory out of 5000000
  6421 multiletter control sequences out of 15000+600000
  10895 words of font info for 40 fonts, out of 8000000 for 9000
@@ -334,10 +336,10 @@ ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texliv
 e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive
 /2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/texlive/
 2015/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on Bitcoin_allocation.pdf (7 pages, 165342 bytes).
+Output written on Bitcoin_allocation.pdf (7 pages, 167884 bytes).
 PDF statistics:
- 95 PDF objects out of 1000 (max. 8388607)
- 68 compressed objects within 1 object stream
+ 97 PDF objects out of 1000 (max. 8388607)
+ 69 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  11 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -2,11 +2,11 @@ This is BibTeX, Version 0.99d (TeX Live 2015)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: Bitcoin_allocation.aux
 The style file: abbrv.bst
-Database file #1: bitcoin_allocation_bibliography.bib.bib
+Database file #1: bitcoin_allocation_bibliography.bib
 Warning--empty year in MARKOWITZ52
 You've used 1 entry,
             2118 wiz_defined-function locations,
-            504 strings with 3845 characters,
+            504 strings with 3841 characters,
 and the built_in function-call counts, 290 in all, are:
 = -- 26
 > -- 7
