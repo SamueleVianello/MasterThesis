@@ -3,14 +3,15 @@
 ###############################################################
 
 # Simple wrapper for frontier
-EfficientFrontier=function(r,S, no_short_sales=NA, N=100,full=FALSE,plot=FALSE, max_r=NA){
+EfficientFrontier=function(r,S, no_short_sales=NA, N=100,full=FALSE,plot=FALSE,min_r=NA, max_r=NA){
   
   if (is.na(no_short_sales[1])){
-    return(EfficientFrontier_unconstr(r=r,S=S,full=full,plot=plot, N=N, max_r = max_r))
+    return(EfficientFrontier_unconstr(r=r,S=S,full=full,plot=plot, N=N, max_r = max_r, min_r=min_r))
 
   }
   else{
-    return(EfficientFrontier_constr(r=r,S=S,full=full,plot=plot, N=N, no_short_sales = no_short_sales))
+    return(EfficientFrontier_constr(r=r,S=S,full=full,plot=plot, N=N, no_short_sales = no_short_sales,
+                                    min_r=min_r, max_r = max_r))
   }
   
 }
@@ -133,7 +134,7 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
 
 
 
-EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA){
+EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA, min_r=NA){
   # INPUT
   # r: expected returns of the assets
   # S: covariance matrix of the asset returns
@@ -142,6 +143,9 @@ EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA
   # N: how many expected returns to take into consideration to plot frontier
   if (is.na(max_r)){
     max_r = max(r)
+  }
+  if (is.na(min_r)){
+    min_r = min(r)
   }
 
   invS = solve(S)
@@ -153,7 +157,7 @@ EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA
   d = drop(a*c - b^2)
   
   
-  yy= seq(from = -0.1, to = max_r,length.out = N+1)
+  yy= seq(from = min_r, to = max_r,length.out = N+1)
   xx = sqrt( (a*yy^2 - 2*b*yy + c)/d)
 
   if (!full){
@@ -179,7 +183,7 @@ EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA
 
 
 
-EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_sales, max_r=NA){
+EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_sales, max_r=NA, min_r =NA){
   # INPUT
   # r: expected returns of the assets
   # S: covariance matrix of the asset returns
@@ -192,6 +196,10 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   if (is.na(max_r)){
     max_r = max(r)
   }
+  if (is.na(min_r)){
+    min_r = min(r)
+  }
+  
   # number of assets
   n= length(r)
 
@@ -217,9 +225,8 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
     b = rbind(b,0)
   }
 
-
-  # yy= set of returns
-  # xx =set of corresponding volatility
+  # yy = set of returns
+  # xx = set of corresponding volatility
   yy= seq(from = min(r), to = max_r,length.out = N+1)
   yy[1] = yy[1]+ 1e-5
   
@@ -228,8 +235,10 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   
   xx = rep(0,length(yy))
   for (i in 1:(N+1)) {
+    print(i)
     #print(yy[i])
     b[1] = yy[i]
+    print(b)
     sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
     xx[i] = sqrt(sol$value)
   }

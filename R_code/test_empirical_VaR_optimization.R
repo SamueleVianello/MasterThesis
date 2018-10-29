@@ -12,12 +12,12 @@ asset_names = colnames(my_returns[,2*(1:14)])
 
 
 
-
-# rendimenti percentuali:
+#*************************************************
+# Percentage returns
+#+++++++++++++++++++++++++++++++++++++++++++++++++
 percentage_returns = exp(my_returns[,2*(1:14)])
 
 hist(percentage_returns$sp500, freq = FALSE, main="Percentage daily S&P500 return")
-
 
 # ANNUAL percentage simulated return matrix
 
@@ -53,6 +53,50 @@ print(paste("percentage VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% 
 
 
 
+#*************************************************
+#               log-returns
+#+++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+hist(my_returns$sp500, freq = FALSE, main="Daily S&P500 log-return", breaks = 50)
+
+# ANNUAL simulated log-return matrix
+
+N_assets = length(asset_names)
+N_sim= 1000 # takes almost 45 mins for 10000, 5 min for 1000
+
+sim_mat_log = matrix(rep(0,N_sim*N_assets), nrow = N_sim)
+x=rep(1,N_assets)
+
+t_beg = Sys.time()
+for(k in 1:N_sim){
+  x = x=rep(1,N_assets)
+  samples = sample(N_samples,255, replace = TRUE)
+  for( i in 1:255){
+    x = x+ my_returns[samples[i],2*(1:N_assets)]
+  }
+  sim_mat_log[k,]=t(x)
+}
+t_end = Sys.time()
+
+t_end-t_beg
+
+colnames(sim_mat_log)=asset_names
+
+w= rep(1/N_assets, N_assets)
+annual_returns = sim_mat_log %*% w
+
+hist(log(annual_returns), breaks = 80, main = "Naif allocation annual log-return")
+abline(v = quantile(log(annual_returns),probs = 0.05), col = 'blue')
+
+VaR = quantile(1-annual_returns,probs = 1-c(0.01,0.05,0.1))
+print(paste("VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% level is",VaR))
+
+
+
+
+
+
 #################################################################
 ################### SIMULATING FRONTIER #########################
 #################################################################
@@ -60,7 +104,9 @@ print(paste("percentage VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% 
 # Pretty time consuming, a single optimization using 10 repetitions take 2 mins (10000 scenarios)
 # So use low number of returns for frontier
 
-returns= seq(1.05,1.4, by=0.05)
+# returns= seq(1.05,1.4, by=0.05) # percentage
+
+returns = seq(0.05,0.4, by=0.05)
 
 
 
@@ -112,7 +158,7 @@ CVaRs = rep(0,length(returns))
 resulting_returns_cvar = rep(0,length(returns)) # just as a check
 for (i in 1:length(returns)){
   print(returns[i])
-  sol_func = OptimalAllocationVaR(simulated_returns = sim_mat, alpha = 0.05, target_return = returns[i], N_rep = 10, CVaR = TRUE)
+  sol_func = OptimalAllocationVaR(simulated_returns = rexxxx, alpha = 0.05, target_return = returns[i]+1, N_rep = 10, CVaR = TRUE)
   allocations_cvar[i,]=sol_func$allocation
   CVaRs[i]=sol_func$objective
   resulting_returns_cvar[i]= sol_func$expected_return
@@ -120,7 +166,7 @@ for (i in 1:length(returns)){
 t_end = Sys.time()
 t_end-t_beg
 
-plot(CVaRs, (resulting_returns_cvar)-1, type='l', col="green", xlab = "CVaR 5%", ylab = "Annual return in %")
+plot(CVaRs, (resulting_returns_cvar), type='l', col="green", xlab = "CVaR 5%", ylab = "Annual return in %")
 title("Efficient CVaR Frontier (bootstrap) including BTC")
 grid()
 

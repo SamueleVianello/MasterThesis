@@ -68,27 +68,34 @@ lines(res$sigma,res$expected_return, type = 'l', col='red')
 ##########################################
 library(pracma)
 
+
 attach(my_returns)
 source("MarkowitzMeanVariancePortfolio.R")
 
+# Number of samples to consider from latest {max is dim(my_returns)[1]}
+# N_samples = 2*255
+N_samples = dim(my_returns)[1]
+
 # From sample
-expected_return_sample = colMeans(my_returns[,2*(1:14)]) * 255
-SS = cov(my_returns[,2*(1:14)]) * 255
+expected_return_sample = colMeans(my_returns[1:N_samples,2*(1:14)]) * 255
+SS = cov(my_returns[1:N_samples,2*(1:14)]) * 255
+
+# returns as percentage:
+expected_return_sample = colMeans(exp(my_returns[1:N_samples,2*(1:14)]))^255
 
 # yearly from model
 # expected_return =  colSums(results$full_mu)/6 + colSums(results$full_theta)/6 * colSums(results$full_lambda)/6
 # SS = results$covariance
 
 # unconstrained = short sales are allowed for every asset
-res1 = EfficientFrontier(expected_return_sample,SS, max_r = 0.4)
-res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14], max_r = 0.4)
+res1 = EfficientFrontier(expected_return_sample,SS, max_r = 1.5)
+res2 = EfficientFrontier(expected_return_sample[2:14],SS[2:14,2:14], max_r = 1.5)
 
 
-#x11()
+x11()
 
-
-windows(width = 10,height = 8)
-plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(-0.1, 0.4), xlab = "Volatility", ylab = "Log-Returns")
+#windows(width = 10,height = 8)
+plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = c(1.00, 1.5), xlab = "Volatility", ylab = "Returns")
 lines(res2$sigma,res2$expected_return, col = 'red')
 points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
 text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:14)]),pos = 3)
@@ -97,17 +104,18 @@ grid()
 
 
 # constrained = no short sales for given assets
-res_btc = EfficientFrontier(r=expected_return_sample, S=SS, full = FALSE, N=200, no_short_sales = 1:14)
+res_btc = EfficientFrontier(r=expected_return_sample, S=SS, full = FALSE, N=200, no_short_sales = 1:14, max_r = 1.5)
 res_no_btc = EfficientFrontier(r= expected_return_sample[2:14], S=SS[2:14,2:14],full = FALSE, N =200, no_short_sales = 1:13)
 
 lines(res_btc$sigma, res_btc$expected_return, col= 'green')
 lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
 
 title(main = "Efficient Markowitz Mean Variance Frontier")
-legend("bottomleft", legend = c("btc", "no btc", "btc no short sale","no btc no short sale"),
+legend("topleft", legend = c("btc", "NO btc", "btc, NO short sale","NO btc, NO short sale"),
        col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75)
 
 
+dev.copy2pdf(file = "chiappedacciaio.pdf")
 
 # # target return
 # target = 0.2
@@ -117,8 +125,12 @@ legend("bottomleft", legend = c("btc", "no btc", "btc no short sale","no btc no 
 # 
 # cbind(w, c(0,w_no_btc))
 
+# percentage
+targets = seq(1.05,1.2, by = 0.025)
 
-targets = seq(0.05,0.25, by = 0.01)
+# # log-returns
+# targets = seq(0.05,0.25, by=0.01)
+
 l=length(targets)
 alloc_btc = zeros(14,l)
 rownames(alloc_btc)=colnames(my_returns[,2*(1:14)])
@@ -131,7 +143,7 @@ for(i in 1:l){
 }
 
 alloc_btc
-
+alloc_no_btc
 
 # ggplot2 library
 library(ggplot2)
@@ -179,6 +191,6 @@ colorRampPalette(brewer.pal(9, "Spectral"))(14)
 data <- data.frame(Asset,Return,Values)
 ggplot(data, aes(x=Return, y=Values, fill=Asset)) + 
   geom_area(alpha=1 , size=1, colour="black") +
-  ggtitle("Markowitz Optimal Allocation Without Shortsellling")+
+  ggtitle("Markowitz Optimal Allocation Without Bitcoin")+
   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(14) )
 
