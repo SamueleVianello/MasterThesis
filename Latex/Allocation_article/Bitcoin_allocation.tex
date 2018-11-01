@@ -193,7 +193,7 @@ We gave two implementations of the empirical CVaR. The first is obtained through
 This approach, though, doesn't take into consideration the actual evolution of the historical returns, but simply draws from a number of previous realizations.
 To add some sense of ``history'' we implemented a second slightly different approach.
 
-The second implementation considers the daily returns of the last 5 years and uses them as the realization of $N= 255 * 5 = 1275$ scenarios. From those we compute the daily portfolio returns as before, multiplying by the portfolio weights.
+The second implementation considers the daily returns of the latest 5 years and uses them as the realization of $N= 255 * 5 = 1275$ scenarios. From those we compute the daily portfolio returns as before, multiplying by the portfolio weights.
 
 In both cases, we considered the higher $95\%$ set of losses and took the mean to get the empirical CVaR$^{95\%}$.
 
