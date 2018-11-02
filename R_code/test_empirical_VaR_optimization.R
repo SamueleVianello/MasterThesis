@@ -22,7 +22,7 @@ hist(percentage_returns$sp500, freq = FALSE, main="Percentage daily S&P500 retur
 # ANNUAL percentage simulated return matrix
 
 N_assets = length(asset_names)
-N_sim= 10000 # takes almost 45 mins for 10000, 5 min for 1000
+N_sim= 1000 # takes almost 45 mins for 10000, 5 mins for 1000
 
 sim_mat = matrix(rep(0,N_sim*N_assets), nrow = N_sim)
 x=rep(1,N_assets)
@@ -43,10 +43,11 @@ t_end-t_beg
 colnames(sim_mat)=asset_names
 
 w= rep(1/N_assets, N_assets)
+
 annual_returns = sim_mat %*% w
 
-hist(log(annual_returns), breaks = 80, main = "Naif allocation annual log-return")
-abline(v = quantile(log(annual_returns),probs = 0.05), col = 'blue')
+hist(-log(annual_returns), breaks = 200, main = "Annual Loss Distribution (log-returns)",xlim = c(-3,0.5))
+abline(v = -quantile(log(annual_returns),probs = 0.05), col = 'blue')
 
 VaR = quantile(1-annual_returns,probs = 1-c(0.01,0.05,0.1))
 print(paste("percentage VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% level is",VaR))
@@ -104,9 +105,9 @@ print(paste("VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% level is",V
 # Pretty time consuming, a single optimization using 10 repetitions take 2 mins (10000 scenarios)
 # So use low number of returns for frontier
 
-# returns= seq(1.05,1.4, by=0.05) # percentage
+returns= seq(1.05,1.4, by=0.05) # percentage
 
-returns = seq(0.05,0.4, by=0.05)
+# returns = seq(0.05,0.4, by=0.05) # log-returns
 
 
 
@@ -158,7 +159,7 @@ CVaRs = rep(0,length(returns))
 resulting_returns_cvar = rep(0,length(returns)) # just as a check
 for (i in 1:length(returns)){
   print(returns[i])
-  sol_func = OptimalAllocationVaR(simulated_returns = rexxxx, alpha = 0.05, target_return = returns[i]+1, N_rep = 10, CVaR = TRUE)
+  sol_func = OptimalAllocationVaR(simulated_returns = rexxxx, alpha = 0.05, target_return = returns[i], N_rep = 5, CVaR = TRUE)
   allocations_cvar[i,]=sol_func$allocation
   CVaRs[i]=sol_func$objective
   resulting_returns_cvar[i]= sol_func$expected_return
@@ -182,7 +183,7 @@ CVaRs_no_btc = rep(0,length(returns_no_btc))
 resulting_returns_cvar_no_btc = rep(0,length(returns_no_btc)) # just as a check
 for (i in 1:length(returns_no_btc)){
   print(returns_no_btc[i])
-  sol_func = OptimalAllocationVaR(simulated_returns = sim_mat[,2:N_assets], alpha = 0.05, target_return = returns_no_btc[i], N_rep = 10, CVaR = TRUE)
+  sol_func = OptimalAllocationVaR(simulated_returns = sim_mat[,2:N_assets], alpha = 0.05, target_return = returns_no_btc[i], N_rep = 5, CVaR = TRUE)
   allocations_cvar_no_btc[i,]=sol_func$allocation
   CVaRs_no_btc[i]=sol_func$objective
   resulting_returns_cvar_no_btc[i]= sol_func$expected_return

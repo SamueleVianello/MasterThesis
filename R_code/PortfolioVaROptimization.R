@@ -24,7 +24,7 @@ OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=1
     solution$obj[i]=res$value
     solution$params[i,]=matrix(res$par,ncol = N_assets)
     solution$expected_ret[i]=(sum(res$par*expected_asset_return))
-    print(paste("Target return:", target_return, "Iteration:", i))
+    print(paste("Target return:", target_return, "Iteration:", i, "Objective:", res$value))
   }
   # print(solution)
   idx = which.min(solution$obj)
