@@ -15,34 +15,45 @@ library(pracma)
 #########################################################
 
 
-pdfHeston = function(x,x_0, dt, sigma_0, r, k, eta, theta, rho, lower=0, upper=50){
+pdfHeston = function(x,x_0, dt, sigma_0, r, k, eta, theta, rho, lower=0, upper=500, unconditional=F){
   l= length(x)
   if(length(dt)!=l) stop("Time intervals and returns vectors should have same length.")
   
   y= rep(0,l)
-  for(i in 1:l){
-    # y[i] = integrate(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = theta,
-    #                  lower = lower, upper=upper, abs.tol = 1e-5)$value/pi
-    
-    # y[i] = gauss_kronrod(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-    #                  a =lower, b=upper)$value/pi ####### WRONG RESULTS!
-    
-    # y[i] = quadinf(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = eta,
-    #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
-    
-    y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
-                         a =lower, b=upper, n=2**8)/pi
-    
-    
-    # y[i]= fourier_cosine(cf = my_cfHeston, x = x[i], a=-10,b=10, N=100,
-    #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
-    
-    # y[i]= my_trap_inversion(cf = my_cfHeston, x = x[i], N_nodes = 100, M_upper = 10,
-    #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
-    
-    # print(y[i])
-    if(is.nan(y[i])|| y[i]<1e-8 ){
-      y[i]=1e-8
+  if (unconditional){
+    for(i in 1:l){
+      y[i] = clenshaw_curtis(f = integrand_uncond_H, x = x[i], tau = dt[i],r = r, vT = eta, rho = rho, k = k, sigma = theta,
+                             a =lower, b=upper*5, n=2**8)/pi
+      if(is.nan(y[i])|| y[i]<1e-8 ){
+        y[i]=1e-8
+      }
+    }
+  }
+  else{
+      for(i in 1:l){
+        # y[i] = integrate(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = theta,
+        #                  lower = lower, upper=upper, abs.tol = 1e-5)$value/pi
+        
+        # y[i] = gauss_kronrod(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+        #                  a =lower, b=upper)$value/pi ####### WRONG RESULTS!
+        
+        # y[i] = quadinf(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r,v0 = sigma_0^2,vT = eta, rho = rho,k = k,sigma = eta,
+        #                  xa = lower, xb=upper, tol = 1e-5)$Q/pi ###### TOO LONG
+        
+        y[i] = clenshaw_curtis(f = integrand_H, x = x[i], x_0 = x_0, tau = dt[i],r = r, v0 = sigma_0^2, vT = eta, rho = rho, k = k, sigma = theta,
+                             a =lower, b=upper, n=2**8)/pi
+        
+        
+        # y[i]= fourier_cosine(cf = my_cfHeston, x = x[i], a=-10,b=10, N=100,
+        #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+        
+        # y[i]= my_trap_inversion(cf = my_cfHeston, x = x[i], N_nodes = 100, M_upper = 10,
+        #                x_0=x_0, tau=dt[i], r=r, v0=sigma_0^2, vT=eta, rho=rho, k=k, sigma=theta)
+        
+        # print(y[i])
+        if(is.nan(y[i])|| y[i]<1e-8 ){
+          y[i]=1e-8
+        }
     }
   }
   
@@ -86,8 +97,46 @@ integrand_H = function(u, x, x_0, tau ,r,v0,vT,rho,k,sigma){
   return(Re(cf*expon))
 }
 
+
+# unconditional characteristic function
+uncond_cfHeston = function(om, tau, r, vT, rho, k, sigma){
+  
+  if (sigma < 1e-08) 
+    sigma <- 1e-08
+  
+  om[which(om==0)]= 1e-8
+  d <- sqrt((rho * sigma * (0+1i) * om - k)^2 + sigma^2 * ((0+1i) *om + om^2))
+  g <- (k - rho * sigma * (0+1i) * om - d)/(k - rho * sigma * (0+1i) * om + d)
+  
+  # to avoid nan due to 0/0
+  g[which((k - rho * sigma * (0+1i) * om - d)==0)]=0
+  
+  A <- 1i*om *r * tau + vT * k/(sigma^2) * ((k - rho * sigma * (0+1i) * om - d) * tau - 2 * log((1 - g * exp(-d * tau))/(1 - g)))
+  
+
+  
+  B <- (k - rho * sigma * (0+1i) * om - d)/sigma^2 * (1 - exp(-d * tau))/(1 - g * exp(-d * tau))
+  
+  w = 2*k/sigma^2
+  nu = 2*k*vT/sigma^2
+  
+  res = exp(A)*(w/(w-B))^nu
+  return(res)
+}
+
+integrand_uncond_H = function(u, x, tau ,r,vT,rho,k,sigma){
+  cf= uncond_cfHeston(om = u,tau = tau,r = r,  vT = vT, rho = rho, k = k, sigma = sigma)
+  expon = exp(-1i*x*u)
+  # print(paste("cf= ",cf, ", expon= ",expon))
+  # print(paste("HI!",Re(cf*expon)))
+  return(Re(cf*expon))
+}
+
+
+  
+  
 # Neg logLikelihood function
-negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE){
+negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE, unconditional=FALSE){
   
   r = params[1]
   k =ifelse(model=="heston", params[2], params[3])
@@ -123,7 +172,7 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE
       }
     else{
       pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                      r = r, k=k, eta=eta, theta = theta, rho = rho)
+                      r = r, k=k, eta=eta, theta = theta, rho = rho, unconditional = unconditional)
       
       to_sum = log(pdfs)
       # print(cbind(pdfs,to_sum))
@@ -134,7 +183,7 @@ negloglikHeston = function(params, x, x_0, sigma_0, dt, model, check_feller=TRUE
   # dont check feller
   else{
     pdfs= pdfHeston(x=x, dt=dt, x_0=x_0, sigma_0 = sigma_0,
-                    r = r, k=k, eta=eta, theta = theta, rho = rho)
+                    r = r, k=k, eta=eta, theta = theta, rho = rho, unconditional = unconditional)
     
     to_sum = log(pdfs)
     # print(cbind(pdfs,to_sum))

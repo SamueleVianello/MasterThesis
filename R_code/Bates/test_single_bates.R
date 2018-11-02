@@ -58,23 +58,24 @@ negloglikBates(paramB, x=qx, x_0=log(S_0), sigma_0 = sigma_0, dt =qdt, model="ba
 ## Test to see how eta and theta influence the distribution
 #################################################################
 n=10
-theta_mix = seq(from=0.001, to=10, length.out = n)
+theta_mix = seq(from=-1, to=1, length.out = n)
 
 
 xx = seq(from=-10, to = 10, by =10/100)
 all_dt = rep(t, length(xx))
 
-plot(0,0, ylim = c(0,1.3),xlim = c(-5,5))
+plot(0,0, ylim = c(0,0.4),xlim = c(-5,5))
 grid()
 for (i in 1:n){
   th =(theta_mix)[i]
   # print(th)
-  yyH=pdfHeston(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = th,rho = rho)
-  yyB=pdfBates(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta,theta = th,rho = rho,
-               lambda =lambda, mu_j = mu_j, sigma_j = sigma_j)
+  yyH=pdfHeston(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta, theta = theta,rho = th,unconditional = T)
+  # yyB=pdfBates(x=xx,x_0 = log(S_0),dt = all_dt,sigma_0 = sigma_0,r = r, k = k,eta = eta,theta = th,rho = rho,
+  #              lambda =lambda, mu_j = mu_j, sigma_j = sigma_j)
   
+  print(paste("skewness =", 3/2*th*theta*sqrt(all_dt[1])/sqrt(eta)))
   lines(xx,yyH)
-  lines(xx,yyB,col='blue')
+  #lines(xx,yyB,col='blue')
 }
 
 legend("topright", legend = c("Heston", "Bates"),col=c('black', 'blue'),
@@ -521,6 +522,9 @@ plot(time_intervals[1:dn], cum_returns_sp500[1:dn], type='l')
 
 
 
+
+
+
 # Any given asset
 
 asset = sp500
@@ -531,148 +535,54 @@ time_intervals = rev(as.double((as.Date((asset_date)) - as.Date(asset_date[lengt
 
 
 N = length(cum_returns_asset)
-dn=255*6
+dn=N
 
-# x_0 = log(my_data$EUROSTOXX50[N])
+
 x_0 = 0
-sigma_0 = sd( rev(asset)[1:dn])*sqrt(255)
+sigma_0 = sd( asset[1:dn])*sqrt(255)
 
-# initial_mu = mean(cum_returns_eur[1:dn]/time_intervals[1:dn])
-initial_mu = mean(rev(asset)[1:dn])*255
-initial =  c(initial_mu, 0.4, sigma_0^2, 0.2, -0.3, sigma_0)
+
+initial =  c(mean(asset[1:dn])*255, 0.9, sigma_0^2, 0.01, -0.3, sigma_0)
+
+
+initial[2]*initial[3]*2 > initial[4]^2
 
 
 plot(time_intervals[1:dn], cum_returns_asset[1:dn], type='l')
+set.seed(1234)
+
 t1=Sys.time()
-params_1 = CalibrateModel(x = cum_returns_asset[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = F, sigma_is_param = TRUE)
+params_1 = CalibrateModel(x = asset[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = rep(1/255,dn),
+                          trace = 1, model = "heston", deoptim = F, initial = initial, feller = T, sigma_is_param = F, unconditional = T)
 t2=Sys.time()
 t2-t1
 
 
 
+params_1$k*params_1$eta*2 > params_1$theta^2
+
+xx = seq(-.2,.2,length.out = 2000)
+dt = rep(1/255,length(xx))
+
+yy = pdfHeston(xx,x_0 = 0, dt = dt, sigma_0 = 100,r = params_1$r, k=params_1$k, eta = params_1$eta, theta = params_1$theta, rho = params_1$rho, unconditional = T)
+
+hist(asset[1:dn],breaks = 100, freq = FALSE)
+lines(xx,yy, type ='l', col='black')
 
 
+# # add lines
+# par = c(0.0672352, 0.675262, 0.0187067, 0.158945, -0.14)
+# xx = seq(-0.4,0.4,length.out = 2000)
+# dt = rep(1/255,length(xx))
+# yy = pdfHeston(xx,x_0 = 0, dt = dt, sigma_0 = 100,r = par[1], k=par[2],eta = par[3],theta = par[4], rho = par[5], unconditional = T)
+# hist(asset[1:dn],breaks = 100, freq = FALSE)
+# lines(xx,yy, type ='l', col='blue')
+# grid()
 
 
+cdf_empiric = cumsum(yy*(xx[2]-xx[1]))
 
-
-
-
-
-################################################
-for(i in 1:100){
-  if(i<=50) tag=TRUE
-  else {tag = FALSE
-      initial=runif(5)}
-  params = CalibrateModel(x = cum_returns_btc[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1,model = "heston", deoptim = tag, initial = initial)
-  full_params[i,1]=params$r
-  full_params[i,2]=params$k
-  full_params[i,3]=params$eta
-  full_params[i,4]=params$theta
-  full_params[i,5]=params$rho
-  full_params[i,6]=params$objective_function
-}
-
-colnames(full_params)=c('r','k','eta','theta','rho','loglik')
-
-
-full_params_complete = matrix(rep(0,6*100), nrow = 100)
-
-for(i in 1:100){
-  if(i<=50) tag=TRUE
-  else {tag = FALSE
-  initial=runif(5)}
-  params = CalibrateModel(x = cum_returns_btc, x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals,
-                          trace = 1,model = "heston", deoptim = tag, initial = initial)
-  full_params_complete[i,1]=params$r
-  full_params_complete[i,2]=params$k
-  full_params_complete[i,3]=params$eta
-  full_params_complete[i,4]=params$theta
-  full_params_complete[i,5]=params$rho
-  full_params_complete[i,6]=params$objective_function
-}
-colnames(full_params_complete)=c('r','k','eta','theta','rho','loglik')
-
-
-
-
-# new res1 0.07313141 4.84737910 0.00001000 0.98992618 1.00000000   823.3702
-# new res2  5    5    2    1    1  911.002
-# new res3 0.3477615 0.9736082 0.0000100 1.0000000 1.0000000    854.2386
-
-plot(time_intervals, cum_returns_btc, type='l')
-
-
-################## eurostoxx #########################
-cum_returns_eurostoxx = cumsum(rev(eurostoxx))
-time_intervals = rev(as.double((as.Date((btc_date)) - as.Date(btc_date[length(btc_date)]) + 1)/365 ))
-
-full_params_eurostoxx = matrix(rep(0,6*100), nrow = 100)
-
-# params = CalibrateModel(x = cum_returns_btc[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-#                         trace = 1,model = "heston", deoptim = TRUE, initial = initial)
-
-
-for(i in 51:100){
-  if(i<=50) tag=TRUE
-  else {
-    tag = FALSE
-    initial=c(runif(4),runif(1,min=-1))
-  }
-  params = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                          trace = 1,model = "heston", deoptim = tag, initial = initial)
-  full_params_eurostoxx[i,1]=params$r
-  full_params_eurostoxx[i,2]=params$k
-  full_params_eurostoxx[i,3]=params$eta
-  full_params_eurostoxx[i,4]=params$theta
-  full_params_eurostoxx[i,5]=params$rho
-  full_params_eurostoxx[i,6]=params$objective_function
-}
-
-colnames(full_params_eurostoxx)=c('r','k','eta','theta','rho','loglik')
-
-
-full_params_complete_eurostoxx = matrix(rep(0,6*100), nrow = 100)
-
-
-
-params = CalibrateModel(x = cum_returns_eurostoxx[1:dn], x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals[1:dn],
-                        trace = 1,model = "heston", deoptim = TRUE, initial = initial)
-
-for(i in 1:100){
-  if(i<=50) tag=TRUE
-  else {tag = FALSE
-  initial=runif(5)}
-  params = CalibrateModel(x = cum_returns_eurostoxx, x_0 = x_0, sigma_0 = sigma_0, dt = time_intervals,
-                          trace = 1,model = "heston", deoptim = tag, initial = initial)
-  full_params_complete_eurostoxx[i,1]=params$r
-  full_params_complete_eurostoxx[i,2]=params$k
-  full_params_complete_eurostoxx[i,3]=params$eta
-  full_params_complete_eurostoxx[i,4]=params$theta
-  full_params_complete_eurostoxx[i,5]=params$rho
-  full_params_complete_eurostoxx[i,6]=params$objective_function
-}
-
-colnames(full_params_complete_eurostoxx)=c('r','k','eta','theta','rho','loglik')
-
-plot(time_intervals[1:dn], cum_returns_eurostoxx[1:dn], type='l')
-
-
-
-
-########### extra 
-# params_sa= GenSA(fn = negloglikHeston, lower = bounds$lower, upper = bounds$upper, par = initial,
-#                  control = c(max.time=180,verbose=TRUE,simple.function=TRUE),
-#                  x = test_x, x_0 = test_x_0, sigma_0 = test_sigma_0, dt = test_dt)
-# params_sa$par
-# 
-# out_nlminb = nlminb(start = initial, objective = negloglikHeston, lower = bounds$lower, upper = bounds$upper,
-#                     x=test_x, x_0 = test_x_0, sigma_0=test_sigma_0, dt = test_dt, model = "heston",
-#                     control=list(eval.max = 1000,iter.max = 100, trace = 1))
-# 
-# out_nlminb$par
-# par_2 = ParametersReconstruction(out_nlminb$par, model = "heston_ab")
-
-
+samples = interp1(cdf_empiric, xx, runif(100000, min = 0.0001, max=0.9999))
+hist(samples,freq=F, breaks = 80)
+lines(xx,yy, type ='l', col='blue')
+skewness(samples)
