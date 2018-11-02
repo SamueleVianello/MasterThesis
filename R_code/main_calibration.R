@@ -6,9 +6,9 @@ library(statmod)
 library(NMOF)
 
 
-library(readxl)
-library(xlsx)
 
+library(xlsx)
+library(openxlsx)
 
 
 library(binaryLogic)
@@ -17,24 +17,27 @@ source('MultivariateMertonModel.R')
 source('CalibrationMVMerton.R')
 
 
-# CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
-
-# my_data<-read.xlsx(file="XBT Correlations.xlsm",sheetName = "STATIC" , header=TRUE)
+# # CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
+# 
+# my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
 # 
 # 
 # 
 # leng = dim(my_data)[1]
-# my_returns = data.frame(btc_date = my_data$BTC_DATE[1:(leng-1)])
+# my_returns = data.frame(btc_date = my_data$BITCOIN_DATE[1:(leng-1)])
 # my_returns$btc = log(my_data$BITCOIN[1:(leng-1)]/my_data$BITCOIN[2:leng])
 # 
 # my_returns$bric_date = my_data$MSCI.BRIC._DATE[1:(leng-1)]
 # my_returns$bric = log(my_data$MSCI.BRIC.[1:(leng-1)]/my_data$MSCI.BRIC.[2:leng])
 # 
-# my_returns$sp500_date = my_data$S.P500_DATE[1:(leng-1)]
-# my_returns$sp500 = log(my_data$S.P500[1:(leng-1)]/my_data$S.P500[2:leng])
+# my_returns$sp500_date = my_data$"S&P500_DATE"[1:(leng-1)]
+# my_returns$sp500 = log(my_data$"S&P500"[1:(leng-1)]/my_data$"S&P500"[2:leng])
 # 
 # my_returns$eurostoxx_date = my_data$EUROSTOXX50_DATE[1:(leng-1)]
 # my_returns$eurostoxx = log(my_data$EUROSTOXX50[1:(leng-1)]/my_data$EUROSTOXX50[2:leng])
+# 
+# my_returns$nasdaq_date = my_data$NASDAQ_DATE[1:(leng-1)]
+# my_returns$nasdaq = log(my_data$NASDAQ[1:(leng-1)]/my_data$NASDAQ[2:leng])
 # 
 # my_returns$gold_date = my_data$GOLD_DATE[1:(leng-1)]
 # my_returns$gold = log(my_data$GOLD[1:(leng-1)]/my_data$GOLD[2:leng])
@@ -60,15 +63,22 @@ source('CalibrationMVMerton.R')
 # my_returns$jpy_date = my_data$JPY_DATE[1:(leng-1)]
 # my_returns$jpy = log(my_data$JPY[1:(leng-1)]/my_data$JPY[2:leng])
 # 
-# my_returns$pan_euro_date = my_data[[25]][1:(leng-1)]
-# my_returns$pan_euro = log(my_data$BBG.Barclays.PAN.EURO.Aggregate[1:(leng-1)]/my_data$BBG.Barclays.PAN.EURO.Aggregate[2:leng])
+# my_returns$bond_europe_date = my_data$BOND_EUROPE_DATE[1:(leng-1)]
+# my_returns$bond_europe = log(my_data$BOND_EUROPE[1:(leng-1)]/my_data$BOND_EUROPE[2:leng])
 # 
-# my_returns$pan_us_date = my_data[[27]][1:(leng-1)]
-# my_returns$pan_us = log(my_data$BBG.Barclays.PAN.US.Aggregate[1:(leng-1)]/my_data$BBG.Barclays.PAN.US.Aggregate[2:leng])
+# my_returns$bond_us_date = my_data$BOND_US_DATE[1:(leng-1)]
+# my_returns$bond_us = log(my_data$BOND_US[1:(leng-1)]/my_data$BOND_US[2:leng])
 # 
-#
-#
+# my_returns$bond_eur_date = my_data$BOND_EUR_DATE[1:(leng-1)]
+# my_returns$bond_eur = log(my_data$BOND_EUR[1:(leng-1)]/my_data$BOND_EUR[2:leng])
+# 
+# my_returns$vix_date = my_data$VIX_DATE[1:(leng-1)]
+# my_returns$vix = log(my_data$VIX[1:(leng-1)]/my_data$VIX[2:leng])
+# 
+# 
+# 
 # save(my_returns, file = "returns.Rda")
+# save(my_data, file = "data.Rda")
 
 load("returns.Rda")
 load("data.Rda")
@@ -79,11 +89,11 @@ N=500
 # Plot of first few data
 x11()
 par(mfrow = c(2,3))
-plot(my_data$BTC_DATE[1:N],my_data$BITCOIN[1:N],type='l')
-plot(my_data$S.P500_DATE[1:N],my_data$S.P500[1:N],type = 'l',col='green')
+plot(my_data$BITCOIN_DATE[1:N],my_data$BITCOIN[1:N],type='l')
+plot(my_data$VIX_DATE[1:N],my_data$VIX[1:N],type = 'l',col='green')
 plot(my_data$EUROSTOXX50_DATE[1:N],my_data$EUROSTOXX50[1:N],type = 'l',col='blue')
 plot(my_returns$btc_date[1:N],my_returns$btc[1:N], type='l')
-plot(my_returns$sp500_date[1:N],my_returns$sp500[1:N], type='l',col='green')
+plot(my_returns$vix_date[1:N],my_returns$vix[1:N], type='l',col='green')
 plot(my_returns$eurostoxx_date[1:N],my_returns$eurostoxx[1:N], type='l',col='blue')
 
 graphics.off()
@@ -168,7 +178,7 @@ dt = 1/255
 # correlation
 # calibrated_nlminb$theta
 
-calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],sp500[1:N],bric[1:N],eurostoxx[1:N]), n=4, dt = dt )
+calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bond_eur[1:N],bond_europe[1:N],vix[1:N]), n=4, dt = dt )
 calibrated_params
 
 #cov2cor(calibrated_params$S)
@@ -183,9 +193,10 @@ calibrated_params
 
 # ONLY WORKS IF N_ASSET IS *EVEN*
 #N_assets = dim(my_returns)[2]/2
-N_assets = 14
+N_assets = 16
 N=dim(my_returns)[1]
 
+# couples of assets to use in calibration
 idx_matrix = matrix(seq(from = 1, to = N_assets, by = 1),N_assets%/% 2,2, byrow = TRUE)
 
 final_cov = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
@@ -210,7 +221,7 @@ for (i in 1:(N_assets%/% 2 -1)){
     final_cov[idx,idx]= final_cov[idx,idx] + SS
     # print(final_cov)
     out = capture.output(calibrated)
-    cat(paste("Assets:", idx,sep = " "), out, file = "computation_of_full_corr_matrix.txt",sep="\n", append=TRUE)
+    cat(paste("Assets:", idx,sep = " "), out, file = "computation_of_full_corr_matrix_nasdaq.txt",sep="\n", append=TRUE)
   }
 }
 
@@ -228,7 +239,8 @@ cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix
 end-beg
 
 results = list(covariance = covariance, correlation = correlation)
-save(results, file= "results.Rda")
+
+# save(results, file= "results.Rda")
 #######
 # paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")
 
