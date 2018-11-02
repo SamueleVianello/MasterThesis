@@ -28,10 +28,10 @@ source('CalibrationMVMerton.R')
 # my_returns$btc = log(my_data$BITCOIN[1:(leng-1)]/my_data$BITCOIN[2:leng])
 # 
 # my_returns$bric_date = my_data$MSCI.BRIC._DATE[1:(leng-1)]
-# my_returns$bric = log(my_data$MSCI.BRIC.[1:(leng-1)]/my_data$MSCI.BRIC.[2:leng])
+# my_returns$bric = log(my_data[[4]][1:(leng-1)]/my_data[[4]][2:leng])
 # 
-# my_returns$sp500_date = my_data$"S&P500_DATE"[1:(leng-1)]
-# my_returns$sp500 = log(my_data$"S&P500"[1:(leng-1)]/my_data$"S&P500"[2:leng])
+# my_returns$sp500_date = my_data$"SP500_DATE"[1:(leng-1)]
+# my_returns$sp500 = log(my_data$"SP500"[1:(leng-1)]/my_data$"SP500"[2:leng])
 # 
 # my_returns$eurostoxx_date = my_data$EUROSTOXX50_DATE[1:(leng-1)]
 # my_returns$eurostoxx = log(my_data$EUROSTOXX50[1:(leng-1)]/my_data$EUROSTOXX50[2:leng])
@@ -178,12 +178,17 @@ dt = 1/255
 # correlation
 # calibrated_nlminb$theta
 
-calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bond_eur[1:N],bond_europe[1:N],vix[1:N]), n=4, dt = dt )
+calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bric[1:N],bond_us[1:N],bond_eur[1:N]), n=4, dt = dt )
 calibrated_params
 
 #cov2cor(calibrated_params$S)
+par(mfrow=c(2,2))
+plot(my_data$BITCOIN_DATE, my_data$BITCOIN, type = 'l', main="BITCOIN")
+plot(my_data$MSCI.BRIC._DATE, my_data$MSCI.BRIC, type='l', main= "BRIC")
+plot(my_data$BOND_US_DATE, my_data$BOND_US, type='l', main= "BOND_US")
+plot(my_data$BOND_EUR_DATE, my_data$BOND_EUR, type='l', main= "BOND_EUR")
 
-
+pairs(my_returns[,(1:17)*2])
 
 ###########################################################################
 ######################## Building complete correlaion #####################
