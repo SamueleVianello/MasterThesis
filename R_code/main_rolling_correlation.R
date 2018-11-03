@@ -32,14 +32,14 @@ PermutationTestCorr = function(x,y=0, N=2000){
   return(p)
 } 
 
-
-earliest = min(btc_date)
-latest = max(btc_date)
+dates = as.Date(btc_date, origin="1899-12-30")
+earliest = min(dates)
+latest = max(dates)
 
 w = 36 # rolling window in months
 step = 1 # moving step in months
 
-d = as.Date(mondate(latest)-step)
+d = as.Date(mondate(latest, timeunits = )-step,origin="1899-12-30")
 beg_times = as.Date(mondate(latest)-w)
 end_times = latest
 while( as.Date(mondate(d)-w) > earliest){
@@ -48,7 +48,7 @@ while( as.Date(mondate(d)-w) > earliest){
   d = as.Date(mondate(d)-step)
 }
 
-# rbind(beg_times,end_times)
+rbind(beg_times,end_times)
 
 n_wind = length(beg_times)
 n_assets = (dim(my_returns)[2]%/%2)
@@ -58,7 +58,7 @@ roll_corr = matrix(rep(NA,n_wind*(n_assets-1)),n_wind,n_assets-1)
 roll_pvalue = matrix(rep(NA,n_wind*(n_assets-1)),n_wind,n_assets-1)
 
 for (i in 1:n_wind){
-  idx = which(btc_date >= beg_times[i] & btc_date<=end_times[i])
+  idx = which(dates >= beg_times[i] & dates<=end_times[i])
   print(idx[1:5])
   correlations = cor(btc[idx],my_returns[idx,2*(2:n_assets)])
   roll_corr[i,]=correlations
@@ -82,11 +82,7 @@ end_times_3y = end_times
 beg_times_3y = beg_times
 
 
-###da cancellare
-p_bonf_3y = roll_pvalue_3y*0
-for (i in 1:ncol(p_bonf)) {
-  p_bonf_3y[,i]=p.adjust(roll_pvalue_3y[,i],method = "bonf")
-}
+
 
 #########
 
@@ -112,7 +108,7 @@ roll_corr = matrix(rep(NA,n_wind*(n_assets-1)),n_wind,n_assets-1)
 roll_pvalue = matrix(rep(NA,n_wind*(n_assets-1)),n_wind,n_assets-1)
 
 for (i in 1:n_wind){
-  idx = which(btc_date >= beg_times[i] & btc_date<=end_times[i])
+  idx = which(dates >= beg_times[i] & dates<=end_times[i])
   print(idx[1:5])
   correlations = cor(btc[idx],my_returns[idx,2*(2:n_assets)])
   roll_corr[i,]=correlations
@@ -131,10 +127,10 @@ for (i in 1:n_wind){
 colnames(roll_corr)= colnames(my_returns[2*(2:(n_assets))])
 colnames(roll_pvalue)= colnames(my_returns[2*(2:(n_assets))])
 
-p_bonf_18m = roll_pvalue*0
-for (i in 1:ncol(p_bonf)) {
-  p_bonf_18m[,i]=p.adjust(roll_pvalue[,i],method = "bonf")
-}
+# p_bonf_18m = roll_pvalue*0
+# for (i in 1:ncol(p_bonf)) {
+#   p_bonf_18m[,i]=p.adjust(roll_pvalue[,i],method = "bonf")
+# }
 
 ########
 
@@ -144,7 +140,7 @@ y_max =  0.2
 
 # plot against stock indices
 x11()
-layout(matrix(c(1,2,3,1,2,3,4,5,6),nrow= 3,ncol=3, byrow=TRUE))
+layout(matrix(c(1,2,3,4,1,2,3,4,5,6,7,8),nrow= 3,ncol=4, byrow=TRUE))
 plot(end_times, roll_corr[,'bric'], type = 'l', ylab = "Bric", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'bric'], type = 'l', ylab = "Bric",col='blue')
@@ -163,6 +159,13 @@ lines(end_times_3y, roll_corr_3y[,'eurostoxx'], type = 'l', ylab = "eurostoxx",c
 title("EUROSTOXX")
 grid()
 
+plot(end_times, roll_corr[,'nasdaq'], type = 'l',ylab = "nasdaq", ylim = c(y_min,y_max))
+#points(end_times, roll_corr[,'eurostoxx'])
+lines(end_times_3y, roll_corr_3y[,'nasdaq'], type = 'l', ylab = "nasdaq",col='blue')
+title("NASDAQ")
+grid()
+
+
 
 plot(end_times, roll_pvalue[,'bric'],type = 'b',ylim = c(0,1), ylab = "Bric")
 lines(end_times_3y,roll_pvalue_3y[,'bric'],type = 'b',col = 'blue')
@@ -176,8 +179,11 @@ plot(end_times, roll_pvalue[,'eurostoxx'],type = 'b',ylim = c(0,1),ylab = "euros
 lines(end_times_3y,roll_pvalue_3y[,'eurostoxx'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
+plot(end_times, roll_pvalue[,'nasdaq'],type = 'b',ylim = c(0,1),ylab = "nasdaq")
+lines(end_times_3y,roll_pvalue_3y[,'nasdaq'],type = 'b',col = 'blue')
+abline(h = .05,col = 'grey')
+
 # dev.copy2pdf(file="rolling_stocks.pdf")
-# 
 # dev.off()
 
 
@@ -276,39 +282,58 @@ plot(end_times, roll_pvalue[,'jpy'],type = 'b',ylim = c(0,1),ylab = "jpy")
 lines(end_times_3y,roll_pvalue_3y[,'jpy'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
-dev.copy2pdf(file="rolling_fx.pdf")
-
-dev.off()
+# dev.copy2pdf(file="rolling_fx.pdf")
+# dev.off()
 
 
 
 # plot against bond indices
 x11()
-layout(matrix(c(1,2,1,2,3,4),nrow= 3,ncol=2, byrow=TRUE))
-plot(end_times, roll_corr[,'pan_euro'], type = 'l', ylab = "pan_euro", ylim = c(y_min,y_max))
+layout(matrix(c(1,2,3,4,1,2,3,4,5,6,7,8),nrow= 3,ncol=4, byrow=TRUE))
+plot(end_times, roll_corr[,'bond_europe'], type = 'l', ylab = "bond_europe", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
-lines(end_times_3y, roll_corr_3y[,'pan_euro'], type = 'l', ylab = "pan_euro",col='blue')
-title("pan_euro")
+lines(end_times_3y, roll_corr_3y[,'bond_europe'], type = 'l', ylab = "bond_europe",col='blue')
+title("bond_europe")
 grid()
 
-plot(end_times, roll_corr[,'pan_us'], type = 'l',ylab = "pan_us", ylim = c(y_min,y_max))
+plot(end_times, roll_corr[,'bond_us'], type = 'l',ylab = "bond_us", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
-lines(end_times_3y, roll_corr_3y[,'pan_us'], type = 'l', ylab = "pan_us",col='blue')
-title("pan_us")
+lines(end_times_3y, roll_corr_3y[,'bond_us'], type = 'l', ylab = "bond_us",col='blue')
+title("bond_us")
+grid()
+
+plot(end_times, roll_corr[,'bond_eur'], type = 'l',ylab = "bond_eur", ylim = c(y_min,y_max))
+#points(end_times, roll_corr[,'sp500'])
+lines(end_times_3y, roll_corr_3y[,'bond_eur'], type = 'l', ylab = "bond_eur",col='blue')
+title("bond_eur")
+grid()
+
+plot(end_times, roll_corr[,'vix'], type = 'l',ylab = "vix", ylim = c(y_min,y_max))
+#points(end_times, roll_corr[,'sp500'])
+lines(end_times_3y, roll_corr_3y[,'vix'], type = 'l', ylab = "vix",col='blue')
+title("vix")
 grid()
 
 
 
 
-plot(end_times, roll_pvalue[,'pan_euro'],type = 'b',ylim = c(0,1), ylab = "pan_euro")
+plot(end_times, roll_pvalue[,'bond_europe'],type = 'b',ylim = c(0,1), ylab = "pan_euro")
 lines(end_times_3y,roll_pvalue_3y[,'pan_euro'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'pan_us'],type = 'b',ylim = c(0,1),ylab = "pan_us")
-lines(end_times_3y,roll_pvalue_3y[,'pan_us'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'bond_us'],type = 'b',ylim = c(0,1),ylab = "bond_us")
+lines(end_times_3y,roll_pvalue_3y[,'bond_us'],type = 'b',col = 'blue')
 abline(h = .05,col = 'grey')
 
-dev.copy2pdf(file="rolling_bonds.pdf")
+plot(end_times, roll_pvalue[,'bond_eur'],type = 'b',ylim = c(0,1),ylab = "bond_eur")
+lines(end_times_3y,roll_pvalue_3y[,'bond_eur'],type = 'b',col = 'blue')
+abline(h = .05,col = 'grey')
 
-dev.off()
+plot(end_times, roll_pvalue[,'vix'],type = 'b',ylim = c(0,1),ylab = "vix")
+lines(end_times_3y,roll_pvalue_3y[,'vix'],type = 'b',col = 'blue')
+abline(h = .05,col = 'grey')
+
+# dev.copy2pdf(file="rolling_bonds.pdf")
+# 
+# dev.off()
 
