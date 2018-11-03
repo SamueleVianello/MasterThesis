@@ -1,3 +1,6 @@
+
+
+
 \documentclass{beamer}
 %
 % Choose how your presentation looks.
@@ -17,11 +20,17 @@
 \usepackage[english]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand\SmallerFont{\fontsize{8}{10}\selectfont}
+
+
 
 \title[Your Short Title]{Bitcoin Allocation}
 \author{Samuele Vianello}
 %\institute{Where You're From}
-\date{October 8th}
+\date{November 6th}
 
 \begin{document}
 
@@ -51,7 +60,7 @@
 %
 %\end{frame}
 
-\section{Models}
+\section{Model}
 
 \subsection{Multivariate Merton}
 
@@ -89,7 +98,9 @@ that has as solution:
 where 
 \begin{itemize}
     \item $X_0=log(S_0)$
-    \item $\eta_k= \log(Y_k) = \log(Y_{t_k})$ and $t_k$ is the time when the $k^{th}$ Poisson shock from $N(t)$ happens
+    \item $\eta_k= \log(Y_k) = \log(Y_{t_k})$ and $t_k$ is the time when the $k^{th}$ Poisson shock from $N(t)$ happens.
+    $\eta_k$ are distributed as Gaussians: $\eta \sim \mathcal{N}(\theta , \delta^2)$
+    \item $N^{(j)}(t)$ are Poisson processes with parameters $\lambda_j$, which are independent of $\mathbf{W}_t$ and of one another
     \item $\mu = \alpha - \frac{\sigma^2}{2} $ for ease of notation
 \end{itemize}
 
@@ -174,20 +185,50 @@ To recover the parameter of the model, we maximize the \textit{Likelihood} funct
 We first use a stochastic optimization in which we find where the global minimun should be and then proceed with an algorithm that computes the numerical gradient to reach the closest minimum.
 
 \end{frame}
+
+
 \section{Calibration}
 \subsection{Calibration Data}
-\begin{frame}{Data}
+
+\begin{frame}{Dataset}
 \begin{itemize}
-    \item Bitcoin
-    \item 3 stock indices: S\&P500, Eurostoxx50 and MSCI BRIC
-    \item 4 commodities: Gold, Oil, Industrial Metals and Grain
-    \item 4 currencies  to USD: EUR, GBP, CHF and JPY
-    \item 2 bond indices: BBG Barclays PAN EURO and PAN US Aggregate
+\item[1.] Stock indexes:
+	\begin{itemize}
+		\item S\&P500: American stock market index based on 500 large company with stock listed either on the NYSE or NASDAQ.
+		\item EURO STOXX 50: equity index of eurozone stocks, covering 50 stocks from 11 eurozone countries.
+		\item MSCI BRIC: market cap weighted index designed to measure the equity market performance across the emerging country indices of Brazil, Russia, India and China.
+		\item NASDAQ: market cap weighted index including all NASDAQ tiers: Global Select, Global Market and Capital Market.
+	\end{itemize}
+\item[2.] Commodities:
+	\begin{itemize}
+		\item Gold: price of gold measured in USD/Oz.
+		\item WTI: price of crude oil used as benchmark in oil pricing and as the underlying commodity in the NYMEX oil future contracts.
+		\item Grain: S\&P GPSCI index that measures the performance of the grain commodity market.
+		\item Metals: S\&P GSCI Industrial Metals index that measures the movements of industrial metal prices including aluminium, copper, zinc, nickel and lead.
+	\end{itemize}
 \end{itemize}
-
-Daily prices (working days only) from September 2010 to September 2018 provided by Bloomberg.
-
 \end{frame}
+	
+\begin{frame}{Dataset}
+\begin{itemize}
+\item[3.] Currencies:
+	\begin{itemize}
+	\item EUR/USD
+	\item GBP/USD
+	\item CHF/USD
+	\item JPY/USD
+	\end{itemize}
+\item[4.] Bond indexes:
+	\begin{itemize}
+		\item BBG Pan European: Bloomberg Barclays Pan-European Aggregate Index that tracks fixed-rate, investment-grade securities issued in different European currencies.
+		\item BBG Pan US: Bloomberg Barclays US Aggregate Bond Index, a benchmark that measures investment grade, US dollar-denominated, fixed-rate taxable bond market.
+		\item BBG Pan EurAgg: similar to the Pan European but only considers securities issued in euros.
+	\end{itemize}
+\item[5.] CBOE VIX: index that reflects the market estimate of future volatility, based on a weighted average of implied volatility on a wide range of strikes. 
+\end{itemize}
+\end{frame}
+
+
 
 \begin{frame}{Histogram of calibrated values}
 \begin{figure}
@@ -197,49 +238,182 @@ Daily prices (working days only) from September 2010 to September 2018 provided 
 \end{frame}
 
 \subsection{Calibration Results}
+
 \begin{frame}{Parameter Results}
+\SmallerFont
 \begin{table}[]
-\begin{tabular}{lllllllll}
-     &btc	&bric	&sp500	&eurostoxx	&gold	&wti	&grain	\\
-$\mu$ &1.5391	&0.0132	&0.1320	&0.0558	&0.0372	&0.0405	&-0.0444\\
-$\theta$ &-0.10	&-0.10	&-0.10	&-0.10	&-0.10	&-0.10	&-0.10\\
-$\delta$&0.1713	&0.0885	&0.1001	&0.0909	&0.0951	&0.1242	&0.1059 \\
-$\lambda$&47.617	&0.976	&2.535	&1.364	&2.539	&9.459	&2.712	\\
+\begin{tabular}{llllllll}
+\toprule
+ & btc & bric & sp500 & eurostoxx & nasdaq & gold & wti \\
+\midrule
+$\mu$ & 1.497 & 0.012 & 0.128 & 0.050 & 0.183 & 0.042 & -0.038 \\
+$\theta $& -0.100 & -0.100 & -0.100 & -0.100 & -0.100 & -0.100 & -0.100 \\
+$\delta$ & 0.171 & 0.087 & 0.097 & 0.092 & 0.089 & 0.094 & 0.126 \\
+$\lambda$ & 46.957 & 0.971 & 2.491 & 1.358 & 2.209 & 2.500 & 3.612 \\
+\bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[]
-\begin{tabular}{lllllllll}
-&metal	&eur	&gbp	&chf	&jpy	&pan-euro	&pan-us\\
-$\mu$ &-0.0192	&-0.0148	&-0.0133	&0.0009	&-0.0143	&0.0410	&0.0259\\
-$\theta$ &-0.10	&-0.10	&-0.10	&-0.10	&-0.10	&-0.10	&-0.10\\
-$\delta$ &0.1029	&2.8356	&0.0987	&0.1150	&0.0933	&0.0912	&0.0998\\
-$\lambda$ &0.793	&0.123	&0.898	&1.954	&1.593	&0.400	&0.641\\
+\begin{tabular}{lllllll}
+\toprule
+ & grain & metal & eur & gbp & chf & jpy \\
+\midrule
+$\mu$ & -0.046 & -0.019 & -0.017 & -0.014 & 0.000 & -0.017 \\
+$\theta$ & -0.100 & -0.100 & -0.100 & -0.100 & -0.100 & -0.100 \\
+$\delta$ & 0.106 & 0.098 & 1.501 & 0.100 & 0.115 & 0.096 \\
+$\lambda$ & 2.582 & 0.785 & 0.319 & 0.820 & 1.815 & 1.982 \\
+\bottomrule
+\end{tabular}
+
+\end{table} 
+
+\begin{table}[]
+\begin{tabular}{lllll}
+\toprule
+ & bond\_europe & bond\_us & bond\_eur & vix \\
+\midrule
+$\mu $& 0.042 & 0.024 & 0.036 & -0.480 \\
+$\theta $& -0.100 & -0.100 & -0.100 & -0.100 \\
+$\delta$ & 0.091 & 0.099 & 0.099 & 0.236 \\
+$\lambda $& 0.611 & 0.572 & 1.002 & 10.635 \\
+\bottomrule
 \end{tabular}
 \end{table} 
 \end{frame}
 
-\section{Correlation}
-\begin{frame}{Correlation Significance}
+
+\begin{frame}{ Mean Return Comparison}
+\SmallerFont
 \begin{table}[]
-\begin{tabular}{lllllllll}
-&bric	&sp500	&eurostoxx	&gold	&wti	&grain	&metal\\
-Correlation &0.0115	&0.0398	&0.0364	&-0.0014	&0.0044	&0.0366	&0.0267\\
-Pearson &0.577	&0.062	&0.091	&0.945	&0.835	&0.087	&0.214\\
-Permutation &0.596	&0.066	&0.094	&0.950	&0.838	&0.092	&0.218\\
-Spearman &0.666	&0.647	&0.188	&0.511	&0.945	&0.155	&0.821\\
+\begin{tabular}{lllllll}
+\toprule
+Asset & btc & bric & sp500 & eurostoxx & nasdaq & gold \\
+\midrule
+Sample & 1.331 & -0.010 & 0.111 & 0.024 & 0.143 & 0.004 \\
+Model & 1.497 & 0.012 & 0.128 & 0.050 & 0.183 & 0.042 \\
+\bottomrule
 \end{tabular}
-\end{table} 
+\end{table}
 
 \begin{table}[]
-\begin{tabular}{lllllllll}
-&eur	&gbp	&chf	&jpy	&pan-euro	&pan-us\\
-0.0267 &0.0233	&0.0071	&0.0235	&-0.0101	&-0.0247	&-0.0179\\
-0.214 &0.286	&0.747	&0.267	&0.652	&0.242	&0.404\\
-0.218 &0.283	&0.743	&0.279	&0.641	&0.254	&0.410\\
-0.821 &0.411	&0.675	&0.990	&0.493	&0.429	&0.330\\
+\begin{tabular}{lllllll}
+\toprule
+Asset & wti & grain & metal & eur & gbp & chf \\
+\midrule
+Sample & -0.022 & -0.062 & -0.028 & -0.013 & -0.018 & 0.006 \\
+Model & -0.038 & -0.046 & -0.019 & -0.017 & -0.014 & 0.000 \\
+\bottomrule
 \end{tabular}
-\end{table} 
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{llllll}
+\toprule
+Asset & jpy & bond\_europe & bond\_us & bond\_eur & vix \\
+\midrule
+Sample & -0.030 & 0.036 & 0.024 & 0.035 & -0.034 \\
+Model & -0.017 & 0.042 & 0.024 & 0.036 & -0.480 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+\end{frame}
+
+
+
+\section{Correlation}
+
+
+\begin{frame}{Correlation Comparison}
+\SmallerFont
+\begin{table}[]
+\begin{tabular}{llllll}
+\toprule
+ & bric & sp500 & eurostoxx & nasdaq & gold \\
+ \midrule
+Sample & -0.0134 & -0.0123 & 0.0320 & -0.0119 & -0.0063 \\
+Model & 0.0141 & 0.0437 & 0.0368 & 0.0359 & -0.0024 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{lllllll}
+\toprule
+ & wti & grain & metal & eur & gbp & chf \\
+ \midrule
+Sample & 0.0232 & 0.0234 & 0.0072 & 0.0268 & 0.0182 & 0.0210 \\
+Model & 0.0077 & 0.0350 & 0.0269 & 0.0229 & 0.0073 & 0.0246 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{llllll}
+\toprule
+ & jpy & bond\_europe & bond\_us & bond\_eur & vix \\
+ \midrule
+Sample & -0.0123 & -0.0132 & -0.0216 & -0.0075 & 0.0182 \\
+Model & -0.0109 & -0.0238 & -0.0184 & -0.0098 & -0.0509 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}{Correlation Comparison}
+\begin{figure}
+\includegraphics[width=\textwidth]{correlation_comparison}
+\caption{The calibrated model is able to reproduce the correlation structure in the dataset very closely.}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}{Correlation Significance against Bitcoin}
+\SmallerFont
+\begin{table}[]
+\begin{tabular}{lllllll}
+\toprule
+ & bric & sp500 & eurostoxx & nasdaq & gold & wti \\
+\midrule
+Correlation & 0.0141 & 0.0437 & 0.0368 & 0.0359 & -0.0024 & 0.0077 \\
+Pearson & 0.504 & 0.044 & 0.094 & 0.089 & 0.905 & 0.719 \\
+Permutation & 0.512 & 0.042 & 0.087 & 0.095 & 0.911 & 0.720 \\
+Spearman & 0.922 & 0.459 & 0.157 & 0.329 & 0.423 & 0.459 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{lllllll}
+\toprule
+ & grain & metal & eur & gbp & chf & jpy \\
+\midrule
+Correlation & 0.0350 & 0.0269 & 0.0229 & 0.0073 & 0.0246 & -0.0109 \\
+Pearson & 0.108 & 0.195 & 0.291 & 0.747 & 0.239 & 0.608 \\
+Permutation & 0.103 & 0.211 & 0.286 & 0.733 & 0.253 & 0.613 \\
+Spearman & 0.170 & 0.798 & 0.453 & 0.697 & 0.905 & 0.474 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{lllll}
+
+\toprule
+ & bond\_europe & bond\_us & bond\_eur & vix \\
+\midrule
+Correlation & -0.0238 & -0.0184 & -0.0098 & -0.0509 \\
+Pearson & 0.285 & 0.408 & 0.642 & 0.018 \\
+Permutation & 0.268 & 0.393 & 0.649 & 0.018 \\
+Spearman & 0.468 & 0.336 & 0.816 & 0.330 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \end{frame}
 
 
@@ -266,7 +440,7 @@ Spearman &0.666	&0.647	&0.188	&0.511	&0.945	&0.155	&0.821\\
 
 \begin{frame}{Rolling Correlation}
 \begin{figure}
-\includegraphics[width=0.8\textwidth]{rolling_bonds.pdf}
+\includegraphics[width=\textwidth]{rolling_bonds.pdf}
 \label{roll_stocks}
 \end{figure}
 \end{frame}
@@ -274,7 +448,7 @@ Spearman &0.666	&0.647	&0.188	&0.511	&0.945	&0.155	&0.821\\
 \section{Efficient Frontier}
 
 \begin{frame}{Efficient  Frontier and Optimal Allocation}
-The two approaches consider both involve the minimization of a \textit{risk measure} given a level of target returns:
+The two approaches considered both involve the minimization of a \textit{risk measure} given a level of target returns:
 \begin{itemize}
 	\item \textit{Markowitz Mean-Variance optimization}:  minimize the portfolio variance (or equivalently the volatility). This approach has explicit formulas for the solution in the unconstrained case.
 	\item \textit{CVaR optimization}: minimize the portfolio \textit{conditional VaR} rather than the simple VaR due to the mathematical properties of the former (CVaR is a coherent risk measure). Numerical algorithms are required.
@@ -298,7 +472,8 @@ where:
 	\item \textbf{w} is the vector of weights,
 	\item \textbf{r} is the vector of returns,
 	\item \textbf{e} indicates a vector of ones,
-	\item $r_{target}$ is the target portfolio return.
+	\item $r_{target}$ is the target portfolio return,
+	\item the last constraint is included only when shortselling is not allowed.
 \end{itemize}
 \end{frame}
 
@@ -334,4 +509,10 @@ Since we only have the empirical distribution of the returns, we have to compute
 \end{frame}
 
 
+
+
+
+
+
 \end{document}
+
