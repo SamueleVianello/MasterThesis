@@ -92,9 +92,10 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
   if(is.na(target_return)){
     stop("Please specify expected return.")
   }
-  if(target_return>max(r)){
+
+  if(target_return > max(r)){
     warning("Cannot produce such a high return without short-selling.")
-    target_return=max(r)
+    target_return=max(r)-1e-5
   }
   
   library(quadprog)
@@ -229,16 +230,17 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   # xx = set of corresponding volatility
   yy= seq(from = min(r), to = max_r,length.out = N+1)
   yy[1] = yy[1]+ 1e-5
+  yy[N+1] = yy[N+1] -1e-5
   
   b[1]= yy[1]
-
+  # print(yy)
   
   xx = rep(0,length(yy))
   for (i in 1:(N+1)) {
-    print(i)
-    #print(yy[i])
+    # print(i)
+    # print(yy[i])
     b[1] = yy[i]
-    print(b)
+    # print(b)
     sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
     xx[i] = sqrt(sol$value)
   }
