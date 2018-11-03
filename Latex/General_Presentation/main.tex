@@ -323,7 +323,7 @@ Model & -0.017 & 0.042 & 0.024 & 0.036 & -0.480 \\
 
 
 \section{Correlation}
-
+\subsection{Correlation Results}
 
 \begin{frame}{Correlation Comparison}
 \SmallerFont
@@ -362,6 +362,7 @@ Model & -0.0109 & -0.0238 & -0.0184 & -0.0098 & -0.0509 \\
 
 \end{frame}
 
+
 \begin{frame}{Correlation Comparison}
 \begin{figure}
 \includegraphics[width=\textwidth]{correlation_comparison}
@@ -369,6 +370,7 @@ Model & -0.0109 & -0.0238 & -0.0184 & -0.0098 & -0.0509 \\
 \end{figure}
 \end{frame}
 
+\subsection{Correlation Significance}
 
 \begin{frame}{Correlation Significance against Bitcoin}
 \SmallerFont
@@ -416,6 +418,8 @@ Spearman & 0.468 & 0.336 & 0.816 & 0.330 \\
 
 \end{frame}
 
+
+\subsection{Rolling Correlation}
 
 \begin{frame}{Rolling Correlation}
 \begin{figure}
@@ -477,15 +481,24 @@ where:
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Markowitz Efficient Frontier}
+\subsection{Markowitz Efficient Frontier}
 
-****FIGURE OF UPDATED EFFICIENT FRONTIER********
-%\begin{figure}
-%\includegraphics[width=0.8\textwidth]{unconstr_frontier.pdf}
-%\label{roll_stocks}
-%\end{figure}
+\begin{frame}{Markowitz Efficient Frontier}
+\begin{figure}
+\includegraphics[width=0.65\textwidth]{frontier_markowitz_sample_percentage.pdf}
+\caption{Efficient frontier for the sample percentage returns We can see how including Bitcoin effectively diversifies the portfolio.}
+\end{figure}
 \end{frame}
 
+\begin{frame}{Markowitz allocation including Bitcoin}
+\begin{figure}
+	\includegraphics[width=0.5\textwidth]{allocation_sample_btc_percentage}
+	\includegraphics[width=0.5\textwidth]{allocation_sample_nobtc_percentage}
+	\caption{}
+\end{figure}
+\end{frame}
+
+\subsection{CVaR Efficient Frontier}
 \begin{frame}{CVaR Efficient Frontier}
 Since we only have the empirical distribution of the returns, we have to compute the CVaR empirically as well. We considered two approaches: 
 
@@ -505,8 +518,6 @@ Since we only have the empirical distribution of the returns, we have to compute
 \end{frame}
 
 
-\begin{frame}{Markowitz allocation}
-\end{frame}
 
 
 
