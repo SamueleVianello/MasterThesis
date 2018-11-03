@@ -188,6 +188,7 @@ plot(my_data$MSCI.BRIC._DATE, my_data$MSCI.BRIC, type='l', main= "BRIC")
 plot(my_data$BOND_US_DATE, my_data$BOND_US, type='l', main= "BOND_US")
 plot(my_data$BOND_EUR_DATE, my_data$BOND_EUR, type='l', main= "BOND_EUR")
 
+x11()
 pairs(my_returns[,(1:17)*2])
 
 ###########################################################################
@@ -196,12 +197,13 @@ pairs(my_returns[,(1:17)*2])
 # from a 4 asset model
 
 
+
 # ONLY WORKS IF N_ASSET IS *EVEN*
 #N_assets = dim(my_returns)[2]/2
 N_assets = 16
-N=dim(my_returns)[1]
 
-# couples of assets to use in calibration
+N=dim(my_returns)[1] 
+
 idx_matrix = matrix(seq(from = 1, to = N_assets, by = 1),N_assets%/% 2,2, byrow = TRUE)
 
 final_cov = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
@@ -212,15 +214,32 @@ w_matrix = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
 beg <- Sys.time()
 
 
+N_computations = (N_assets %/% 2)*(N_assets %/% 2 -1) /2
 
+names = colnames(my_returns[,2*(1:N_assets)])
+mus = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+colnames(mus) = names
+thetas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+colnames(thetas) = names
+deltas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+colnames(deltas) = names
+lambdas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+colnames(lambdas) = names
+
+ctr = 1
 for (i in 1:(N_assets%/% 2 -1)){
   for (j in (i+1):(N_assets%/% 2)){
     idx =c(idx_matrix[i,],idx_matrix[j,])
     
-    w_matrix[idx,idx]=
-      w_matrix[idx,idx]+1
+    w_matrix[idx,idx]= w_matrix[idx,idx]+1
     calibrated = CalibrateMVMerton(x=cbind(my_returns[,2*idx[1]][1:N],my_returns[,2*idx[2]][1:N],my_returns[,2*idx[3]][1:N],my_returns[,2*idx[4]][1:N]),
-                                  n=4, dt = dt )
+                                   n=4, dt = dt )
+    
+    mus[ctr,idx] = calibrated$mu
+    thetas[ctr,idx] = calibrated$theta
+    deltas[ctr,idx] = calibrated$delta
+    lambdas[ctr,idx] = calibrated$lambda
+    ctr = ctr+1
     
     SS = calibrated$S
     final_cov[idx,idx]= final_cov[idx,idx] + SS
@@ -231,22 +250,95 @@ for (i in 1:(N_assets%/% 2 -1)){
 }
 
 end<- Sys.time()
+end-beg
+
+
+
+
+
+
 
 
 w_matrix
 final_cov/w_matrix
 covariance = final_cov/w_matrix
-correlation = cov2cor(final_cov/w_matrix)
+
+
+# new part starts here
+
+N_assets = dim(my_returns)[2]/2
+
+complete_var = matrix(rep(0, N_assets*N_assets), nrow = N_assets)
+complete_var[1:(N_assets-1), 1:(N_assets-1)] = covariance * w_matrix
+
+complete_w_matrix = matrix(rep(0, N_assets*N_assets), nrow = N_assets)
+complete_w_matrix[1:(N_assets-1), 1:(N_assets-1)] = w_matrix
+
+idx_last_column = matrix(1:(3*(N_assets%/%3)), ncol = 3, byrow = TRUE)
+idx_last_column = rbind(idx_last_column, N_assets - c(3,2,1))
+
+last_mu=0
+last_theta = 0
+last_delta = 0
+last_lambda= 0 
+for (i in 1:dim(idx_last_column)[1]){
+
+  idx =c(idx_last_column[i,],N_assets)
+  print(idx)
+  complete_w_matrix[idx,idx] = complete_w_matrix[idx,idx]+1
   
+  calibrated = CalibrateMVMerton(x=cbind(my_returns[,2*idx[1]][1:N],my_returns[,2*idx[2]][1:N],my_returns[,2*idx[3]][1:N],my_returns[,2*idx[4]][1:N]),
+                                 n=4, dt = dt )
+  last_mu = last_mu+  calibrated$mu[4]
+  last_theta = last_theta+ calibrated$theta[4]
+  last_delta = last_delta+ calibrated$delta[4]
+  last_lambda = last_lambda+ calibrated$lambda[4]
+
+  SS = calibrated$S
+  complete_var[idx,idx]= complete_var[idx,idx] + SS
+  # print(final_cov)
+  out = capture.output(calibrated)
+  cat(paste("Assets:", idx,sep = " "), out, file = "computation_of_full_corr_matrix_nasdaq.txt",sep="\n", append=TRUE)
+}
+
+
+last_mu = last_mu/dim(idx_last_column)[1]
+last_theta = last_theta/dim(idx_last_column)[1]
+last_delta = last_delta/dim(idx_last_column)[1]
+last_lambda = last_lambda/dim(idx_last_column)[1]
+
+complete_w_matrix
+covariance = complete_var/complete_w_matrix
+
+correlation = cov2cor(covariance)
+
 out = capture.output(cov2cor(final_cov/w_matrix))
-cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix.txt",sep="\n", append=TRUE)
+cat("FINAL RESULT FOR CORRELATION", out, file = "computation_of_full_corr_matrix_nasdaq.txt",sep="\n", append=TRUE)
 
-end-beg
 
-results = list(covariance = covariance, correlation = correlation)
 
-# save(results, file= "results.Rda")
+
+
+
+actual_parameters = colSums(mus)/(N_assets%/%2 -1)
+actual_parameters = rbind(actual_parameters, colSums(thetas)/(N_assets%/%2 -1))
+actual_parameters = rbind(actual_parameters, colSums(deltas)/(N_assets%/%2 -1))
+actual_parameters = rbind(actual_parameters, colSums(lambdas)/(N_assets%/%2 -1))
+actual_parameters = cbind(actual_parameters, results$last_asset_params)
+
+rownames(actual_parameters)= c("mu", "theta", "delta", "lambda")
+colnames(actual_parameters)[N_assets] = "vix"
+
+results = list(parameters = actual_parameters, covariance = covariance, correlation = correlation, 
+               full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas, 
+               last_asset_params = c(mu=last_mu, theta=last_theta, delta=last_delta, lambda=last_lambda))
+
+save(results, file= "results.Rda")
 #######
 # paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")
+
+
+
+
 
 

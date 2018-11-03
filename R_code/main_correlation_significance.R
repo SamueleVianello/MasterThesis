@@ -27,6 +27,51 @@ plot(btc,pan_us, pch=20)
 
 # No apparent correlation from graphical inspection
 
+#**************************************** 
+#** VISUAL COMPARISON OF CORRELATIONS  **
+#****************************************
+library(reshape2)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+
+load("results.Rda")
+
+x11()
+
+colnames(correlation) = colnames(my_returns[,2*(1:17)])
+rownames(correlation) = colnames(my_returns[,2*(1:17)])
+
+longData<-melt(correlation)
+longData<-longData[longData$value!=0,]
+
+p1=ggplot(longData, aes(x = Var2, y = Var1)) + 
+  geom_raster(aes(fill=value)) + 
+  scale_fill_gradient2(low="blue", high="red",mid = "white") +
+  labs( title="Model Correlation") +
+  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 1),
+                     axis.text.y=element_text(size=9),
+                     plot.title=element_text(size=11),
+                     axis.title = element_blank() )
+
+
+sample_corr = cor(my_returns[, 2*(1:17)])
+
+longData<-melt(sample_corr)
+longData<-longData[longData$value!=0,]
+
+p2=ggplot(longData, aes(x = Var2, y = Var1)) + 
+  geom_raster(aes(fill=value)) + 
+  scale_fill_gradient2(low="blue", high="red",mid = "white") +
+  labs( title="Sample Correlation") +
+  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 1),
+                     axis.text.y=element_text(size=9),
+                     plot.title=element_text(size=11),
+                     axis.title = element_blank() )
+
+grid.arrange(p1,p2,nrow=1)
+
 
 ############## Significance of correlation ##############
 
@@ -79,13 +124,6 @@ for(i in 2:(dim(my_returns)[2]%/%2)){
 
 p_values
 
-
-
-
-################## Rolling Correlation ###################################
-
-earliest = min(btc_date)
-latest = max(btc_date)
 
 
 
