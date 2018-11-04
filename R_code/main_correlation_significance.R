@@ -38,38 +38,44 @@ library(gridExtra)
 
 load("results.Rda")
 
-x11()
 
+attach(results)
 colnames(correlation) = colnames(my_returns[,2*(1:17)])
 rownames(correlation) = colnames(my_returns[,2*(1:17)])
 
-longData<-melt(correlation)
+correl_reverse = correlation[dim(correlation)[1]:1,]
+
+longData<-melt(correl_reverse)
 longData<-longData[longData$value!=0,]
 
 p1=ggplot(longData, aes(x = Var2, y = Var1)) + 
   geom_raster(aes(fill=value)) + 
   scale_fill_gradient2(low="blue", high="red",mid = "white") +
   labs( title="Model Correlation") +
-  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 1),
+  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 0),
                      axis.text.y=element_text(size=9),
                      plot.title=element_text(size=11),
-                     axis.title = element_blank() )
+                     axis.title = element_blank() )+
+  scale_x_discrete(position = "top")
 
 
 sample_corr = cor(my_returns[, 2*(1:17)])
+sample_cor_reverse = sample_corr[dim(sample_corr)[1]:1,]
 
-longData<-melt(sample_corr)
+longData<-melt(sample_cor_reverse)
 longData<-longData[longData$value!=0,]
 
 p2=ggplot(longData, aes(x = Var2, y = Var1)) + 
   geom_raster(aes(fill=value)) + 
   scale_fill_gradient2(low="blue", high="red",mid = "white") +
   labs( title="Sample Correlation") +
-  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 1),
+  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 0),
                      axis.text.y=element_text(size=9),
                      plot.title=element_text(size=11),
-                     axis.title = element_blank() )
+                     axis.title = element_blank() )+
+  scale_x_discrete(position = "top")
 
+x11()
 grid.arrange(p1,p2,nrow=1)
 
 
