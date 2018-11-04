@@ -1,6 +1,5 @@
 
 
-
 \documentclass{beamer}
 %
 % Choose how your presentation looks.
@@ -25,7 +24,7 @@
 
 \newcommand\SmallerFont{\fontsize{8}{10}\selectfont}
 
-
+\setbeamertemplate{bibliography item}[text]
 
 \title[Your Short Title]{Bitcoin Allocation}
 \author{Samuele Vianello}
@@ -65,7 +64,7 @@
 \subsection{Multivariate Merton}
 
 \begin{frame}{Original Merton Model (1976)}
-Original Merton 1976 model:
+Original Merton 1976 \cite{MERTON1976} model:
 \begin{equation}
 \label{merton_model}
     \frac{dS_t}{S_t} = \alpha dt + \sigma dW_t  + (Y_t-1)dN
@@ -183,6 +182,7 @@ To recover the parameter of the model, we maximize the \textit{Likelihood} funct
 \end{equation}
 
 We first use a stochastic optimization in which we find where the global minimun should be and then proceed with an algorithm that computes the numerical gradient to reach the closest minimum.
+The estimation through \textit{maximul likelihood} is a standard practice, see for instance \cite{HONORE1998}.
 
 \end{frame}
 
@@ -454,14 +454,13 @@ Spearman & 0.468 & 0.336 & 0.816 & 0.330 \\
 \begin{frame}{Efficient  Frontier and Optimal Allocation}
 The two approaches considered both involve the minimization of a \textit{risk measure} given a level of target returns:
 \begin{itemize}
-	\item \textit{Markowitz Mean-Variance optimization}:  minimize the portfolio variance (or equivalently the volatility). This approach has explicit formulas for the solution in the unconstrained case.
+	\item \textit{Markowitz Mean-Variance optimization}:  minimize the portfolio variance (or equivalently the volatility) as originally proposed in \cite{MARKOWITZ}. This approach has explicit formulas for the solution in the unconstrained case.
 	\item \textit{CVaR optimization}: minimize the portfolio \textit{conditional VaR} rather than the simple VaR due to the mathematical properties of the former (CVaR is a coherent risk measure). Numerical algorithms are required.
 \end{itemize}
 \end{frame}
 
 
 \begin{frame}{Efficient  Frontier and Optimal Allocation}
-General framework:
 \begin{subequations}
 	\begin{align}
 	&\!\min_{\mathbf{w}\in \mathbb{R}^{n}}        & & PtfRisk(\mathbf{w}) \notag\\
@@ -479,6 +478,8 @@ where:
 	\item $r_{target}$ is the target portfolio return,
 	\item the last constraint is included only when shortselling is not allowed.
 \end{itemize}
+
+In the Markowitz case the risk measure is the portfolio variance $\mathbf{w}'\Sigma \mathbf{w}$, in the CVaR case is the portfolio CVaR at level $95\%$.
 \end{frame}
 
 \subsection{Markowitz Efficient Frontier}
@@ -494,7 +495,7 @@ where:
 \begin{figure}
 	\includegraphics[width=0.5\textwidth]{allocation_sample_btc_percentage}
 	\includegraphics[width=0.5\textwidth]{allocation_sample_nobtc_percentage}
-	\caption{}
+	\caption{We can see in green that the allocation in Bitcoin is about $3\%$ and increases with the target return.}
 \end{figure}
 \end{frame}
 
@@ -510,20 +511,29 @@ Since we only have the empirical distribution of the returns, we have to compute
 \end{frame}
 
 \begin{frame}{CVaR Efficient Frontier (annual bootstrap)}
-***TWO FIGURES OF ANNUAL BOOTSTRAP FRONTIER****
+\begin{figure}
+	\includegraphics[width=0.4\textwidth]{frontier_bootstrap_btc.pdf}
+	\includegraphics[width=0.4\textwidth]{frontier_bootstrap_nobtc.pdf}
+
+\end{figure}
 \end{frame}
 
 \begin{frame}{CVaR Efficient Frontier (daily returns)}
-***********FIGURE OF DAILY RETURN FRONTIER**********
+\begin{figure}
+	\includegraphics[height= 0.8\textheight]{frontier_daily.pdf}
+\end{figure}
 \end{frame}
 
 
 
+\begin{frame}[allowframebreaks] %allow to expand references to multiple frames (slides)
+\frametitle{References}
 
+\scriptsize{\bibliographystyle{acm}}
 
+\bibliography{my_bibliography} %bibtex file name without .bib extension
 
-
-
+\end{frame}
 
 \end{document}
 
