@@ -16,6 +16,15 @@
   \setbeamertemplate{caption}[numbered]
 } 
 
+\AtBeginSection[]{%
+\frame{
+	
+	\transsplitverticalin
+	\frametitle{Outline}
+	\tableofcontents[currentsection]
+}
+}
+
 \usepackage[english]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath}
