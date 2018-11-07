@@ -35,6 +35,13 @@
 
 \setbeamertemplate{bibliography item}[text]
 
+\addtobeamertemplate{navigation symbols}{}{%
+	\usebeamerfont{footline}%
+	\usebeamercolor[fg]{footline}%
+	\hspace{1em}%
+	\insertframenumber/\inserttotalframenumber
+}
+
 \title[Your Short Title]{Bitcoin Allocation}
 \author{Samuele Vianello}
 %\institute{Where You're From}
@@ -199,42 +206,37 @@ The estimation through \textit{maximul likelihood} is a standard practice, see f
 \section{Calibration}
 \subsection{Calibration Data}
 
-\begin{frame}{Dataset}
-\begin{itemize}
-\item[1.] Stock indexes:
+\begin{frame}[allowframebreaks]{Dataset}
+The dataset contains the prices of different assets from \textit{August 2010}  to \textit{October 2018}, all values downloaded from Bloomberg. 
+\begin{enumerate}
+\item Stock indexes:
 	\begin{itemize}
 		\item S\&P500: American stock market index based on 500 large company with stock listed either on the NYSE or NASDAQ.
 		\item EURO STOXX 50: equity index of eurozone stocks, covering 50 stocks from 11 eurozone countries.
 		\item MSCI BRIC: market cap weighted index designed to measure the equity market performance across the emerging country indices of Brazil, Russia, India and China.
 		\item NASDAQ: market cap weighted index including all NASDAQ tiers: Global Select, Global Market and Capital Market.
 	\end{itemize}
-\item[2.] Commodities:
+\item Bond indexes:
+	\begin{itemize}
+		\item BBG Pan European: Bloomberg Barclays Pan-European Aggregate Index that tracks fixed-rate, investment-grade securities issued in different European currencies.
+		\item BBG Pan US: Bloomberg Barclays US Aggregate Bond Index, a benchmark that measures investment grade, US dollar-denominated, fixed-rate taxable bond market.
+		\item BBG Pan EurAgg: similar to the Pan European but only considers securities issued in euros.
+	\end{itemize} 
+\item Currencies:
+	\begin{itemize}
+		\item EUR/USD
+		\item GBP/USD
+		\item CHF/USD
+		\item JPY/USD
+	\end{itemize}
+\item Commodities:
 	\begin{itemize}
 		\item Gold: price of gold measured in USD/Oz.
 		\item WTI: price of crude oil used as benchmark in oil pricing and as the underlying commodity in the NYMEX oil future contracts.
 		\item Grain: S\&P GPSCI index that measures the performance of the grain commodity market.
 		\item Metals: S\&P GSCI Industrial Metals index that measures the movements of industrial metal prices including aluminium, copper, zinc, nickel and lead.
 	\end{itemize}
-\end{itemize}
-\end{frame}
-	
-\begin{frame}{Dataset}
-\begin{itemize}
-\item[3.] Currencies:
-	\begin{itemize}
-	\item EUR/USD
-	\item GBP/USD
-	\item CHF/USD
-	\item JPY/USD
-	\end{itemize}
-\item[4.] Bond indexes:
-	\begin{itemize}
-		\item BBG Pan European: Bloomberg Barclays Pan-European Aggregate Index that tracks fixed-rate, investment-grade securities issued in different European currencies.
-		\item BBG Pan US: Bloomberg Barclays US Aggregate Bond Index, a benchmark that measures investment grade, US dollar-denominated, fixed-rate taxable bond market.
-		\item BBG Pan EurAgg: similar to the Pan European but only considers securities issued in euros.
-	\end{itemize}
-\item[5.] CBOE VIX: index that reflects the market estimate of future volatility, based on a weighted average of implied volatility on a wide range of strikes. 
-\end{itemize}
+\end{enumerate}
 \end{frame}
 
 
@@ -381,12 +383,27 @@ Model & -0.0109 & -0.0238 & -0.0184 & -0.0098 & -0.0509 \\
 
 \subsection{Correlation Significance}
 
-%\begin{frame}{Tests on Correlation Significance}
-%We perform three different tests on the null hypothesis $H_0 : \rho= 0$ versus the alternative $H_1 : \rho \neq 0$:
-%
-%\end{frame}
+\begin{frame}{Tests on Correlation Significance}
+\small
+We perform two different tests of the type:
+\begin{equation*}
+H_0 : \rho= 0 \quad vs  \quad H_1 : \rho \neq 0
+\end{equation*} 
 
-\begin{frame}{Correlation Significance against Bitcoin}
+for the empirical correlation between Bitcoin and the other assets computed as Pearson's sample correlation:
+\begin{equation*}
+r_{X,Y} = \frac{\sum_{i = 1}^{N} (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i = 1}^{N} (x_i - \bar{x})^2 \sum_{i = 1}^{N} (y_i - \bar{y})^2}}
+\end{equation*}
+
+Pearson's test is a simple t-test, the downside is that the underlying hypotheses are normality of both samples but also works if samples are large  enough.
+Permutation test is a more general test with no additional hypotheses but is performed through simulation.
+
+We report the \textit{p-value} for all tests. Considering a confidence level of $5\%$, whenever a \textbf{p-value is higher than $\mathbf{0.05}$} the test is telling us that \textbf{there is no statistical evidence} allowing us  \textbf{to assert that the correlation is different from zero}.
+
+\end{frame}
+
+
+\begin{frame}{Correlation Significance with Bitcoin}
 \SmallerFont
 \begin{table}[]
 \begin{tabular}{lllllll}
@@ -399,7 +416,6 @@ Permutation & 0.512 & 0.042 & 0.087 & 0.095 & 0.911 & 0.720 \\
 Spearman & 0.922 & 0.459 & 0.157 & 0.329 & 0.423 & 0.459 \\
 \bottomrule
 \end{tabular}
-
 \end{table}
 
 \begin{table}[]
@@ -436,7 +452,7 @@ Values reported are the \textit{p-values} for three test on $H_0: \rho=0$ vs $H_
 
 \subsection{Rolling Correlation}
 
-\begin{frame}{Rolling Correlation Stocks}
+\begin{frame}{Rolling Correlation between Bitcoin and Stocks}
 \begin{figure}
 \includegraphics[width=\textwidth]{rolling_stocks.pdf}
 \label{roll_stocks}
@@ -444,7 +460,23 @@ Values reported are the \textit{p-values} for three test on $H_0: \rho=0$ vs $H_
 \end{figure}
 \end{frame}
 
-\begin{frame}{Rolling Correlation Commodities}
+\begin{frame}{Rolling Correlation between Bitcoin and Bonds and VIX}
+\begin{figure}
+	\includegraphics[width=\textwidth]{rolling_bonds.pdf}
+	\label{roll_bonds}
+	\caption{In blue we have the 3 year rolling correlation, in black the 18 month rolling correlation, both updated monthly.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Rolling Correlation between Bitcoin and Currencies}
+\begin{figure}
+	\includegraphics[width=\textwidth]{rolling_fx.pdf}
+	\label{roll_fx}
+	\caption{In blue we have the 3 year rolling correlation, in black the 18 month rolling correlation, both updated monthly.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Rolling Correlation between Bitcoin and Commodities}
 \begin{figure}
 \includegraphics[width=\textwidth]{rolling_commodities.pdf}
 \label{roll_comm}
@@ -452,21 +484,7 @@ Values reported are the \textit{p-values} for three test on $H_0: \rho=0$ vs $H_
 \end{figure}
 \end{frame}
 
-\begin{frame}{Rolling Correlation Currencies}
-\begin{figure}
-\includegraphics[width=\textwidth]{rolling_fx.pdf}
-\label{roll_fx}
-\caption{In blue we have the 3 year rolling correlation, in black the 18 month rolling correlation, both updated monthly.}
-\end{figure}
-\end{frame}
 
-\begin{frame}{Rolling Correlation Bonds and VIX}
-\begin{figure}
-\includegraphics[width=\textwidth]{rolling_bonds.pdf}
-\label{roll_bonds}
-\caption{In blue we have the 3 year rolling correlation, in black the 18 month rolling correlation, both updated monthly.}
-\end{figure}
-\end{frame}
 
 \section{Efficient Frontier}
 
