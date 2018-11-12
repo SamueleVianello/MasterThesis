@@ -82,21 +82,26 @@ p_values
 
 
 
-################## Rolling Correlation ###################################
+################## Lagged Correlation with VIX #################################
+library(tseries)
 
-earliest = min(btc_date)
-latest = max(btc_date)
+dn= 255
+x11()
+ccf(x = cumsum(rev(btc[1:dn])), y=cumsum(rev(vix[1:dn])),lag.max = 100,plot = TRUE)
+
+lag=40
+
+x11()
+par(mfrow=c(2,1))
+plot(rev(btc_date[1:dn]), cumsum(rev(btc[1:dn])), type='l', col='black')
+lines( rev(btc_date[1:(dn-lag)]), cumsum(rev(btc[(1+lag):dn])), col='blue')
+plot(rev(vix_date[1:dn]), cumsum(rev(vix[1:dn])), type='l', col='red')
+lines( rev(btc_date[1:(dn-lag)]), cumsum(rev(btc[(1+lag):dn])), col='blue')
 
 
 
+cor(cumsum(rev(btc[1:dn])),cumsum(rev(vix[1:dn])))
 
-
-
-
-
-
-
-
-
+cor(cumsum(rev(btc[51:dn])),cumsum(rev(vix[1:(dn-50)])))
 
 
