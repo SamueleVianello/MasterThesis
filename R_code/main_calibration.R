@@ -178,21 +178,45 @@ dt = 1/255
 # correlation
 # calibrated_nlminb$theta
 
-calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bric[1:N],bond_us[1:N],bond_eur[1:N]), n=4, dt = dt )
+calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bric[1:N],sp500[1:N],eurostoxx[1:N]), n=4, dt = dt )
 calibrated_params
 
-#cov2cor(calibrated_params$S)
+print(calibrated_params$mu)
+colMeans(my_returns[,2*(1:4)]*255)
+
+cov2cor(calibrated_params$S)
+
+
+
 par(mfrow=c(2,2))
-plot(my_data$BITCOIN_DATE, my_data$BITCOIN, type = 'l', main="BITCOIN")
-plot(my_data$MSCI.BRIC._DATE, my_data$MSCI.BRIC, type='l', main= "BRIC")
-plot(my_data$BOND_US_DATE, my_data$BOND_US, type='l', main= "BOND_US")
-plot(my_data$BOND_EUR_DATE, my_data$BOND_EUR, type='l', main= "BOND_EUR")
+plot(my_data$BITCOIN_DATE, my_data$BITCOIN, type = 'l', main="BITCOIN", ylab = 'Price')
+plot(my_data$MSCI.BRIC._DATE, my_data$MSCI.BRIC, type='l', main= "BRIC", ylab = 'Price')
+plot(my_data$BOND_US_DATE, my_data$BOND_US, type='l', main= "BOND_US", ylab = 'Price')
+plot(my_data$BOND_EUR_DATE, my_data$BOND_EUR, type='l', main= "BOND_EUR", ylab = 'Price')
 
 x11()
 pairs(my_returns[,(1:17)*2])
 
+
+
+
+x11()
+par(mfrow=c(2,2))
+for (idx in 1:4) {
+  xx=seq(-2,2,length.out = 2000)
+  yy= MultivariateMertonPdf_1asset_nocommon(x = xx,dt = 1/255,mu = calibrated_params$mu[idx], S = calibrated_params$sigma[idx],
+                                        theta = calibrated_params$theta[idx], delta = calibrated_params$delta[idx], lambda = calibrated_params$lambda[idx])
+  
+  print(sum(yy*(xx[2]-xx[1])))
+  print(sum(xx*yy*(xx[2]-xx[1]))*255)
+  
+  hist(my_returns[,idx*2], breaks = 60,freq = FALSE)
+  lines(xx, dnorm(xx, mean = mean(my_returns[,idx*2]),sd = sd(my_returns[,idx*2])))
+  lines(xx,yy, col='green')
+}
+
 ###########################################################################
-######################## Building complete correlaion #####################
+######################## Building complete correlation #####################
 ###########################################################################
 # from a 4 asset model
 
@@ -327,7 +351,7 @@ actual_parameters = rbind(actual_parameters, colSums(lambdas)/(N_assets%/%2 -1))
 actual_parameters = cbind(actual_parameters, results$last_asset_params)
 
 rownames(actual_parameters)= c("mu", "theta", "delta", "lambda")
-colnames(actual_parameters)[N_assets] = "vix"
+colnames(actual_parameters)[N_assets] = colnames(my_returns[, 2*N_assets])
 
 results = list(parameters = actual_parameters, covariance = covariance, correlation = correlation, 
                full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas, 

@@ -336,8 +336,8 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
     stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
   }
   
-  pdf=(1-ldt)*dnorm(x, mean = mu, sigma = sqrt(S))+
-      ldt *dnorm(x, mean = mu+theta, sigma = sqrt(S + delta))
+  pdf=(1-ldt)*dnorm(x, mean = mu*dt, sd = sqrt(S*dt))+
+      ldt *dnorm(x, mean = mu*dt +theta, sd = sqrt(S*dt + delta))
 
   return(pdf)
 }
@@ -390,149 +390,6 @@ negloglik_1asset_nocommon= function(params, x, dt, n) {
   
   # computing pdf on each point and adding
   partial = MultivariateMertonPdf_1asset_nocommon(x, dt, mu, S, theta, delta, lambda)
-  nll = -sum(log(partial))
-  
-  # last check on result
-  if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
-    nll = 1e10
-  }
-  return(nll)
-}
-
-
-#############################################################################
-####################### two assets + 1 common jump ##########################
-#############################################################################
-
-
-MultivariateMertonPdf_2assets = function(x, dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha){
-  # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
-  # NOTE: all vectors should be vertical [n*1]
-  # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
-  #
-  # INPUT
-  # x:      vector representing at which point to compute the density [vector of n]
-  # mu:     drift of the continuos part [vector of n]
-  # S:      covariance of the continuous part [matrix n*n]
-  # theta:  means of the idiosyncratic jump intensity [vector of n]
-  # delta:  variances of the idiosyncratic jump intensity [vector of n]
-  # lambda:  poisson parameters of the idiosyncratic jump part [vector of n]
-  # theta_z: mean of common jump intensity 
-  # delta_z: variance of common jump intensity
-  # lambda_z: poisson parameter of common jump part
-  # alpha:  vector of coefficient that multiply the common jump effect for each component
-  
-  # check on lambdas: 
-  ldt =lambda*dt
-  ldt_z = lambda_z*dt
-  
-  if(sum(ldt>=1) || ldt_z >=1){
-    stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
-  }
-  
-  n = length(mu)
-  
-  cov_z = alpha%*%t(alpha)*delta_z
-  mean_z = theta_z*alpha
-  
-  pdf = 0
-  
-  mean_y1 = c(theta[1],0)
-  cov_y1 = matrix(c(delta[1]^2,0,0,0), 2,2)
-  
-  mean_y2 = c(0,theta[2])
-  cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
-  
-  mean_x = mu*dt
-  cov_x = S*sqrt(dt)
-  
-
-  #000
-  pdf= pdf + (1-ldt[1])*(1-ldt[2])*(1-ldt_z)*dmvnorm(x, mean = mean_x, sigma = cov_x)
-  #001
-  pdf= pdf + (ldt[1])*(1-ldt[2])*(1-ldt_z)*dmvnorm(x, mean = mean_x+mean_y1, sigma = cov_x+cov_y1)
-  #010
-  pdf= pdf + (1-ldt[1])*(ldt[2])*(1-ldt_z)*dmvnorm(x, mean = mean_x+mean_y2, sigma = cov_x+cov_y2)
-  #011
-  pdf= pdf + (ldt[1])*(ldt[2])*(1-ldt_z)*dmvnorm(x, mean = mean_x+mean_y1+mean_y2, sigma = cov_x+cov_y1+cov_y2)
-  #100
-  pdf= pdf + (1-ldt[1])*(1-ldt[2])*(ldt_z)*dmvnorm(x, mean = mean_x+mean_z, sigma = cov_x+cov_z)
-  #101
-  pdf= pdf + (ldt[1])*(1-ldt[2])*(ldt_z)*dmvnorm(x, mean = mean_x+mean_y1+mean_z, sigma = cov_x+cov_y1+cov_z)
-  #110
-  pdf= pdf + (1-ldt[1])*(ldt[2])*(ldt_z)*dmvnorm(x, mean = mean_x+mean_y2+mean_z, sigma = cov_x+cov_y2+cov_z)
-  #111
-  pdf= pdf + (ldt[1])*(ldt[2])*(ldt_z)*dmvnorm(x, mean = mean_x+mean_y1+mean_y2+mean_z, sigma = cov_x+cov_y1+cov_y2+cov_z)
-  
-  
-  return(pdf)
-}
-
-
-negloglik_2assets= function(params, x, dt, n) {
-  # 
-  # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
-  # 
-  ## add check on inputs
-  
-  # reconstruction of parameters:
-  idx =1
-  mu = params[idx:(idx+n-1)]
-  idx = idx+n 
-  
-  
-  sigma=diag(params[idx:(idx+n-1)])
-  idx = idx + n
-  
-  corr = matrix(rep(0,n*n), ncol = n)
-  k=1
-  for(i in 1:n)
-    for(j in i:n){
-      if (j!=i){
-        corr[i,j]=params[idx+k-1]
-        corr[j,i]=params[idx+k-1]
-        k=k+1
-      }
-      else
-        corr[i,j]=1
-    }
-  idx = idx + n*(n-1)/2
-  
-  S = sigma %*% corr %*% sigma
-  
-  theta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  delta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  lambda = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  theta_z = params[idx]
-  idx = idx+1
-  
-  delta_z = params[idx]
-  idx = idx+1
-  
-  lambda_z = params[idx]
-  idx = idx+1
-  
-  alpha = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  # print(mu)
-  # print(S)
-  # print(theta)
-  # print(delta)
-  # print(lambda)
-  # print(alpha)
-  if( (idx-1)!=length(params))
-    stop("Error in parameter reconstruction: number of parameters is wrong.")
-  
-  
-  # computing pdf on each point and adding
-  partial = MultivariateMertonPdf_2assets(x, dt, mu, S, theta, delta, lambda, theta_z, delta_z, lambda_z, alpha)
   nll = -sum(log(partial))
   
   # last check on result
@@ -845,7 +702,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4 = matrix(rep(0,n*n),n,n)
   cov_y4[4,4] = delta[4]^2
   
-  mean_x = mu*dt
+  mean_x = (mu)*dt #- theta*ldt
   cov_x = S*sqrt(dt)
   
   
