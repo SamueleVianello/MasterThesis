@@ -21,8 +21,9 @@ plot(btc,eur, pch=20)
 plot(btc,gbp, pch=20)
 plot(btc,chf, pch=20)
 plot(btc,jpy, pch=20)
-plot(btc,pan_euro, pch=20)
-plot(btc,pan_us, pch=20)
+plot(btc,bond_europe, pch=20)
+plot(btc,bond_us, pch=20)
+plot(btc,bond_eur, pch=20)
 
 
 # No apparent correlation from graphical inspection
@@ -50,11 +51,11 @@ longData<-longData[longData$value!=0,]
 
 p1=ggplot(longData, aes(x = Var2, y = Var1)) + 
   geom_raster(aes(fill=value)) + 
-  scale_fill_gradient2(low="blue", high="red",mid = "white") +
+  scale_fill_gradient2(low="blue", high="red",mid = "white", limits = c(-1,1)) +
   labs( title="Model Correlation") +
-  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 0),
-                     axis.text.y=element_text(size=9),
-                     plot.title=element_text(size=11),
+  theme_bw() + theme(axis.text.x=element_text(size=12, angle=90,hjust = 0),
+                     axis.text.y=element_text(size=12),
+                     plot.title=element_text(size=15),
                      axis.title = element_blank() )+
   scale_x_discrete(position = "top")
 
@@ -67,16 +68,17 @@ longData<-longData[longData$value!=0,]
 
 p2=ggplot(longData, aes(x = Var2, y = Var1)) + 
   geom_raster(aes(fill=value)) + 
-  scale_fill_gradient2(low="blue", high="red",mid = "white") +
+  scale_fill_gradient2(low="blue", high="red",mid = "white", limits=c(-1,1)) +
   labs( title="Sample Correlation") +
-  theme_bw() + theme(axis.text.x=element_text(size=9, angle=90,hjust = 0),
-                     axis.text.y=element_text(size=9),
-                     plot.title=element_text(size=11),
+  theme_bw() + theme(axis.text.x=element_text(size=12, angle=90,hjust = 0),
+                     axis.text.y=element_text(size=12),
+                     plot.title=element_text(size=15),
                      axis.title = element_blank() )+
   scale_x_discrete(position = "top")
 
 x11()
 grid.arrange(p1,p2,nrow=1)
+
 
 
 ############## Significance of correlation ##############
