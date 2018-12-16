@@ -1,0 +1,110 @@
+\chapter{Presentation of the Models}
+\label{chpr:models}
+In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce the Merton Model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple B\&S dynamics of the asset price. Then we move to the \textit{stochastic volatility} model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying which evolves as a B\&S  with a stochastic volatility term.
+The last model we will present was introduced by Bates in 1996 and it is the combination of the former two: an asset dynamics which include jumps and is driven by a stochastic volatility.
+All models are first introduced in the one dimensional case and then generalised to the $n$ dimensional case which was then implemented in our code.
+
+\bigskip
+
+\section{Preliminary Notions}
+
+In this section we will briefly present the Black\&Scholes framework and asset dynamics, introduce the notion of Poisson process and present the 
+CIR process. All of these building blocks will be required to fully understand the models to follow.
+
+
+\subsection{B\&S Model}
+
+\subsection{Poisson Process}
+
+\subsection{CIR Process}
+
+\bigskip
+\section{Merton Model}
+
+ ******maybe add some words right here ********
+%%% ORIGINAL MODEL
+\subsection{Original Univariate Model}
+The first jump diffusion model was originally introduced in \cite{MERTON1976} in order to account for the leptokurtic distribution of real market returns and to model sudden fall (or rise) in prices due to the arrival of new information.
+The asset price dynamics is modelled as follows:
+
+\begin{equation}
+\label{merton_model}
+\frac{dS_t}{S_t} = \alpha dt + \sigma dW_t  + (Y_t-1)dN
+\end{equation}
+
+where $\alpha$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y_t$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
+
+We can rewrite (\ref{merton_model}) in terms of the log-returns $X_t = log(S_t)$ and obtain, following the computations in \cite{MARTIN2007} and using theory from \cite{TANKOV2015}:
+\begin{equation}
+dX_t = (\alpha - \frac{\sigma^2}{2})dt + \sigma dW_t + \log (Y_t)
+\end{equation}
+
+that has as solution:
+\begin{equation}
+\label{merton_returns}
+X_t =X_0 +  \mu t + \sigma W_t + \sum_{k=1}^{N(t)} \eta_k
+\end{equation}
+
+where $X_0$ is the initial value of the log-returns, $\eta_k= \log(Y_k) = \log(Y_{t_k})$ and $t_k$ is the time when the $k^{th}$ Poisson shock from $N(t)$ happens. We use $\mu = \alpha - \frac{\sigma^2}{2} $ for ease of notation throughout the paper.
+Following \cite{MERTON1976}, we take $\eta_k$ \textit{i.i.d.} (independent and identically distributed) and Gaussian, in particular $\eta \sim \mathcal{N}(\theta, \delta^2)$.
+Another choice for the distribution of $\eta$ is given in \cite{KOU2002}. 
+
+%% AGGIUNGERE DENSITA' NEL caso generale [0,T] ?
+
+It is often useful when dealing with market data that are by nature discrete, to consider a \textit{discretized} version of (\ref{merton_returns}) in which the values are sampled at intervals of $\Delta t$ in $[0, T]$. We thus get that for $X_i = \log(\frac{S_{i+1}}{S_i})$:
+
+\begin{equation}
+\label{discrete_returns}
+X_i =  \mu \Delta t + \sigma \sqrt{\Delta t} \; z +  \sum_{k=1}^{N_{i+1} - N_i} Y_k
+\end{equation}
+
+where we denote $X_i = X_{t_i}$, $N_i = N(t_i)$ and $t_i = i \Delta t$ with $i= 0 \dots N$, $t_N = N \Delta t= T$,  $z$ is distributed as a standard Gaussian $ z\sim \mathcal{N}(0,1)$.
+
+The Poisson process $N(t)$ in (\ref{discrete_returns}) is computed at times $t_{i+1}$ and $t_i$ and these quantities are subtracted. Following basic stochastic analysis, one can prove that the resulting value $N_{i+1} - N_i$,  is distributed as a Poisson random variable $N$ of parameter $\lambda \Delta t$.
+This allows us to provide an explicit formulation for the transition density of the returns using the theorem of total probability:
+
+\begin{equation}
+\label{transitional}
+f_{\Delta X} (x) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta X | N = k}(x) 
+\end{equation}
+
+This is an infinite mixture of Gaussian distributions, due to the infinite possible realization of the Poisson variable, and renders the estimation of the model through MLE technique intractable, see \cite{HONORE1998}.
+To solve this problem we introduce a first order approximation, as it's been proposed in \cite{BALLTOROUS1983}. Considering small $\Delta t$, so that also $\lambda \Delta t $ is small, we obtain that the only relevant terms in (\ref{transitional}) are the one for $ k = 0, 1$.
+The formula for the transition density becomes:
+\begin{equation*}
+f_{\Delta X} (x) = \mathbb{P}(N = 0) f_{\Delta X | N = 0}(x) + \mathbb{P}(N = 1) f_{\Delta X | N = 1}(x)
+\end{equation*}
+expressing it explicitly:
+\begin{equation}
+f_{\Delta X} (x) = (1 - \lambda \Delta t) \;f_{\mathcal{N}}(x ; \mu, \sigma^2) + (\lambda \Delta t)\; f_{\mathcal{N}}(x ; \mu + \theta, \sigma^2+\delta^2)
+\end{equation}
+where $f_{\mathcal{N}}(x ; \mu, \sigma^2)$ is the density of a Gaussian with parameters $\mathcal{N}(\mu, \sigma^2)$.
+
+
+%%% MULTIVARIATE MODEL
+\subsection{Multivariate Model}
+Starting from the univariate model introduced in \cite{MERTON1976}, we developed a generalization to $n$ assets including only idiosyncratic jumps:
+
+\begin{equation}
+\frac{dS_t^{(j)}}{S_t^{(j)}} = \alpha_j dt + \sigma_j dW_t^{(j)} + (Y^{(j)}_t -1) dN^{(j)}_t
+\end{equation}
+
+where $\mathbf{S}_t$ are the prices of the assets, $j = 1 ... n$ represents the asset, $\alpha_j$ are the drifts, $\sigma_j$ are the diffusion coefficients, $W^{(j)}_t$ are the components of an $n$-dimensional Wiener process $ \mathbf{W}_t$ with $dW^{(j)}dW^{(i)}=\rho_{j,i}$, $\eta_j$ represent the intensities of the jumps and are distributed as Gaussian: $\eta_j \sim \mathcal{N}(\theta_j , \delta_j^2)$. Finally, $N^{(j)}(t)$ are Poisson processes with parameters $\lambda_j$, which are independent of $\mathbf{W}_t$ and of one another. 
+
+In order to calibrate the parameters to the value of the market log-returns, we used a Maximum Likelihood approach. We thus maximize:
+\begin{equation}
+\mathcal{L}(\psi | \Delta \mathbf{x}_{t_1},\Delta \mathbf{x}_{t_2},\dots,\Delta \mathbf{x}_{t_N}) = \sum_{i=1}^{N} f_{\Delta \mathbf{X}}(\Delta\mathbf{x}_{t_i} | \psi)
+\end{equation}
+
+where $\psi = \{ \{\mu_j\},\{\sigma_j\},\{\rho_{i,j}\},\{\theta_j\},\{\delta\}_j,\{\lambda_j\} \}$ are the model parameters, $f_{\Delta \mathbf{X}}$ is the transitional density of the log-returns which is computed approximately using the theorem of total probability.
+For a full insight on the model and the calibration procedure, please refer to the *APPENDIX LINK*
+
+
+\section{Heston Model}
+
+
+
+\section{Bates Model}
+
+
+
