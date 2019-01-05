@@ -3,7 +3,7 @@
 ###############################################################
 
 
-CalibrateMVMerton=function(x, n, dt, trace = 10){
+CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
   
   library(DEoptim)
   source("MultivariateMertonModel.R")
@@ -15,19 +15,21 @@ CalibrateMVMerton=function(x, n, dt, trace = 10){
   else if(n ==4) obj = negloglik_4assets_nocommon
   else obj = negloglik
   
-  custom_jump_bounds = T
-  min_jump = rep(0,n)
-  max_jump = rep(0,n)
-  
-  alpha_max = 0.995 # quantile for max jump
-  alpha_min = 0.999
-  for (i in 1:n) {
-    min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
-    max_jump[i] = quantile(x= x[,i], probs = 1-alpha_max)
+  if(custom_jump_bounds){
+    min_jump = rep(0,n)
+    max_jump = rep(0,n)
+    
+    alpha_max = 0.995 # quantile for max jump
+    alpha_min = 0.999
+    for (i in 1:n) {
+      min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
+      max_jump[i] = quantile(x= x[,i], probs = 1-alpha_max)
+    }
   }
-  
-  
-  
+  else{
+    min_jump = rep(-0.1,n)
+    max_jump = rep(-1,n)
+  }
   
   bounds_nocommon = BoundsCreator(n=n, custom_jump_mean = custom_jump_bounds, 
                                   max_jump_mean = max_jump, min_jump_mean = min_jump)
