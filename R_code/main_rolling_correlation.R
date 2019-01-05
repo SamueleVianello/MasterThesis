@@ -1,6 +1,11 @@
 library(mondate)
-# source("main_correlation_significance.R")
+load("returns.Rda")
+load("data.Rda")
+attach(my_returns)
 
+
+
+# Funtcion to perform permutation test ########################################
 PermutationTestCorr = function(x,y=0, N=2000){
   # Two sided permutation test for correlation
   # H0: rho = 0   vs    H1: rho!=0
@@ -31,6 +36,8 @@ PermutationTestCorr = function(x,y=0, N=2000){
   p = larger/N
   return(p)
 } 
+############################################################################
+
 
 dates = as.Date(btc_date, origin="1899-12-30")
 earliest = min(dates)
@@ -172,20 +179,20 @@ grid()
 
 
 
-plot(end_times, roll_pvalue[,'bric'],type = 'b',ylim = c(0,1), ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'bric'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'bric'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'bric'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'sp500'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'sp500'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'sp500'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'sp500'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'eurostoxx'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'eurostoxx'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'eurostoxx'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'eurostoxx'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'nasdaq'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'nasdaq'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'nasdaq'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'nasdaq'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
 # dev.copy2pdf(file="rolling_stocks.pdf")
@@ -225,23 +232,23 @@ abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "
 grid(nx=NA,  ny =NULL)
 
 
-plot(end_times, roll_pvalue[,'gold'],type = 'b',ylim = c(0,1), ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'gold'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'gold'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'gold'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "dotted", lwd = par("lwd"))
 
-plot(end_times, roll_pvalue[,'wti'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'wti'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'wti'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'wti'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "dotted", lwd = par("lwd"))
 
-plot(end_times, roll_pvalue[,'grain'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'grain'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'grain'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'grain'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "dotted", lwd = par("lwd"))
 
-plot(end_times, roll_pvalue[,'metal'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'metal'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'metal'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'metal'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "dotted", lwd = par("lwd"))
 
@@ -277,20 +284,20 @@ title("jpy")
 grid()
 
 
-plot(end_times, roll_pvalue[,'eur'],type = 'b',ylim = c(0,1), ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'eur'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'eur'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'eur'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'gbp'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'gbp'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'gbp'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'gbp'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'chf'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'chf'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'chf'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'chf'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'jpy'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'jpy'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'jpy'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'jpy'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
 # dev.copy2pdf(file="rolling_fx.pdf")
@@ -328,20 +335,21 @@ grid()
 
 
 
-plot(end_times, roll_pvalue[,'bond_europe'],type = 'b',ylim = c(0,1), ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'bond_europe'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'bond_europe'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'bond_europe'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'bond_us'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'bond_us'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'bond_us'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'bond_us'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-plot(end_times, roll_pvalue[,'bond_eur'],type = 'b',ylim = c(0,1),ylab = "pvalue")
-lines(end_times_3y,roll_pvalue_3y[,'bond_eur'],type = 'b',col = 'blue')
+plot(end_times, roll_pvalue[,'bond_eur'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
+lines(end_times_3y,roll_pvalue_3y[,'bond_eur'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
 
-# plot(end_times, roll_pvalue[,'vix'],type = 'b',ylim = c(0,1),ylab = "vix")
-# lines(end_times_3y,roll_pvalue_3y[,'vix'],type = 'b',col = 'blue')
+
+# plot(end_times, roll_pvalue[,'vix'],type = 'b',pch=16,ylim = c(0,1),ylab = "vix")
+# lines(end_times_3y,roll_pvalue_3y[,'vix'],type = 'b',pch=16,col = 'blue')
 # abline(h = .05,col = 'grey')
 
 # dev.copy2pdf(file="rolling_bonds.pdf")
