@@ -1,6 +1,6 @@
 \chapter{Presentation of the Models}
 \label{chpr:models}
-In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce the Merton Model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple B\&S dynamics of the asset price. Then we move to the \textit{stochastic volatility} model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying which evolves as a B\&S  with a stochastic volatility term.
+In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce a \textit{jump diffusion} model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple B\&S dynamics of the asset price. Then we move to the \textit{stochastic volatility} model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying which evolves as a B\&S  with a stochastic volatility term.
 The last model we will present was introduced by Bates in 1996 and it is the combination of the former two: an asset dynamics which include jumps and is driven by a stochastic volatility.
 All models are first introduced in the one dimensional case and then generalised to the $n$ dimensional case which was then implemented in our code.
 
@@ -8,13 +8,101 @@ All models are first introduced in the one dimensional case and then generalised
 
 \section{Preliminary Notions}
 
-In this section we will briefly present the Black\&Scholes framework and asset dynamics, introduce the notion of Poisson process and present the 
+In this section we will briefly present the equation of a geometric brownian motion, introduce the notion of Poisson process and present the 
 CIR process. All of these building blocks will be required to fully understand the models to follow.
 
 
-\subsection{B\&S Model}
+\subsection{Geometric Brownian Motion}
+The simplest continuous dynamics to describe the price of an asset is that of a geometric brownian motion:
+\begin{equation}
+	\label{GBM_eq}
+	\frac{dS_t}{S_t} = \mu dt + \sigma dW_t
+\end{equation}
 
-\subsection{Poisson Process}
+where $S_t$ represents the price of the asset at time $t$, $\mu$ is the (constant) drift and $\sigma$ is the (constant) volatility. $W_t$ is a Wiener process.
+This is the standard and most widespread stichastic differential equation to model asset dynamics, so we will only present those results that will be later used in our study.
+
+
+Applying Ito's lemma to the previous equation, we can also explicitly express the dynamics of the log-returns $X_t = log(S_t)$ , obtaining:
+\begin{equation}
+	dX_t = (\mu - 	\frac{\sigma^2}{2}) dt + \sigma dW_t
+\end{equation}
+
+This stochastic differential has a simple solution which can be computed via stochastic integrals and allows us to describe the dynamics of the log-returns at each instant $t$ starting from $t=0$:
+\begin{equation}
+	\label{GBM_ret_sol}
+	X_t = X_0 + (\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t
+\end{equation}
+
+Thanks to (\ref{GBM_ret_sol}) we can now express the price dynamics of the asset by inverting the relation with the returns: $S_t = e^{X_t}$. 
+We thus obtain the solution to (\ref{GBM_eq}):
+\begin{equation}
+	S_t = S_0 \;e^{(\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t}
+\end{equation}
+
+Given that $S_t = e^{X_t}$, that $X_t$ by its equation is a generalized brownian motion and hence we have $X_t - X_0 \sim \mathcal{N}(\mu - 	\frac{\sigma^2}{2}, \sigma^2)$, the resulting distribution of prices at time $t$ as units of the initial value is distibuted as a log-normal.
+
+The great success of these framework comes from the simplicity of its dynamics. In particular, since the log-returns follow a Gaussian distribution, $\mu$ and $\sigma$ are easy to calibrate from data and the formulas for pricing options  are often explicit.
+As one can imagine, a simple model can only explain simple phenomena: that's why we have such a great deal of \textit{new and improved} version of equation \ref{GBM_eq}.
+
+\subsection{Poisson Process and Compound Poisson Process}
+Consider a sequence of \textit{independent} exponential random variables  $\{\tau_i\}_{i\geq1}$ with parameter $\lambda$\footnote{An exponential random variable $\tau$ of parameter $\lambda$ has a cumulative distibution function of the form: $\mathbb{P}(\tau \geq y) = e^{-\lambda y}$} and let $T_n = \sum_{i=1}^{n}\tau_i$. Then we can define the \textit{Poisson process} $N_t$ as
+\begin{equation}
+ 	N_t = \sum_{n\geq 1} \mathds{1}_{t \geq T_n}
+\end{equation}
+
+where $\mathds{1}_{condition}$ is 1 if the \textit{condition} is true, 0 if it is false.
+
+$N_t$ is thus a piece-wise constant RCLL\footnote{RCLL is shorthand for right continuous with left limit.} process with jumps that happen at times $T_n$ and are all of size 1, as we can see from Figure \cref{fig:pois}.
+An important property of Posson processes is that they have independent and stationary increments, meaning that the increment of $N_t - N_s$ (with $s\leq t$) is independent from the history of the process up to $N_s$ and has the same law of $N_{t-s}$.
+At any time $t$, $N_t$ is distributed as a Poisson of parameter $\lambda t$, which means it is a discrete random variable on the integer set with
+\begin{equation}
+\label{eq:pois_pdf}
+\mathbb{P}( N_t = n) = e^{-\lambda t}\frac{(\lambda t)^n}{n!}
+\end{equation}
+
+
+
+\begin{figure}
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{Images/poisson_process.pdf}
+		\caption{Poisson processes.}
+		\label{fig:pois}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{Images/compound_poisson_process.pdf}
+		\caption{Compound with Gaussian jumps.}
+		%$\mathcal{N}(1,1)$
+		\label{fig:compound_pois}
+	\end{subfigure}
+	\caption{Poisson processes and compound Poisson processes with different $\lambda$.}
+	\label{fig:pois_process}
+\end{figure}
+
+When working with jump diffusion process, it is often the case that there is no explicit formula for its density, thus usually we resort to characteristic functions. The characteristic function of $N_t$ is given by 
+\begin{equation}
+\label{eq:pois_chf}
+	\phi_{N_t}(u)=e^{\lambda t (e^{iu}-1)}
+\end{equation}
+
+The computations to get \ref{eq:pois_chf} from \ref{eq:pois_pdf} are carried out in Appendix \ref{app:A}. 
+
+\bigskip
+For financial applications, it is of little interest to have a process with a single possible jump size. The \textit{compound} Poisson processes are a generalization of Poisson processes  where  the jump sizes can have an arbitrary distribution. More precisely, consider a Poisson process $N_t$ with parameter $\lambda$ and a sequence of i.i.d\footnote{i.i.d stands for independent and identically distributed.} variables ${Y_i}_{i\geq 1}$ with law $f_Y(y)$. Then the process defined by
+\begin{equation}
+	X_t = \sum_{n=1}^{N_t} Y_i
+\end{equation}
+is a compound Poisson process. Examples of this kind of process are plotted in Figure \cref{fig:compound_pois}.
+
+As before, we developed the computations to obtain an expression for the characteristic function of $X_t$ in Appendix \ref{app:A}. The resulting expression depends on the distribution of $Y$, specifically from its characteristic function:
+
+\begin{equation}
+	\phi_{X_t}(u) = e^{\lambda t (\phi_Y(u)-1)}
+\end{equation}
+
 
 \subsection{CIR Process}
 
