@@ -3,8 +3,10 @@
 ###############################################################
 
 
+
 CalibrateMVMerton=function(x, n, dt, trace = 10,
                            min_theta=NA,max_theta=NA, min_delta=NA, max_delta=NA){
+
   
   library(DEoptim)
   source("MultivariateMertonModel.R")
@@ -16,12 +18,14 @@ CalibrateMVMerton=function(x, n, dt, trace = 10,
   else if(n ==4) obj = negloglik_4assets_nocommon
   else obj = negloglik
   
+
   bounds_nocommon = BoundsCreator(n, n_common=0,
                                   min_theta=min_theta, max_theta=max_theta, min_delta= min_delta, max_delta=max_delta)
+
   
   # First optimization using deoptim
   print("Starting calibration using DEoptim...")
-  control_list_deoptim = list(itermax = 50, NP = 200, strategy = 6,trace=trace)
+  control_list_deoptim = list(itermax = 50, NP = 10*length(bounds_nocommon$lower), strategy = 6,trace=trace)
   
   start_time_deoptim <- Sys.time()
   outDE <- DEoptim(obj, 
@@ -56,26 +60,30 @@ CalibrateMVMerton=function(x, n, dt, trace = 10,
 
 
 
+
 BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=NA, max_delta=NA){
+
   # Creates lower and upper boundaries for the DEoptim optimization on the likelihood
   # for a n-multivariate merton process and n_common common jumps
-  min_mu = -10
-  max_mu = 10
-  min_lambda = 0.1
+  min_mu = -5
+  max_mu = 5
+  min_sigma = 1e-5
+  max_sigma = 5
+  min_lambda = 0.0001
   max_lambda = 100
+
   if (is.na(min_theta)) {min_theta = -1}
   if (is.na(max_theta)) {max_theta =  1}
   min_sigma = 1e-5
   max_sigma = 10
   if(is.na(min_delta)) {min_delta = min_sigma}
   if(is.na(max_delta)) {max_delta = max_sigma}
+
   min_corr = -1
   max_corr = 1
-  min_alpha = -1
-  max_alpha = 1
   
   # initialising resulting vector low and up
-  leng = 4*n + (n+1)*n*0.5 + n_common*n + 3*n_common
+  leng = 4*n + (n+1)*n*0.5
   low = rep(0,leng)
   up = rep(0,leng)
   
@@ -99,12 +107,22 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
     idx = idx + N_var
   }
   
-  # means of idiosyncratic term
-  low[idx:(idx+n-1)] = rep(min_theta,n)
-  up[idx:(idx+n-1)] = rep(max_theta,n)
+  # means of idiosyncratic jump term
+  if (!custom_jump_mean){
+    low[idx:(idx+n-1)] = rep(min_theta,n)
+    up[idx:(idx+n-1)] = rep(max_theta,n)
+  }
+  else {
+    for (i in 0:(n-1)) {
+      low[idx+i] = ifelse(is.na(min_jump_mean[i+1]), min_theta, min_jump_mean[i+1])
+      up[idx+i] = ifelse(is.na(max_jump_mean[i+1]), min_theta, max_jump_mean[i+1])
+    }
+  }
   idx = idx+n
   
-  # standar deviation of idyosincratic term
+
+  # standar deviation of idyosincratic jump term
+
   low[idx:(idx+n-1)] = rep(min_delta,n)
   up[idx:(idx+n-1)] = rep(max_delta,n)
   idx = idx+n
@@ -114,26 +132,6 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
   up[idx:(idx+n-1)] = rep(max_lambda,n)
   idx = idx+n
   
-  if (n_common>0)
-  {  
-    # boundaries on the parameters of common jumps
-    low[idx] =min_mu
-    up[idx] = max_mu
-    idx = idx+1
-    
-    low[idx] =min_var
-    up[idx] = max_var
-    idx = idx+1
-    
-    low[idx] =min_lambda
-    up[idx] = max_lambda
-    idx = idx+1
-    
-    # boundaries on alpha
-    low[idx:(idx+n-1)] = rep(min_alpha,n)
-    up[idx:(idx+n-1)] = rep(max_alpha,n)
-    idx = idx+n
-  }
   
   if(  ((idx-1)!=length(low))  || (length(low)!=length(up)) )
     stop("Error in parameter reconstruction: number of parameters is wrong.")
@@ -142,7 +140,8 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
 }
 
 
-ParametersReconstruction = function(params, n, common = TRUE){
+
+ParametersReconstruction = function(params, n, common = FALSE){
   
   # reconstruction of parameters:
   idx =1

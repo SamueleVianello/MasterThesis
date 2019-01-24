@@ -339,6 +339,7 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
   pdf=(1-ldt)*dnorm(x, mean = mu*dt, sd = sqrt(S*dt))+
       ldt *dnorm(x, mean = mu*dt+theta, sd = sqrt(S*dt + delta))
 
+
   return(pdf)
 }
 
@@ -826,8 +827,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4[4,4] = delta[4]^2
   
   mean_x = mu*dt
-  cov_x = S*(dt)
-  
+  cov_x = S*sqrt(dt) # FIXME:check sqrt(dt) or dt
   
   #0000
   pdf= pdf + (1-ldt[1])*(1-ldt[2])*(1-ldt[3])*(1-ldt[4])*dmvnorm(x, mean = mean_x, sigma = cov_x)

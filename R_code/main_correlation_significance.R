@@ -21,11 +21,64 @@ plot(btc,eur, pch=20)
 plot(btc,gbp, pch=20)
 plot(btc,chf, pch=20)
 plot(btc,jpy, pch=20)
-plot(btc,pan_euro, pch=20)
-plot(btc,pan_us, pch=20)
+plot(btc,bond_europe, pch=20)
+plot(btc,bond_us, pch=20)
+plot(btc,bond_eur, pch=20)
 
 
 # No apparent correlation from graphical inspection
+
+#**************************************** 
+#** VISUAL COMPARISON OF CORRELATIONS  **
+#****************************************
+library(reshape2)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+
+load("results.Rda")
+
+
+attach(results)
+colnames(correlation) = colnames(my_returns[,2*(1:17)])
+rownames(correlation) = colnames(my_returns[,2*(1:17)])
+
+correl_reverse = correlation[dim(correlation)[1]:1,]
+
+longData<-melt(correl_reverse)
+longData<-longData[longData$value!=0,]
+
+p1=ggplot(longData, aes(x = Var2, y = Var1)) + 
+  geom_raster(aes(fill=value)) + 
+  scale_fill_gradient2(low="blue", high="red",mid = "white", limits = c(-1,1)) +
+  labs( title="Model Correlation") +
+  theme_bw() + theme(axis.text.x=element_text(size=12, angle=90,hjust = 0),
+                     axis.text.y=element_text(size=12),
+                     plot.title=element_text(size=15),
+                     axis.title = element_blank() )+
+  scale_x_discrete(position = "top")
+
+
+sample_corr = cor(my_returns[, 2*(1:17)])
+sample_cor_reverse = sample_corr[dim(sample_corr)[1]:1,]
+
+longData<-melt(sample_cor_reverse)
+longData<-longData[longData$value!=0,]
+
+p2=ggplot(longData, aes(x = Var2, y = Var1)) + 
+  geom_raster(aes(fill=value)) + 
+  scale_fill_gradient2(low="blue", high="red",mid = "white", limits=c(-1,1)) +
+  labs( title="Sample Correlation") +
+  theme_bw() + theme(axis.text.x=element_text(size=12, angle=90,hjust = 0),
+                     axis.text.y=element_text(size=12),
+                     plot.title=element_text(size=15),
+                     axis.title = element_blank() )+
+  scale_x_discrete(position = "top")
+
+x11()
+grid.arrange(p1,p2,nrow=1)
+
 
 
 ############## Significance of correlation ##############
@@ -67,11 +120,11 @@ cor(btc,sp500)
 PermutationTestCorr(btc,sp500)
 rcorr(btc,sp500, type = "pearson")$P['x','y']
 
-# Notice that Spearman is a non parametric test
 
-p_values= data.frame(type = c("Pearson", "Permutation", "Spearman"))
+p_values= data.frame(type = c("Correlation","Pearson", "Permutation", "Spearman"))
 for(i in 2:(dim(my_returns)[2]%/%2)){
-  cors = c(PermutationTestCorr(btc,my_returns[,2*i]),
+  cors = c(cor(btc,my_returns[,2*i]),
+           PermutationTestCorr(btc,my_returns[,2*i]),
            rcorr(btc,my_returns[,2*i], type = "pearson")$P['x','y'],
            rcorr(btc,my_returns[,2*i], type = "spearman")$P['x','y'])
   p_values[colnames(my_returns)[2*i]] = cors
@@ -82,8 +135,10 @@ p_values
 
 
 
+
 ################## Lagged Correlation with VIX #################################
 library(tseries)
+
 
 dn= 255
 x11()
