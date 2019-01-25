@@ -1,0 +1,144 @@
+\documentclass[12pt, a4paper, oneside]{book}
+
+
+\include{packages}
+
+%% remark theoremstyle
+%\newtheoremstyle{break}
+%{\topsep}{\topsep}%
+%{\itshape}{}%
+%{\bfseries}{}%
+%{\newline}{}%
+%\theoremstyle{break}
+%\newtheorem{remark}{Remark}[section]
+
+% problem theoremstyle
+%\newtheoremstyle{problemstyle}  % <name>
+%{10pt}  % <space acbove>
+%{10pt}  % <space below>
+%{\normalfont} % <body font>
+%{}  % <indent amount}
+%{\bfseries\itshape} % <theorem head font>
+%{\normalfont\bfseries:} % <punctuation after theorem head>
+%{.5em} % <space after theorem head>
+%{} % <theorem head spec (can be left empty, meaning `normal')>
+%\theoremstyle{problemstyle}
+%\newtheorem{problem}{Problem}[section] % Comment out [section] toremove section number dependence
+%\newtheorem{definition}{Definition}[section]
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{proposition}{Proposition}[section]
+%\newtheorem{remark}{Remark}[section]
+%\newtheorem{lemma}{Lemma}[section]
+% create command for variance in math mode
+%\newcommand{\Var}[1]{\operatorname{Var}\left[#1\right]}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{mydef}{Definition}[section]
+\newtheorem{myexample}{Example}[section]
+\newtheorem{myprop}{Proposition}[section]
+
+\newcommand{\source}[1]{\caption*{Source: {#1}} }
+
+\renewcommand\textflush{flushright}
+\setlength\epigraphwidth{.6\textwidth}
+
+\makeglossaries
+\include{Glossary/Glossary}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{gray!30},   
+	commentstyle=\color{green},
+	keywordstyle=\color{blue},
+	numberstyle=\tiny\color{gray},
+	stringstyle=\color{black},
+	basicstyle=\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+% COVER PAGE
+%----------------------------------------------------------------------------------------
+\pagestyle{empty}
+\input{Cover/cover}
+
+%----------------------------------------------------------------------------------------
+% ABSTRACT
+%---------------------------------------------------------------------------------------
+
+%% Set page numbers of the introduction to roman  
+\frontmatter
+\pagestyle{plain}
+%\include{Abstract/abstract}
+
+%\cleardoublepage
+\vspace*{\fill}
+\epigraph{\textit{The secret to happiness is freedom. \\ And the secret to freedom is courage.}}{Thucydides}
+\vspace*{\fill}
+
+
+%----------------------------------------------------------------------------------------
+%	LIST OF CONTENTS/FIGURES/TABLES PAGES
+%----------------------------------------------------------------------------------------
+
+\tableofcontents
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\listofalgorithms
+\addcontentsline{toc}{chapter}{List of Algorithms}
+\printglossaries
+
+\include{Abstract/abstract}
+\include{Acknowledgement/acknowledgement}
+
+%----------------------------------------------------------------------------------------
+%	THESIS CONTENT - CHAPTERS
+%----------------------------------------------------------------------------------------
+
+\mainmatter
+
+\include{Chapters/Introduction}
+\include{Chapters/Correlation_analysis}
+\include{Chapters/Asset_models}
+\include{Chapters/Calibration}
+\include{Chapters/Markowitz}
+\include{Chapters/Conclusion}
+
+%----------------------------------------------------------------------------------------
+%	THESIS CONTENT - APPENDICES
+%----------------------------------------------------------------------------------------
+
+\appendix
+\input{Appendix/AppendixA}
+
+
+\backmatter
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\backmatter
+%\nocite{*}
+\bibliographystyle{acm}
+\bibliography{Bibliography/my_bibliography}
+
+
+
+\end{document}  

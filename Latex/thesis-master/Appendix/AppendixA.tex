@@ -1,0 +1,53 @@
+\chapter{Characteristic Function of a Compound Poisson Process }
+\label{app:A}
+
+
+By definition, the characteristic function of a random variable $X$ is given by:
+\begin{equation}
+\label{eq:chf_def}
+	\phi_{X}(u) = \mathbb{E}[e^{iuX}]
+\end{equation}
+
+Let's first consider a simple Poisson process $N_t$ of parameter $\lambda$. At each time $t >0$, $N_t$ has a discrete distribution that follows:
+\begin{equation}
+\mathbb{P}( N_t = n) = e^{-\lambda t}\frac{(\lambda t)^n}{n!} ,\: n = 0,1,2,...
+\end{equation}
+
+Since $N_t$ is a \textit{discrete} random variable, the expectation in \ref{eq:chf_def} amounts to a sum over all the possible values of $N_t$:
+
+\begin{equation*} 
+	\begin{split}
+	\phi_{N_t}(u) & = \mathbb{E}[e^{iu N_t}] = \sum_{n=0}^{\infty} e^{iun} \mathbb{P}( N_t = n)\\
+	&= \sum_{n=0}^{\infty}e^{iun}e^{-\lambda t}\frac{(\lambda t)^n}{n!}\\
+	&= e^{-\lambda t} \sum_{n=0}^{\infty}\frac{(\lambda t e^{iu})^n}{n!}\\
+	\end{split}
+\end{equation*}
+
+Using the definition of exponential $e^x  = \sum_{n=0}^{\infty} \frac{x^n}{n!}$ we then get the final result:
+\begin{equation*} 
+	\begin{split}
+	\phi_{N_t}(u) & = e^{-\lambda t} e^{\lambda t e^{iu})}\\
+	& = e^{\lambda t (e^{iu}-1)}
+	\end{split}
+\end{equation*}
+
+Let's consider now a compound Poisson process defined by 
+\begin{equation}
+	X_t = \sum_{i=1}^{N_t} Y_i
+\end{equation}
+where $Y_i$ are i.i.d. and have density expressed by the function $f_Y(y)$.
+
+\bigskip
+To compute the characteristic function of $X_t$ we can follow the same steps as in the simple Poisson case, but in addition we use the theorem of total expectation to first simplify the expression and then proceed exploiting the i.i.d property:
+\begin{equation*} 
+	\begin{split}
+	\phi_{X_t}(u) & = \mathbb{E}[e^{iu X_t}]\\
+	&= \sum_{n=0}^{\infty} \mathbb{E}[e^{iu X_t}| N_t = n] \mathbb{P}( N_t = n)\\
+	&= \sum_{n=0}^{\infty} \mathbb{E}[\prod_{i=1}^{N_t}e^{iu Y_i}| N_t = n] \mathbb{P}( N_t = n)\\
+	& = \sum_{n=0}^{\infty} \prod_{i=1}^{n}\mathbb{E}[e^{iu Y_i}| N_t = n] \mathbb{P}( N_t = n)\\
+	&= \sum_{n=0}^{\infty} (\mathbb{E}[e^{iu Y}])^n \mathbb{P}( N_t = n)\\
+	&= \sum_{n=0}^{\infty}(\phi_Y(u))^n e^{-\lambda t}\frac{(\lambda t)^n}{n!}\\
+	&= e^{-\lambda t}\sum_{n=0}^{\infty}\frac{(\lambda t \, \phi_Y(u))^n}{n!}\\
+	&=e^{\lambda t (\phi_Y(u)-1)}
+	\end{split}
+\end{equation*}
