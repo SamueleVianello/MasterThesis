@@ -3,10 +3,7 @@
 ###############################################################
 
 
-
-CalibrateMVMerton=function(x, n, dt, trace = 10,
-                           min_theta=NA,max_theta=NA, min_delta=NA, max_delta=NA){
-
+CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
   
   library(DEoptim)
   source("MultivariateMertonModel.R")
@@ -18,10 +15,26 @@ CalibrateMVMerton=function(x, n, dt, trace = 10,
   else if(n ==4) obj = negloglik_4assets_nocommon
   else obj = negloglik
   
-
-  bounds_nocommon = BoundsCreator(n, n_common=0,
-                                  min_theta=min_theta, max_theta=max_theta, min_delta= min_delta, max_delta=max_delta)
-
+  if(custom_jump_bounds){
+    min_jump = rep(0,n)
+    max_jump = rep(0,n)
+    
+    alpha_max = 0.995 # quantile for max jump
+    alpha_min = 0.999 # quantile for min jump
+    for (i in 1:n) {
+      min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
+      max_jump[i] = quantile(x= x[,i], probs = 1-alpha_max)
+    }
+  }
+  else{
+    min_jump = rep(-0.1,n) # default jumps at -10%
+    max_jump = rep(-1,n)
+  }
+  
+  bounds_nocommon = BoundsCreator(n=n, custom_jump_mean = custom_jump_bounds, 
+                                  max_jump_mean = max_jump, min_jump_mean = min_jump)
+  
+  print(rbind(bounds_nocommon$lower, bounds_nocommon$upper))
   
   # First optimization using deoptim
   print("Starting calibration using DEoptim...")
@@ -61,8 +74,13 @@ CalibrateMVMerton=function(x, n, dt, trace = 10,
 
 
 
-BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=NA, max_delta=NA){
 
+
+BoundsCreator= function(n, 
+                        custom_jump_mean =FALSE,
+                        max_jump_mean = rep(NA,n),
+                        min_jump_mean = rep(NA,n)
+){
   # Creates lower and upper boundaries for the DEoptim optimization on the likelihood
   # for a n-multivariate merton process and n_common common jumps
   min_mu = -5
@@ -71,14 +89,10 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
   max_sigma = 5
   min_lambda = 0.0001
   max_lambda = 100
-
-  if (is.na(min_theta)) {min_theta = -1}
-  if (is.na(max_theta)) {max_theta =  1}
-  min_sigma = 1e-5
-  max_sigma = 10
-  if(is.na(min_delta)) {min_delta = min_sigma}
-  if(is.na(max_delta)) {max_delta = max_sigma}
-
+  min_theta = -1
+  max_theta = -0.1
+  min_delta = 0.0001
+  max_delta = 0.4
   min_corr = -1
   max_corr = 1
   
@@ -100,12 +114,10 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
   idx = idx+n 
   
   # correlations 
-  if(n!=1){
-    N_var = n*(n-1)/2
-    low[idx:(idx + N_var -1)] = rep(min_corr,N_var)
-    up[idx:(idx + N_var -1)] = rep(max_corr,N_var)
-    idx = idx + N_var
-  }
+  N_var = n*(n-1)/2
+  low[idx:(idx + N_var -1)] = rep(min_corr,N_var)
+  up[idx:(idx + N_var -1)] = rep(max_corr,N_var)
+  idx = idx + N_var
   
   # means of idiosyncratic jump term
   if (!custom_jump_mean){
@@ -120,9 +132,7 @@ BoundsCreator= function(n, n_common=1 , min_theta = NA, max_theta=NA, min_delta=
   }
   idx = idx+n
   
-
   # standar deviation of idyosincratic jump term
-
   low[idx:(idx+n-1)] = rep(min_delta,n)
   up[idx:(idx+n-1)] = rep(max_delta,n)
   idx = idx+n
@@ -149,31 +159,25 @@ ParametersReconstruction = function(params, n, common = FALSE){
   idx = idx+n 
   
   
-  if(n!=1){
-    sigma=diag(params[idx:(idx+n-1)])
-    idx = idx + n
-    
-    corr = matrix(rep(0,n*n), ncol = n)
-    k=1
-    for(i in 1:n)
-      for(j in i:n){
-        if (j!=i){
-          corr[i,j]=params[idx+k-1]
-          corr[j,i]=params[idx+k-1]
-          k=k+1
-        }
-        else
-          corr[i,j]=1
+  sigma=diag(params[idx:(idx+n-1)])
+  idx = idx + n
+  
+  corr = matrix(rep(0,n*n), ncol = n)
+  k=1
+  for(i in 1:n)
+    for(j in i:n){
+      if (j!=i){
+        corr[i,j]=params[idx+k-1]
+        corr[j,i]=params[idx+k-1]
+        k=k+1
       }
-    idx = idx + n*(n-1)/2
-    S = sigma %*% corr %*% sigma
-  }
-  else{
-    sigma = params[idx]
-    S = params[idx]
-    idx = idx +1
-    corr = NA
-  }
+      else
+        corr[i,j]=1
+    }
+  idx = idx + n*(n-1)/2
+  
+  S = sigma %*% corr %*% sigma
+  
   theta = params[idx:(idx+n-1)]
   idx = idx+n
   
@@ -196,11 +200,11 @@ ParametersReconstruction = function(params, n, common = FALSE){
     alpha = params[idx:(idx+n-1)]
     idx = idx+n
     
-    return(list( mu = mu, sigma = ifelse(n!=1, diag(sigma),S), corr = corr, theta = theta, delta = delta, lambda =lambda,
+    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda,
                  theta_z = theta_z, delta_z = delta_z, lambda_z = lambda_z, alpha = alpha, S = S))
   }
   
   else{
-    return(list( mu = mu, sigma = ifelse(n!=1, sqrt(diag(sigma)),sqrt(S)), corr = corr, theta = theta, delta = delta, lambda =lambda, S = S))
+    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda, S = S))
   }
 }

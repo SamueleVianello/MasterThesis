@@ -43,5 +43,6 @@ rsconnect/
 # R package: bookdown caching files
 /*_files/
 
+computation_of_full_calibration*.txt
 
 # End of https://www.gitignore.io/api/r
