@@ -18,29 +18,29 @@ source('CalibrationMVMerton.R')
 
 
 # CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
-# 
-# my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
-# 
-# leng = dim(my_data)[1]
-# N_assets = dim(my_data)[2] /2
-# 
-# var_names = c('btc_date','btc', #btc
-#               'bric_date','bric','sp500_date','sp500','eurostoxx_date','eurostoxx','nasdaq_date','nasdaq', #stock
-#               'bond_europe_date','bond_europe','bond_us_date','bond_us','bond_eur_date','bond_eur', #bond
-#               'eur_date','eur','gbp_date','gbp','chf_date','chf','jpy_date','jpy', #FX
-#               'gold_date','gold','wti_date','wti','grain_date','grain','metal_date','metal', # commodities
-#               'vix_date','vix')
-# 
-# my_data = my_data[,var_names]
-# 
-# my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
-# my_returns =my_data[1:(leng-1),]
-# 
-# my_returns[,2*(1:N_assets)]=my_returns_values
-# 
-# 
-# save(my_returns, file = "returns.Rda")
-# save(my_data, file = "data.Rda")
+
+my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
+
+leng = dim(my_data)[1]
+N_assets = dim(my_data)[2] /2
+
+var_names = c('btc_date','btc', #btc
+              'bric_date','bric','sp500_date','sp500','eurostoxx_date','eurostoxx','nasdaq_date','nasdaq', #stock
+              'bond_europe_date','bond_europe','bond_us_date','bond_us','bond_eur_date','bond_eur', #bond
+              'eur_date','eur','gbp_date','gbp','chf_date','chf','jpy_date','jpy', #FX
+              'gold_date','gold','wti_date','wti','grain_date','grain','metal_date','metal', # commodities
+              'vix_date','vix')
+
+my_data = my_data[,var_names]
+
+my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
+my_returns =my_data[1:(leng-1),]
+
+my_returns[,2*(1:N_assets)]=my_returns_values
+
+
+save(my_returns, file = "returns.Rda")
+save(my_data, file = "data.Rda")
 
 load("returns.Rda")
 load("data.Rda")
@@ -141,17 +141,7 @@ w_matrix = matrix(rep(0,N_assets_even*N_assets_even),N_assets_even,N_assets_even
 beg <- Sys.time()
 
 
-<<<<<<< HEAD
-names = colnames(my_returns[,2*(1:14)])
-mus = matrix(rep(0,21*14),21,14)
-colnames(mus) = names
-thetas = matrix(rep(0,21*14),21,14)
-colnames(thetas) = names
-deltas = matrix(rep(0,21*14),21,14)
-colnames(deltas) = names
-lambdas = matrix(rep(0,21*14),21,14)
 
-=======
 N_computations = (N_assets_even %/% 2)*(N_assets_even %/% 2 -1) /2
 
 names = colnames(my_returns[,2*(1:N_assets_even)])
@@ -162,7 +152,7 @@ colnames(thetas) = names
 deltas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(deltas) = names
 lambdas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
->>>>>>> 08c4b3a9f10206bb0a4bdf01c3407e5b4f4dd21c
+
 colnames(lambdas) = names
 
 ctr = 1
@@ -274,16 +264,16 @@ final_time = Sys.time()
 final_time - initial_time
 
 save(results, file= "results.Rda")
-#######
-# paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")
 
 
-write.table(results$parameters, file = "results_txt_merton.txt")
-write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
+####### Save results to a .txt file #################
+# 
+# write.table(results$parameters, file = "results_txt_merton.txt")
+# write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
 
 
 
