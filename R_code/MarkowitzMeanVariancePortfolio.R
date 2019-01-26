@@ -2,6 +2,61 @@
 ############## MARKOVITZ MEAN VARIANCE PORTFOLIO ##############
 ###############################################################
 
+# Plotter for the efficient frontier
+PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude = NA, short_sell = TRUE)
+{
+  N_assets = length(exp_returns)
+  full_idx = 1:N_assets
+  
+  if (!is.na(exclude) ){
+    if (max(exclude)<=N_assets && min(exclude)>0){
+      idx = full_idx[-exclude]
+      print(idx)
+    }
+    else{
+      warning("Wrong index format for excluded assets.")
+      idx = full_idx
+    }
+  }
+  else{
+    idx = full_idx
+  }
+  
+  # unconstrained = short sales are allowed for every asset
+  res1 = EfficientFrontier(exp_returns,covariance, max_r = max_r)
+  res2 = EfficientFrontier(exp_returns[idx],covariance[idx,idx], max_r = max_r)
+
+  # if plot is not working exchange x11 command for window or vice-versa
+  x11()
+  #windows(width = 10,height = 8)
+  plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = y_lim, xlab = "Volatility", ylab = "Returns")
+  lines(res2$sigma,res2$expected_return, col = 'red')
+  points(sqrt(diag(covariance)),exp_returns, pch='+', col = 'blue')
+  text(sqrt(diag(covariance)),exp_returns, labels = colnames(my_returns[,2*(idx)]),pos = 3)
+  grid()
+  
+  
+  if(short_sell){
+    # constrained = no short sales for given assets
+    res_btc = EfficientFrontier(r=exp_returns, S=covariance, full = FALSE, N=100, no_short_sales =1:N_assets, max_r = max_r)
+    res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = FALSE, N =200, no_short_sales = idx)
+    
+    lines(res_btc$sigma, res_btc$expected_return, col= 'green')
+    lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
+    
+    legend("topleft", legend = c("btc", "NO btc", "btc, NO short sale","NO btc, NO short sale"),
+           col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75, bg = 'white')
+  }
+  else {
+    legend("topleft", legend = c("btc", "NO btc"),
+           col=c("darkgreen","red"), lwd = 3, lty = c(1,1), cex=0.75, bg = 'white')
+  }
+  
+  title(main = "Efficient Markowitz Mean Variance Frontier")
+
+}
+
+
 # Simple wrapper for frontier
 EfficientFrontier=function(r,S, no_short_sales=NA, N=100,full=FALSE,plot=FALSE,min_r=NA, max_r=NA){
   

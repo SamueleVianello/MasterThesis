@@ -6,7 +6,7 @@ load("results.Rda")
 
 
 ##########################################
-##### test on ourcalibrated assets #######
+##### compute efficient frontier #########
 ##########################################
 library(pracma)
 
@@ -15,62 +15,33 @@ library(pracma)
 source("MarkowitzMeanVariancePortfolio.R")
 
 # Number of samples to consider from latest {max is dim(my_returns)[1]}
-# N_samples = 2*255
 N_samples = dim(my_returns)[1]
-N_assets = dim(my_returns)[2]/2
+# Number of assets
+N_assets = dim(my_returns)[2]/2 -1 # -1 to exclude VIX from our analysis
 
-# From sample
-SS = cov(my_returns[1:N_samples,2*(1:N_assets)]) * 255
+# ***** LOG-RETURNS ********
+# SS = cov(my_returns[1:N_samples,2*(1:N_assets)]) * 255
 # expected_return_sample = colMeans(my_returns[1:N_samples,2*(1:N_assets)]) * 255
 # y_lim = c(-0.05,0.4)
 # max_r = 0.4
 
-# returns as percentage:
-# expected_return_sample = colMeans(exp(my_returns[1:N_samples,2*(1:N_assets)]))^255
-# y_lim = c(1.00,1.4)
-# max_r = 1.4
-
-# yearly from model
-# expected_return =  results$parameters[1,]
-# y_lim = c(-0.05,0.4)
-# max_r = 0.4
-SS = results$covariance
-
-# percentage return from model
-expected_return = exp(results$parameters[1,])
-y_lim = c(1.00,1.4)
-max_r = 1.4
-
-# unconstrained = short sales are allowed for every asset
-res1 = EfficientFrontier(expected_return_sample,SS, max_r = max_r)
-res2 = EfficientFrontier(expected_return_sample[2:N_assets],SS[2:N_assets,2:N_assets], max_r = max_r)
-
-
-x11()
-
-#windows(width = 10,height = 8)
-plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = y_lim, xlab = "Volatility", ylab = "Returns")
-lines(res2$sigma,res2$expected_return, col = 'red')
-points(sqrt(diag(SS)),expected_return_sample, pch='+', col = 'blue')
-text(sqrt(diag(SS)),expected_return_sample, labels = colnames(my_returns[,2*(1:N_assets)]),pos = 3)
-grid()
+# ***** PERCENTAGE RETURNS ******
+expected_return_sample = colMeans(exp(my_returns[1:N_samples,2*(1:N_assets)]))^255
+SS = cov(exp(my_returns[1:N_samples,2*(1:N_assets)]))*255
+max_r = 1.8
+y_lim = c(1.00,max_r)
 
 
 
-# constrained = no short sales for given assets
-res_btc = EfficientFrontier(r=expected_return_sample, S=SS, full = FALSE, N=100, no_short_sales = 1:N_assets, max_r = max_r)
-res_no_btc = EfficientFrontier(r= expected_return_sample[2:N_assets], S=SS[2:N_assets,2:N_assets],full = FALSE, N =200, no_short_sales = 1:(N_assets-1))
-
-lines(res_btc$sigma, res_btc$expected_return, col= 'green')
-lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
-
-title(main = "Efficient Markowitz Mean Variance Frontier")
-legend("topleft", legend = c("btc", "NO btc", "btc, NO short sale","NO btc, NO short sale"),
-       col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75)
+# FIXME: add the same analysis done with calibrated results
 
 
-# dev.copy2pdf(file = "chiappedacciaio_logreturn.pdf")
+PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r, exclude = 1)
+
+
+# dev.copy2pdf(file = "efficient_frontier.pdf")
 # dev.off()
+
 
 
 # # target return
