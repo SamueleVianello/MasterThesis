@@ -122,39 +122,40 @@ pairs(my_returns[,(1:4)*2])
 
 N_assets = dim(my_returns)[2]/2
 
+initial_time = Sys.time()
+
 # First work with an even number of assets
-if(N_assets %% 2 ==1){
-  N_assets = N_assets - 1
-}
-N_assets
+N_assets_even = ifelse(N_assets %%2 ==1, N_assets -1, N_assets)
+
+N_assets_even
 
 N=dim(my_returns)[1] 
 
-idx_matrix = matrix(seq(from = 1, to = N_assets, by = 1),N_assets%/% 2,2, byrow = TRUE)
+idx_matrix = matrix(seq(from = 1, to = N_assets_even, by = 1),N_assets_even%/% 2,2, byrow = TRUE)
 
-final_cov = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+final_cov = matrix(rep(0,N_assets_even*N_assets_even),N_assets_even,N_assets_even)
 
-incremental = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
-w_matrix = matrix(rep(0,N_assets*N_assets),N_assets,N_assets)
+
+w_matrix = matrix(rep(0,N_assets_even*N_assets_even),N_assets_even,N_assets_even)
 
 beg <- Sys.time()
 
 
-N_computations = (N_assets %/% 2)*(N_assets %/% 2 -1) /2
+N_computations = (N_assets_even %/% 2)*(N_assets_even %/% 2 -1) /2
 
-names = colnames(my_returns[,2*(1:N_assets)])
-mus = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+names = colnames(my_returns[,2*(1:N_assets_even)])
+mus = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(mus) = names
-thetas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+thetas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(thetas) = names
-deltas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+deltas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(deltas) = names
-lambdas = matrix(rep(0,N_computations*N_assets),N_computations,N_assets)
+lambdas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(lambdas) = names
 
 ctr = 1
-for (i in 1:(N_assets%/% 2 -1)){
-  for (j in (i+1):(N_assets%/% 2)){
+for (i in 1:(N_assets_even%/% 2 -1)){
+  for (j in (i+1):(N_assets_even%/% 2)){
     idx =c(idx_matrix[i,],idx_matrix[j,])
     
     w_matrix[idx,idx]= w_matrix[idx,idx]+1
@@ -184,7 +185,7 @@ covariance = final_cov/w_matrix
 
 
 # ********* If total assets are ODD, need to calibrated the remaining one ***********
-N_assets = dim(my_returns)[2]/2
+# N_assets = dim(my_returns)[2]/2
 
 if(N_assets %% 2 == 1){
 
@@ -269,6 +270,10 @@ results = list(parameters = actual_parameters, covariance = covariance, correlat
                full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas, 
                last_asset_params = c(mu=last_mu, theta=last_theta, delta=last_delta, lambda=last_lambda))
 
+final_time = Sys.time()
+
+final_time - initial_time
+
 save(results, file= "results.Rda")
 #######
 # paste(format(Sys.time(), "%Y-%m-%d %I-%p"), "pdf", sep = ".")
@@ -280,7 +285,6 @@ write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
 write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
 write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
 write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
-
 
 
 
