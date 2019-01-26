@@ -17,64 +17,26 @@ source('MultivariateMertonModel.R')
 source('CalibrationMVMerton.R')
 
 
-# # CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
+# CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
 # 
 # my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
 # 
-# 
-# 
 # leng = dim(my_data)[1]
-# my_returns = data.frame(btc_date = my_data$BITCOIN_DATE[1:(leng-1)])
-# my_returns$btc = log(my_data$BITCOIN[1:(leng-1)]/my_data$BITCOIN[2:leng])
+# N_assets = dim(my_data)[2] /2
 # 
-# my_returns$bric_date = my_data$MSCI.BRIC._DATE[1:(leng-1)]
-# my_returns$bric = log(my_data[[4]][1:(leng-1)]/my_data[[4]][2:leng])
+# var_names = c('btc_date','btc', #btc
+#               'bric_date','bric','sp500_date','sp500','eurostoxx_date','eurostoxx','nasdaq_date','nasdaq', #stock
+#               'bond_europe_date','bond_europe','bond_us_date','bond_us','bond_eur_date','bond_eur', #bond
+#               'eur_date','eur','gbp_date','gbp','chf_date','chf','jpy_date','jpy', #FX
+#               'gold_date','gold','wti_date','wti','grain_date','grain','metal_date','metal', # commodities
+#               'vix_date','vix')
 # 
-# my_returns$sp500_date = my_data$"SP500_DATE"[1:(leng-1)]
-# my_returns$sp500 = log(my_data$"SP500"[1:(leng-1)]/my_data$"SP500"[2:leng])
+# my_data = my_data[,var_names]
 # 
-# my_returns$eurostoxx_date = my_data$EUROSTOXX50_DATE[1:(leng-1)]
-# my_returns$eurostoxx = log(my_data$EUROSTOXX50[1:(leng-1)]/my_data$EUROSTOXX50[2:leng])
+# my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
+# my_returns =my_data[1:(leng-1),]
 # 
-# my_returns$nasdaq_date = my_data$NASDAQ_DATE[1:(leng-1)]
-# my_returns$nasdaq = log(my_data$NASDAQ[1:(leng-1)]/my_data$NASDAQ[2:leng])
-# 
-# my_returns$gold_date = my_data$GOLD_DATE[1:(leng-1)]
-# my_returns$gold = log(my_data$GOLD[1:(leng-1)]/my_data$GOLD[2:leng])
-# 
-# my_returns$wti_date = my_data$WTI_DATE[1:(leng-1)]
-# my_returns$wti = log(my_data$WTI[1:(leng-1)]/my_data$WTI[2:leng])
-# 
-# my_returns$grain_date = my_data$GRAIN_DATE[1:(leng-1)]
-# my_returns$grain = log(my_data$GRAIN[1:(leng-1)]/my_data$GRAIN[2:leng])
-# 
-# my_returns$metal_date = my_data$IND.METALS_DATE[1:(leng-1)]
-# my_returns$metal = log(my_data$IND.METALS[1:(leng-1)]/my_data$IND.METALS[2:leng])
-# 
-# my_returns$eur_date = my_data$EUR_DATE[1:(leng-1)]
-# my_returns$eur = log(my_data$EUR[1:(leng-1)]/my_data$EUR[2:leng])
-# 
-# my_returns$gbp_date = my_data$GBP_DATE[1:(leng-1)]
-# my_returns$gbp = log(my_data$GBP[1:(leng-1)]/my_data$GBP[2:leng])
-# 
-# my_returns$chf_date = my_data$CHF_DATE[1:(leng-1)]
-# my_returns$chf = log(my_data$CHF[1:(leng-1)]/my_data$CHF[2:leng])
-# 
-# my_returns$jpy_date = my_data$JPY_DATE[1:(leng-1)]
-# my_returns$jpy = log(my_data$JPY[1:(leng-1)]/my_data$JPY[2:leng])
-# 
-# my_returns$bond_europe_date = my_data$BOND_EUROPE_DATE[1:(leng-1)]
-# my_returns$bond_europe = log(my_data$BOND_EUROPE[1:(leng-1)]/my_data$BOND_EUROPE[2:leng])
-# 
-# my_returns$bond_us_date = my_data$BOND_US_DATE[1:(leng-1)]
-# my_returns$bond_us = log(my_data$BOND_US[1:(leng-1)]/my_data$BOND_US[2:leng])
-# 
-# my_returns$bond_eur_date = my_data$BOND_EUR_DATE[1:(leng-1)]
-# my_returns$bond_eur = log(my_data$BOND_EUR[1:(leng-1)]/my_data$BOND_EUR[2:leng])
-# 
-# my_returns$vix_date = my_data$VIX_DATE[1:(leng-1)]
-# my_returns$vix = log(my_data$VIX[1:(leng-1)]/my_data$VIX[2:leng])
-# 
+# my_returns[,2*(1:N_assets)]=my_returns_values
 # 
 # 
 # save(my_returns, file = "returns.Rda")
@@ -89,11 +51,11 @@ N=500
 # Plot of first few data
 x11()
 par(mfrow = c(2,3))
-plot(my_data$BITCOIN_DATE[1:N],my_data$BITCOIN[1:N],type='l')
-plot(my_data$VIX_DATE[1:N],my_data$VIX[1:N],type = 'l',col='green')
-plot(my_data$EUROSTOXX50_DATE[1:N],my_data$EUROSTOXX50[1:N],type = 'l',col='blue')
+plot(my_data$btc_date[1:N],my_data$btc[1:N],type='l')
+plot(my_data$nasdaq_date[1:N],my_data$nasdaq[1:N],type = 'l',col='green')
+plot(my_data$eurostoxx_date[1:N],my_data$eurostoxx[1:N],type = 'l',col='blue')
 plot(my_returns$btc_date[1:N],my_returns$btc[1:N], type='l')
-plot(my_returns$vix_date[1:N],my_returns$vix[1:N], type='l',col='green')
+plot(my_returns$nasdaq_date[1:N],my_returns$nasdaq[1:N], type='l',col='green')
 plot(my_returns$eurostoxx_date[1:N],my_returns$eurostoxx[1:N], type='l',col='blue')
 
 graphics.off()
@@ -102,7 +64,8 @@ graphics.off()
 
 
 
-################ CALIBRATION USING deoptim + nlminb ############################
+
+################ TEST CALIBRATION on 4 assets ############################
 attach(my_returns)
 
 
@@ -123,31 +86,33 @@ cov2cor(calibrated_params$S)
 
 x11()
 par(mfrow=c(2,2))
-plot(my_data$BITCOIN_DATE, my_data$BITCOIN, type = 'l', main="BITCOIN", ylab = 'Price')
-plot(my_data$MSCI.BRIC._DATE, my_data$MSCI.BRIC, type='l', main= "BRIC", ylab = 'Price')
-plot(my_data$BOND_US_DATE, my_data$BOND_US, type='l', main= "BOND_US", ylab = 'Price')
-plot(my_data$BOND_EUR_DATE, my_data$BOND_EUR, type='l', main= "BOND_EUR", ylab = 'Price')
+plot(my_data$btc_date, my_data$btc, type = 'l', main="BITCOIN", ylab = 'Price')
+plot(my_data$bric_date, my_data$bric, type='l', main= "BRIC", ylab = 'Price')
+plot(my_data$bond_us_date, my_data$bond_us, type='l', main= "BOND_US", ylab = 'Price')
+plot(my_data$bond_eur_date, my_data$bond_eur, type='l', main= "BOND_EUR", ylab = 'Price')
 
 x11()
-pairs(my_returns[,(1:17)*2])
+pairs(my_returns[,(1:4)*2])
 
 
 
 
-x11()
-par(mfrow=c(2,2))
-for (idx in 1:4) {
-  xx=seq(-2,2,length.out = 2000)
-  yy= MultivariateMertonPdf_1asset_nocommon(x = xx,dt = 1/255,mu = calibrated_params$mu[idx], S = calibrated_params$sigma[idx],
-                                        theta = calibrated_params$theta[idx], delta = calibrated_params$delta[idx], lambda = calibrated_params$lambda[idx])
-  
-  print(sum(yy*(xx[2]-xx[1])))
-  print(sum(xx*yy*(xx[2]-xx[1]))*255)
-  
-  hist(my_returns[,idx*2], breaks = 60,freq = FALSE)
-  lines(xx, dnorm(xx, mean = mean(my_returns[,idx*2]),sd = sd(my_returns[,idx*2])))
-  lines(xx,yy, col='green')
-}
+# x11()
+# par(mfrow=c(2,2))
+# for (idx in 1:4) {
+#   xx=seq(-2,2,length.out = 2000)
+#   yy= MultivariateMertonPdf_1asset_nocommon(x = xx,dt = 1/255,mu = calibrated_params$mu[idx], S = calibrated_params$sigma[idx],
+#                                         theta = calibrated_params$theta[idx], delta = calibrated_params$delta[idx], lambda = calibrated_params$lambda[idx])
+#   
+#   print(sum(yy*(xx[2]-xx[1])))
+#   print(sum(xx*yy*(xx[2]-xx[1]))*255)
+#   
+#   hist(my_returns[,idx*2], breaks = 60,freq = FALSE)
+#   lines(xx, dnorm(xx, mean = mean(my_returns[,idx*2]),sd = sd(my_returns[,idx*2])))
+#   lines(xx,yy, col='blue')
+# }
+
+
 
 ###########################################################################
 ######################## Building complete correlation #####################
@@ -156,6 +121,7 @@ for (idx in 1:4) {
 
 
 N_assets = dim(my_returns)[2]/2
+
 # First work with an even number of assets
 if(N_assets %% 2 ==1){
   N_assets = N_assets - 1

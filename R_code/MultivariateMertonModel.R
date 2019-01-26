@@ -308,7 +308,7 @@ negloglik_nocommon = function(params, x, dt, n) {
 
 
 #############################################################################
-####################### one asset no common jump  ###########################
+############################### one asset  ##################################
 #############################################################################
 
 
@@ -333,7 +333,7 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
   ldt =lambda*dt
   
   if(ldt>=1){
-    stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
+    stop("Error: lambda*dt should be lower than 1 (ideally close to 0).")
   }
   
   pdf=(1-ldt)*dnorm(x, mean = mu*dt, sd = sqrt(S*dt))+
@@ -747,7 +747,7 @@ negloglik_4assets_nocommon= function(params, x, dt, n) {
   # 
   # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
   # 
-  ## add check on inputs
+  ## add check on inputs if necessary
   
   # reconstruction of parameters:
   idx =1
@@ -792,7 +792,7 @@ negloglik_4assets_nocommon= function(params, x, dt, n) {
   # print(lambda)
   # print(alpha)
   if( (idx-1)!=length(params))
-    stop("Error in parameter reconstruction: number of parameters is wrong.")
+    stop("Error in parameters reconstruction: number of parameters is wrong.")
   
   
   # computing pdf on each point and adding
