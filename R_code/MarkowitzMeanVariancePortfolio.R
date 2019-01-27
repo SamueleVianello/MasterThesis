@@ -3,7 +3,7 @@
 ###############################################################
 
 # Plotter for the efficient frontier
-PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude = NA, short_sell = TRUE)
+PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude = NA, add_no_short_sell = TRUE)
 {
   N_assets = length(exp_returns)
   full_idx = 1:N_assets
@@ -36,7 +36,7 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude
   grid()
   
   
-  if(short_sell){
+  if(add_no_short_sell){
     # constrained = no short sales for given assets
     res_btc = EfficientFrontier(r=exp_returns, S=covariance, full = FALSE, N=100, no_short_sales =1:N_assets, max_r = max_r)
     res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = FALSE, N =200, no_short_sales = idx)
@@ -106,8 +106,9 @@ OptimalAllocation_unconstr= function(r,S, target_return = NA, sd = NA){
     w_opt = invS %*% (e*lambda + mu*r)
     
     sigma_opt = sqrt(t(w_opt)%*%S%*%w_opt)
+   
     sigma = sqrt( (a*target_return^2 - 2*b*target_return + c)/d)
-    
+    print(paste(sigma_opt, sigma))
     # test on the results:
     if (abs(sigma - sigma_opt) > 1e-6){
       stop("Computations of minimum standard deviation yield different results.")
@@ -149,6 +150,7 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
   }
 
   if(target_return > max(r)){
+    # print(max(r))
     warning("Cannot produce such a high return without short-selling.")
     target_return=max(r)-1e-5
   }
@@ -172,7 +174,7 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
   b= rbind(b,1)
   
   
-  # Constraint on short selling ony on given assets
+  # Constraints on short selling ony on given assets
   for (i in no_short_sales){
     A_i = rep(0,n)
     A_i[i]=1
@@ -273,7 +275,7 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   b= rbind(b,1)
   
   
-  # Constraint on short selling ony on given assets
+  # Constraint on short selling on given assets
   for (i in no_short_sales){
     A_i = rep(0,n)
     A_i[i]=1
@@ -298,6 +300,9 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
     # print(b)
     sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
     xx[i] = sqrt(sol$value)
+    
+    # sigma = sqrt(t(sol$solution)%*%SS%*%sol$solution)
+    # print(paste(xx[i], sigma))
   }
 
   if (!full){
