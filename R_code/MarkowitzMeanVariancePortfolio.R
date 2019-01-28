@@ -3,7 +3,7 @@
 ###############################################################
 
 # Plotter for the efficient frontier
-PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude = NA, add_no_short_sell = TRUE)
+PlotEfficientFrontier = function(exp_returns, covariance, min_r=NA, max_r,  exclude = NA, add_no_short_sell = TRUE, full_plot = FALSE)
 {
   N_assets = length(exp_returns)
   full_idx = 1:N_assets
@@ -11,7 +11,7 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude
   if (!is.na(exclude) ){
     if (max(exclude)<=N_assets && min(exclude)>0){
       idx = full_idx[-exclude]
-      print(idx)
+      #print(idx)
     }
     else{
       warning("Wrong index format for excluded assets.")
@@ -22,13 +22,18 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude
     idx = full_idx
   }
   
+  total_result = list()
+  
   # unconstrained = short sales are allowed for every asset
-  res1 = EfficientFrontier(exp_returns,covariance, max_r = max_r)
-  res2 = EfficientFrontier(exp_returns[idx],covariance[idx,idx], max_r = max_r)
-
+  res1 = EfficientFrontier(exp_returns,covariance, min_r = min_r,max_r = max_r,full = full_plot)
+  res2 = EfficientFrontier(exp_returns[idx],covariance[idx,idx], min_r =min_r, max_r = max_r, full = full_plot)
+  total_result[["simple"]]=res1
+  total_result[["simple_excluded"]]=res2
+  
   # if plot is not working exchange x11 command for window or vice-versa
   x11()
   #windows(width = 10,height = 8)
+  y_lim = c(1.0, max_r)
   plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = y_lim, xlab = "Volatility", ylab = "Returns")
   lines(res2$sigma,res2$expected_return, col = 'red')
   points(sqrt(diag(covariance)),exp_returns, pch='+', col = 'blue')
@@ -38,8 +43,11 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude
   
   if(add_no_short_sell){
     # constrained = no short sales for given assets
-    res_btc = EfficientFrontier(r=exp_returns, S=covariance, full = FALSE, N=100, no_short_sales =1:N_assets, max_r = max_r)
-    res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = FALSE, N =200, no_short_sales = idx)
+    res_btc = EfficientFrontier(r=exp_returns, S=covariance, full = full_plot, N=100, no_short_sales =1:N_assets, max_r = max_r)
+    res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = full_plot, N =200, no_short_sales = idx)
+    
+    total_result[["no_short"]]=res_btc
+    total_result[["no_short_excluded"]]=res_no_btc
     
     lines(res_btc$sigma, res_btc$expected_return, col= 'green')
     lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
@@ -53,7 +61,8 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r, max_r,  exclude
   }
   
   title(main = "Efficient Markowitz Mean Variance Frontier")
-
+  
+  total_result
 }
 
 
@@ -68,8 +77,8 @@ EfficientFrontier=function(r,S, no_short_sales=NA, N=100,full=FALSE,plot=FALSE,m
     return(EfficientFrontier_constr(r=r,S=S,full=full,plot=plot, N=N, no_short_sales = no_short_sales,
                                     min_r=min_r, max_r = max_r))
   }
-  
 }
+
 
 #Simple wrapper for optimal allocation
 OptimalAllocation=function(r,S, target_return = NA, sd = NA, no_short_sales=NA){

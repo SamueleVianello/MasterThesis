@@ -36,7 +36,7 @@ y_lim = c(1.00,max_r)
 # FIXME: add the same analysis done with calibrated results
 
 
-PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r, exclude = 1)
+eff_front = PlotEfficientFrontier(expected_return_sample, SS,  max_r=max_r, exclude = 1)
 
 
 # dev.copy2pdf(file = "efficient_frontier.pdf")
@@ -53,7 +53,7 @@ PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r, exclude = 1)
 # cbind(w, c(0,w_no_btc))
 
 # percentage ****************
-targets = seq(1.05,1.3, by = 0.025)
+targets = seq(1.025, 1.17, by = 0.005)
 
 # log-returns *******************
 # targets = seq(0.05,0.30, by=0.01)
@@ -63,7 +63,7 @@ l=length(targets)
 alloc_btc = zeros(N_assets,l)
 rownames(alloc_btc)=colnames(my_returns[,2*(1:N_assets)])
 alloc_no_btc = zeros(N_assets-1,l)
-rownames(alloc_no_btc)=colnames(my_returns[,2*(N_assets)])
+rownames(alloc_no_btc)=colnames(my_returns[,2*(2:N_assets)])
 
 for(i in 1:l){
   # print(paste(i, targets[i]))
@@ -100,6 +100,11 @@ ggplot(data, aes(x=Return, y=Values, fill=Asset)) +
   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(N_assets) )
 
 
+volatilities_alloc = rep(0,length(targets)) 
+
+for(i in 1:length(targets)){
+  volatilities_alloc[i]= sqrt(t(alloc_btc[,i]) %*% SS %*% alloc_btc[,i])
+}
 
 
 
@@ -123,3 +128,9 @@ ggplot(data, aes(x=Return, y=Values, fill=Asset)) +
   ggtitle("Markowitz Optimal Allocation Without Bitcoin")+
   scale_fill_manual(values =colorRampPalette(brewer.pal(9, "Paired"))(N_assets) )
 
+
+volatilities_alloc_no_btc = rep(0,length(targets)) 
+
+for(i in 1:length(targets)){
+  volatilities_alloc_no_btc[i]= sqrt(t(alloc_no_btc[,i]) %*% SS[2:N_assets,2:N_assets] %*% alloc_no_btc[,i])
+}
