@@ -301,6 +301,8 @@ g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \fra
 The only difference is that the signs of the $d$ terms are all flipped: the origin of the two representations for the characteristic function lies in the fact that the complex root $d$ has two possible values and the second value is exactly minus the first value.
 A uniform choice between the two possibilities cannot be made over all the complex plane to obtain a continuous function due to the presence of a branch cut in the graph of $\sqrt{z}$. Selecting the sign of $d$ as in $\phi_{x_t}^*$ and $g^*$ avoids the discontinuity affecting our future computations.
 
+For this reason, from now on we will be using the second formulation while leaving out the star * from our notation.
+
 \bigskip
 
 
@@ -311,9 +313,9 @@ We can easily remove the dependence on $x_0$ by considering the distribution of 
 Applying the definition of characteristic function:
 \begin{equation*}
 	\begin{split}
-	\phi_{\Delta x_t}(u) &= \mathbb{E}\big[e^{i u \Delta x_t} \big] \\
-	&=  \mathbb{E}\big[e^{i u ( x_t - x_0)}\big]\\
-	&= \mathbb{E}\big[e^{i u x_t}\big] e^{-i u x_0}\\
+	\phi_{\Delta x_t}(u|V_0) &= \mathbb{E}\big[e^{i u \Delta x_t} |V_0\big] \\
+	&=  \mathbb{E}\big[e^{i u ( x_t - x_0)}|V_0\big]\\
+	&= \mathbb{E}\big[e^{i u x_t}|V_0\big] e^{-i u x_0}\\
 	&= \phi_{x_t}(u) e^{-i u x_0}\\
 	&= \exp\{A(t,u) + (B(t,u) - iu) x_0 + C(t,u) V_0\}
 	\end{split}
@@ -322,18 +324,104 @@ Applying the definition of characteristic function:
 and since $B(t,u)  = i u$, the second term in the exponential is equal to zero and we are left with:
 \begin{equation}
 \label{eq:chf_V0}
-\phi_{\Delta x_t}(u) =  \exp\{A(t,u) + C(t,u) V_0\}
+\phi_{\Delta x_t}(u|V_0) =  \exp\{A(t,u) + C(t,u) V_0\}
 \end{equation}
 
 
 
 
-This equation is however still dependent on the initial value of the variance process. In a simulation framework, this would not be an issue, since we can define the level of $V_0$ ourselves and then generate all the different scenarios. However, if we need to calibrate the model parameters from asset prices, the market data for the variance process are not available. We will address more in depth different ways to solve this problem later on in Chapter \ref{chpr:calibration}. As for now, we show that we can obtain an \textit{unconditional} expression for the characteristic function of a Heston process by approximating the distribution of $V_t$ with its long-run distribution.
+This equation is however still dependent on the initial value of the variance process. In a simulation framework, this would not be an issue, since we can define the level of $V_0$ ourselves and then generate all the different scenarios. However, if we need to calibrate the model parameters from asset prices, the market data for the variance process are not available. We will address more in depth different ways to solve this problem later on in Chapter \ref{chpr:calibration}. As for now, we show that we can obtain an \textit{unconditional} expression for the characteristic function of a Heston process by approximating the distribution of $V_t$ with its stationary distribution.
+
+\begin{equation*}
+\begin{split}
+	\phi_{\Delta x_t}(u) &= \mathbb{E}\big[e^{i u \Delta x_t} \big] \\
+	&= \mathbb{E}\big[ \mathbb{E}\big[ e^{i u \Delta x_t} | V_0\big] \big]\\
+	&=  \int_{0}^{\infty} \mathbb{E}\big[e^{i u ( x_t - x_0)}|V_0 = v \big] f_{V_0}(v) dv \\
+	&= \int_{0}^{\infty} \exp\{A(t,u) + C(t,u) v\} f_{V_0}(v) dv \\
+	&=  \exp\{A(t,u)\} \int_{0}^{\infty}  \exp \{C(t,u) v\} f_{V_0}(v) dv\\
+	&= \exp\{A(t,u) \} M_{V_0}(C(t,u))
+\end{split}
+\end{equation*}
+
+where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$.
 
 
 
+\subsection{Parsimonious Multiasset Heston Model}
+The problem with generalizing Heston framework to include more than one underlying is that the model becomes quickly very complex: we need 5 parameters for each asset ($\mu, \kappa,\theta, \sigma_V$ and $ \rho$), and we can also model all types of correlation between the different stochastic drivers. In particular, we have 4 types of correlation: 
+\begin{itemize}
+	\item $ \rho^{S_i , V_i}$:  correlation that we already have in the unidimensional case, that models the way the price and the variance processes are linked ;
+	\item $ \rho^{S_i , S_j}$: correlation between the movements in prices of two different assets ;
+	\item $\rho^{V_i , V_j} $: correlation between the variance processes of two different assets. One might expect that asset of similar nature have a higher correlation both in the price and in the variance processes;
+	\item $\rho^{S_i , V_j} $: correlation between the price process of an asset and the variance process of a different one.
+\end{itemize}
 
-\textcolor{red}{\textbf{*** add unconditional chf ***}}
+To overcome this increase in both mathematical and computation complexity, we will use the \textit{parsimonious} model introduced by Szimayer, Dimitroff and Lorenz in \cite{PARSIMONIOUS2011}. Their framework has two main characteristics: each single-asset sub-model forms a traditional Heston model and the parameters are  composed by $n$ single-asset Heston parameter sets and $n (n-1)/2$  \textit{asset-asset} correlations.
+
+The $n$-dimensional model  hence becomes:
+
+%\begin{equation}
+%\frac{dS_i(t)}{S_i(t)} = \mu dt +\sqrt{ V_t} dW_t^S
+%\end{equation}
+%\begin{equation}
+%dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
+%\end{equation}
+
+ \begin{multline}
+\begin{pmatrix}
+	dS_i(t) / S_i(t)\\
+	dV_i(t)
+\end{pmatrix}
+= \begin{pmatrix}
+\mu_i\\
+\kappa_i (\theta_i - V_i(t))
+\end{pmatrix}
+dt  +\\ \begin{pmatrix}
+\sqrt{V_i(t)} & 0 \\
+0 & \sigma_{V_i} \sqrt{V_i(t)} 
+\end{pmatrix}
+\begin{pmatrix}
+1 & 0 \\
+ \rho_i & \sqrt{1-\rho_i^2} 
+\end{pmatrix}
+\begin{pmatrix}
+dW^{S_i}(t)\\
+dW^{V_i }(t)
+\end{pmatrix}
+\end{multline}
+
+where $dW^{S_i}(t)$ and $dW^{V_i}(t)$ are independent processes and we have written explicitly the dependence between the price and the variance processes.
+
+To fully characterize the model, we need to describe how the different $W^{S_i}$ and $W^{V_i}$ are correlated. In accordance with what was stated earlier, the correlation structure is the following:
+\begin{equation}
+\label{eq:heston_cor}
+\Sigma^{(S,V)} = cor(\boldsymbol{W}^{S}, \boldsymbol{W}^{V}) = \begin{pmatrix}
+\Sigma^{S} & 0 \\
+0& I_n
+\end{pmatrix}
+\end{equation}
+
+in which $\Sigma^S = cor(\boldsymbol{W}^{S})$.
+Equation (\ref{eq:heston_cor}) mathematically represents what we defined as the correlation structure for our model: we only explicitly define the \textit{asset-asset} correlations through matrix $\Sigma^S$, the dependence of every variance  on other processes is carried over via $\Sigma^S$ and the correlations $\rho_i$.
+More clearly, let $(\Sigma^S)_{i,j} = \rho_{i,j}$\footnote{Of course we will have $\rho_{i,j} = 1 $ whenever $i=j$.}:
+\begin{itemize}
+	\item $dW^{S_i}(t) dW^{S_j}(t) = \rho_{i,j} dt$
+	\item $dW^{S_i}(t) dW^{V_j}(t) = \rho_{i,j} \rho_j dt$
+	\item $dW^{V_i}(t) dW^{V_j}(t) = \rho_i \rho_{i,j}\rho_j dt $ if $i\neq j$, $dt$ otherwise
+\end{itemize}
+
+A detailed representation of a 2-asset \textit{parsimonious} Heston model can be found in the reference paper \cite{PARSIMONIOUS2011}.
+
+%	\begin{bmatrix}
+%	ax_{0} + bx_{1} \\           
+%	\vdots \\
+%	ax_{n-1}+bx_{n}
+%	\end{bmatrix} -
+%	\begin{bmatrix}
+%	z_{1} \\
+%	\vdots \\
+%	z_{n}
+%	\end{bmatrix}
 \section{Bates Model}
-
+Bates 
 
