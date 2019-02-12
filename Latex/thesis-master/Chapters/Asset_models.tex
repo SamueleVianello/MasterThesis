@@ -229,9 +229,11 @@ The Heston model belongs to the family of SD processes, generalizations of B\&S 
 Starting with a GBM as in the B\&S framework, we obtain the dynamics of the price process simply by allowing the volatility in (\ref{eq:GBM}) to evolve over time and specifying how this evolution takes place.
 In particular, the dynamics of the \textit{instantaneous} variance $V_t = \sigma_t^2$ for the Heston model is described by a CIR process :
 \begin{equation}
+\label{eq:heston_price}
 	\frac{dS_t}{S_t} = \mu dt +\sqrt{ V_t} dW_t^S
 \end{equation}
 \begin{equation}
+\label{eq:heston_variance}
 	dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
 \end{equation}
 
@@ -284,6 +286,7 @@ This formulation is the one proposed by Heston in his original paper \cite{HESTO
 \begin{equation}
 % heston trap solution
 \begin{split}
+\label{eq:heston_chf_trap}
 \phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}\\
 A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg)\\
 B(t,u) &= i u \\
@@ -423,5 +426,46 @@ A detailed representation of a 2-asset \textit{parsimonious} Heston model can be
 %	z_{n}
 %	\end{bmatrix}
 \section{Bates Model}
-Bates 
+Bates model is a way of combining both of the characteristics of Merton (price jumps) and Heston (stochastic volatility) in a single framework.  It was introduced in 1996 by David Bates, an American professor at University of Iowa.
 
+\subsection{Univariate Model}
+In his paper \cite{BATES96}, Bates proposes his model as a way of capturing the leptokurtosis in the distribution of log-differences of the USD/DeutscheMark exchange rate. He suggested to improve the versatility of Heston model by including \textit{log-normal, Poisson driven} jumps in the prices process, borrowing this addition from Merton model.
+
+Thus, we will have to deal with a total of 8 parameters: $\mu, \kappa, \theta, \sigma_V$ and $ \rho$ for the stochastic volatility part, and $ \mu_J, \sigma_J$ and $ \lambda$ for the jump component. 
+
+
+\textbf{**** add jump component ****}
+\begin{equation}
+\frac{dS_t}{S_t} = \mu dt +\sqrt{ V_t} dW_t^S
+\end{equation}
+\begin{equation}
+dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
+\end{equation}
+
+Of course, as these equations are directly obtained from \eqref{eq:heston_price} and \eqref{eq:heston_variance}, we have that the variance process is strictly positive whenever the Feller condition $2\kappa\theta\geq \sigma_V$ is satisfied.
+\textbf{*** add explanation of jump part***}
+
+Unfortunately, for the same reason as in previous section, an explicit formula for the distribution of the log-returns $x_t = log(S_t)$ is not available and thus we have to make reference to their characteristic function.
+The silver lining is, though, that to obtain expression of   $\phi_{x_t}(u)$, we only have to include an extra additive term to the exponential in \eqref{eq:heston_chf_trap} to account for the jumps:
+
+\textbf{***** controllare jump component*********}
+\begin{equation}
+% heston trap solution
+\begin{split}
+\label{eq:heston_chf_trap}
+\phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0 + D(t,u)\}\\
+A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg)\\
+B(t,u) &= i u \\
+C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big]\\
+D(t,u) &= -\lambda \mu_J u i t + \lambda t  \:\Big[ (1+\mu_J)^{ui} e^{\sigma_J^2(ui/2)(ui-1)}-1 \Big]
+\end{split}
+\end{equation} 
+where :
+\begin{equation*}
+\begin{split}
+d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)}\\
+g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \frac{1}{g}
+\end{split}
+\end{equation*} 
+
+We will used the  *  formulation for the same desirable numerical properties as already stated, while leaving out the * symbol from our notation from now on.

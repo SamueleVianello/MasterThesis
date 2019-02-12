@@ -827,7 +827,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4[4,4] = delta[4]^2
   
   mean_x = mu*dt
-  cov_x = S*sqrt(dt) # FIXME:check sqrt(dt) or dt
+  cov_x = S*(dt) # FIXME:check sqrt(dt) or dt --> dt because it is a covariance not a volatility
   
   #0000
   pdf= pdf + (1-ldt[1])*(1-ldt[2])*(1-ldt[3])*(1-ldt[4])*dmvnorm(x, mean = mean_x, sigma = cov_x)
