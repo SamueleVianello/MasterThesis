@@ -132,7 +132,22 @@ When modelling interest rate in continuous time, having $r_t$ hit zero is not an
 
 The non negativity of the CIR process will become fundamental when we introduce Heston and Bates SV models, where the (stochastic) variance of the process driving the asset price will be model as a CIR process.
 
-\textcolor{red}{******AGGIUNGERE DISTRIBUZIONE DI rt e di r-inf (gamma)******}
+Since it will be useful later on in the paper, we also present the \textit{stationary} distribution of $r_t$. Due to the mean reversion effect, $r_t$ will approach a \textit{gamma} distribution with density:
+\begin{equation}
+\label{eq:cir_pdf}
+f_{r_\infty}(x) = \frac{\omega^\nu}{\Gamma(\nu)} x^{\nu-1}e^{-\omega x}
+\end{equation}
+where
+\begin{equation*}
+\omega= \frac{2\kappa}{\sigma^2}\: , \: \nu= \frac{2\kappa\theta}{\sigma^2}
+\end{equation*}
+
+Its \textit{moment generating function}, which will be useful later as well, is defined as follows:
+\begin{equation}
+\label{eq:cir_mgf}
+	M_{r_\infty}(z) = \Big(\frac{\omega}{\omega-z}\Big)^\nu
+\end{equation}
+
 
 \bigskip
 \section{Merton Model}
@@ -346,7 +361,7 @@ This equation is however still dependent on the initial value of the variance pr
 \end{split}
 \end{equation*}
 
-where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$.
+where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as considered stationary, so that of a Gamma distribution. In particular, it will have the same expression as \eqref{eq:cir_mgf}.
 
 
 

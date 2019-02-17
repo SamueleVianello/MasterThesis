@@ -5,9 +5,7 @@
 # Merton model in different cases and implements the loglikelihood function. 
 # Explicit implementations are needed to make the code run much faster,
 # that's why there are explicit functions for each number of asset up to 4
-#
-# In addition, there is a helper function to extract and group 
-# each parameter from a single parameter vector (ParametersReconstruction)
+
 
 library(mvtnorm)
 
@@ -324,20 +322,16 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
   # theta:  means of the idiosyncratic jump intensity [vector of n]
   # delta:  variances of the idiosyncratic jump intensity [vector of n]
   # lambda:  poisson parameters of the idiosyncratic jump part [vector of n]
-  # theta_z: mean of common jump intensity 
-  # delta_z: variance of common jump intensity
-  # lambda_z: poisson parameter of common jump part
-  # alpha:  vector of coefficient that multiply the common jump effect for each component
-  
+
   # check on lambdas: 
   ldt =lambda*dt
-  
+
   if(ldt>=1){
     stop("Error: lambda*dt should be lower than 1 (ideally close to 0).")
   }
-  
-  pdf=(1-ldt)*dnorm(x, mean = mu*dt, sd = sqrt(S*dt))+
-      ldt *dnorm(x, mean = mu*dt+theta, sd = sqrt(S*dt + delta))
+  mu_adj=mu -lambda*theta
+  pdf=(1-ldt)*dnorm(x, mean = mu_adj*dt, sd = sqrt(S*dt))+
+      ldt *dnorm(x, mean = mu_adj*dt+theta, sd = sqrt(S*dt + delta))
 
 
   return(pdf)
@@ -810,7 +804,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   mean_y1[1] = theta[1]
   cov_y1 = matrix(rep(0,n*n),n,n)
   cov_y1[1,1] = delta[1]^2
-  
+
   mean_y2 = rep(0,n)
   mean_y2[2] = theta[2]
   cov_y2 = matrix(rep(0,n*n),n,n)
@@ -826,8 +820,8 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4 = matrix(rep(0,n*n),n,n)
   cov_y4[4,4] = delta[4]^2
   
-  mean_x = mu*dt
-  cov_x = S*(dt) # FIXME:check sqrt(dt) or dt --> dt because it is a covariance not a volatility
+  mean_x = mu*dt - lambda*theta*dt #FIXME ldt o non ldt?
+  cov_x = S*(dt) # FIXME:check sqrt(dt) or dt -->FIXED dt because it is a covariance not a volatility
   
   #0000
   pdf= pdf + (1-ldt[1])*(1-ldt[2])*(1-ldt[3])*(1-ldt[4])*dmvnorm(x, mean = mean_x, sigma = cov_x)

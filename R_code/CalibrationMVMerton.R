@@ -96,54 +96,65 @@ BoundsCreator= function(n,
   min_corr = -1
   max_corr = 1
   
-  # initialising resulting vector low and up
-  leng = 4*n + (n+1)*n*0.5
-  low = rep(0,leng)
-  up = rep(0,leng)
   
-  
-  idx =1
-  # mean of continuos part
-  low[idx:(idx+n-1)] = rep(min_mu,n)
-  up[idx:(idx+n-1)] = rep(max_mu,n)
-  idx = idx+n 
-  
-  # diffusion coefficients
-  low[idx:(idx+n-1)] = rep(min_sigma,n)
-  up[idx:(idx+n-1)] = rep(max_sigma,n)
-  idx = idx+n 
-  
-  # correlations 
-  N_var = n*(n-1)/2
-  low[idx:(idx + N_var -1)] = rep(min_corr,N_var)
-  up[idx:(idx + N_var -1)] = rep(max_corr,N_var)
-  idx = idx + N_var
-  
-  # means of idiosyncratic jump term
-  if (!custom_jump_mean){
-    low[idx:(idx+n-1)] = rep(min_theta,n)
-    up[idx:(idx+n-1)] = rep(max_theta,n)
-  }
-  else {
-    for (i in 0:(n-1)) {
-      low[idx+i] = ifelse(is.na(min_jump_mean[i+1]), min_theta, min_jump_mean[i+1])
-      up[idx+i] = ifelse(is.na(max_jump_mean[i+1]), min_theta, max_jump_mean[i+1])
+  if (n==1){
+    low = c(min_mu, min_sigma, min_lambda, min_theta, min_delta)
+    up = c(max_mu, max_sigma, max_lambda, max_theta, max_delta)
+    
+    if (custom_jump_mean){
+      low[4] = min_jump_mean
+      up[4] = max_jump_mean
     }
   }
-  idx = idx+n
+  else {
+    # initialising resulting vector low and up
+    leng = 4*n + (n+1)*n*0.5
+    low = rep(0,leng)
+    up = rep(0,leng)
+    
+    
+    idx =1
+    # mean of continuos part
+    low[idx:(idx+n-1)] = rep(min_mu,n)
+    up[idx:(idx+n-1)] = rep(max_mu,n)
+    idx = idx+n 
+    
+    # diffusion coefficients
+    low[idx:(idx+n-1)] = rep(min_sigma,n)
+    up[idx:(idx+n-1)] = rep(max_sigma,n)
+    idx = idx+n 
+    
+    # correlations 
+    N_var = n*(n-1)/2
+    low[idx:(idx + N_var -1)] = rep(min_corr,N_var)
+    up[idx:(idx + N_var -1)] = rep(max_corr,N_var)
+    idx = idx + N_var
+    
+    # means of idiosyncratic jump term
+    if (!custom_jump_mean){
+      low[idx:(idx+n-1)] = rep(min_theta,n)
+      up[idx:(idx+n-1)] = rep(max_theta,n)
+    }
+    else {
+      for (i in 0:(n-1)) {
+        low[idx+i] = ifelse(is.na(min_jump_mean[i+1]), min_theta, min_jump_mean[i+1])
+        up[idx+i] = ifelse(is.na(max_jump_mean[i+1]), min_theta, max_jump_mean[i+1])
+      }
+    }
+    idx = idx+n
+    
+    # standar deviation of idyosincratic jump term
+    low[idx:(idx+n-1)] = rep(min_delta,n)
+    up[idx:(idx+n-1)] = rep(max_delta,n)
+    idx = idx+n
+    
+    # lambda of idyosincratic poissons
+    low[idx:(idx+n-1)] = rep(min_lambda,n)
+    up[idx:(idx+n-1)] = rep(max_lambda,n)
+    idx = idx+n
+  }
   
-  # standar deviation of idyosincratic jump term
-  low[idx:(idx+n-1)] = rep(min_delta,n)
-  up[idx:(idx+n-1)] = rep(max_delta,n)
-  idx = idx+n
-  
-  # lambda of idyosincratic poissons
-  low[idx:(idx+n-1)] = rep(min_lambda,n)
-  up[idx:(idx+n-1)] = rep(max_lambda,n)
-  idx = idx+n
-  
-  
-  if(  ((idx-1)!=length(low))  || (length(low)!=length(up)) )
+  if( n!=1 && ((idx-1)!=length(low))  || (length(low)!=length(up)) )
     stop("Error in parameter reconstruction: number of parameters is wrong.")
   
   return(list(lower = low, upper = up))
@@ -153,58 +164,56 @@ BoundsCreator= function(n,
 
 ParametersReconstruction = function(params, n, common = FALSE){
   
-  # reconstruction of parameters:
-  idx =1
-  mu = params[idx:(idx+n-1)]
-  idx = idx+n 
+  if (n==1){
+    mu = params[1]
+    sigma = matrix(params[2])
+    lambda = params[3]
+    theta = params[4]
+    delta = params[5]
+    S=sigma^2
+    corr=NA
+  }
+  else{
+    # reconstruction of parameters:
+    idx =1
+    mu = params[idx:(idx+n-1)]
+    idx = idx+n 
+    
+    
+    sigma=diag(params[idx:(idx+n-1)])
+    idx = idx + n
   
-  
-  sigma=diag(params[idx:(idx+n-1)])
-  idx = idx + n
-  
-  corr = matrix(rep(0,n*n), ncol = n)
-  k=1
-  for(i in 1:n)
-    for(j in i:n){
-      if (j!=i){
-        corr[i,j]=params[idx+k-1]
-        corr[j,i]=params[idx+k-1]
-        k=k+1
+    corr = matrix(rep(0,n*n), ncol = n)
+    k=1
+    for(i in 1:n)
+      for(j in i:n){
+        if (j!=i){
+          corr[i,j]=params[idx+k-1]
+          corr[j,i]=params[idx+k-1]
+          k=k+1
+        }
+        else
+          corr[i,j]=1
       }
-      else
-        corr[i,j]=1
-    }
-  idx = idx + n*(n-1)/2
-  
-  S = sigma %*% corr %*% sigma
-  
-  theta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  delta = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  lambda = params[idx:(idx+n-1)]
-  idx = idx+n
-  
-  if (common){  
-    theta_z = params[idx]
-    idx = idx+1
     
-    delta_z = params[idx]
-    idx = idx+1
+    idx = idx + n*(n-1)/2
     
-    lambda_z = params[idx]
-    idx = idx+1
+    S = sigma %*% corr %*% sigma
     
-    alpha = params[idx:(idx+n-1)]
+    theta = params[idx:(idx+n-1)]
     idx = idx+n
     
-    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda,
-                 theta_z = theta_z, delta_z = delta_z, lambda_z = lambda_z, alpha = alpha, S = S))
+    delta = params[idx:(idx+n-1)]
+    idx = idx+n
+    
+    lambda = params[idx:(idx+n-1)]
+    idx = idx+n
   }
   
-  else{
-    return(list( mu = mu, sigma = diag(sigma), corr = corr, theta = theta, delta = delta, lambda =lambda, S = S))
-  }
+  corr_matrix = matrix(ncol = n, nrow = n)
+  
+  corr_matrix = corr
+
+  return(list( mu = mu, sigma =diag(sigma), corr = corr_matrix, theta = theta, delta = delta, lambda =lambda, S = S))
+  
 }
