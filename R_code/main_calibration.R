@@ -257,7 +257,10 @@ end<- Sys.time()
 end-beg
 
 
-results = list(covariance = covariance, correlation = correlation, 
+regularized_covariance = covariance_regularization(covariance)
+
+
+results = list(covariance = regularized_covariance, correlation = correlation, 
                full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas)
 
 final_time = Sys.time()

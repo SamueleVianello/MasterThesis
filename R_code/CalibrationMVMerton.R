@@ -217,3 +217,34 @@ ParametersReconstruction = function(params, n, common = FALSE){
   return(list( mu = mu, sigma =diag(sigma), corr = corr_matrix, theta = theta, delta = delta, lambda =lambda, S = S))
   
 }
+
+
+
+
+covariance_regularization = function(mat, method =  'simple'){
+  decomp = eigen(mat,symmetric = TRUE)
+  S = decomp$vectors
+  eigval = decomp$values
+  
+  print("Eigenvalues: ")
+  print(eigval)
+  
+  if(method =="jackel"){
+    eigval[which(eigval<0)]=0
+    
+    Lambda = diag(eigval)
+    
+    t = rep(x=NA, length(eigval))
+    for (i in 1:length(eigval)) {
+      t[i] = 1/sum(S[i,]^2 * eigval)
+    }  
+    B = sqrt(diag(t)) %*% S %*% sqrt(Lambda)
+    
+    res = B %*% t(B)
+  }
+  else{
+    eigval[which(eigval<0)]=1e-5
+    res = S %*% diag(eigval)%*% t(S)
+  }
+  res
+}
