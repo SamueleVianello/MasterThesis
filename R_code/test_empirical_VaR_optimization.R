@@ -8,14 +8,15 @@ load("results.Rda")
 
 
 N_samples=dim(my_returns)[1]
-asset_names = colnames(my_returns[,2*(1:14)])
+N_assets = dim(my_returns)[2]/2 
+asset_names = colnames(my_returns[,2*(1:N_assets)])
 
 
 
 #*************************************************
 # Percentage returns
 #+++++++++++++++++++++++++++++++++++++++++++++++++
-percentage_returns = exp(my_returns[,2*(1:14)])
+percentage_returns = exp(my_returns[,2*(1:N_assets)])
 
 hist(percentage_returns$sp500, freq = FALSE, main="Percentage daily S&P500 return")
 
@@ -54,9 +55,9 @@ print(paste("percentage VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% 
 
 
 
-#*************************************************
-#               log-returns
-#+++++++++++++++++++++++++++++++++++++++++++++++++
+##################################################
+#           log-returns simulation               #
+##################################################
 
 
 hist(my_returns$sp500, freq = FALSE, main="Daily S&P500 log-return", breaks = 50)
@@ -102,10 +103,12 @@ print(paste("VaR for naif allocation at",  c(0.01,0.05,0.1)*100 , "% level is",V
 ################### SIMULATING FRONTIER #########################
 #################################################################
 
-# Pretty time consuming, a single optimization using 10 repetitions take 2 mins (10000 scenarios)
-# So use low number of returns for frontier
+# Pretty time consuming, a single optimization using 10 iterations take 2 mins (10000 scenarios)
+# I suggest using 1000 scenarios and 5 iterations
 
-returns= seq(1.05,1.4, by=0.05) # percentage
+
+#returns= seq(1.025,1.15, by=0.005) # percentage
+returns= seq(1.175,1.8, by=0.025) # percentage
 
 # returns = seq(0.05,0.4, by=0.05) # log-returns
 
@@ -114,7 +117,7 @@ returns= seq(1.05,1.4, by=0.05) # percentage
 #--------------------------------------------------------------
 ##################### ANNUAL VaR/CVaR RETURN ##################
 #--------------------------------------------------------------
-## VAR
+####### VAR ####
 
 t_beg = Sys.time()
 allocations = matrix(rep(0,N_assets*length(returns)), ncol=N_assets)
@@ -155,11 +158,12 @@ abline(v = mean(sim_mat%*%allocations[idx,]))
 
 t_beg = Sys.time()
 allocations_cvar = matrix(rep(0,N_assets*length(returns)), ncol=N_assets)
+colnames(allocations_cvar)=asset_names
 CVaRs = rep(0,length(returns))
 resulting_returns_cvar = rep(0,length(returns)) # just as a check
 for (i in 1:length(returns)){
   print(returns[i])
-  sol_func = OptimalAllocationVaR(simulated_returns = rexxxx, alpha = 0.05, target_return = returns[i], N_rep = 5, CVaR = TRUE)
+  sol_func = OptimalAllocationVaR(simulated_returns = sim_mat, alpha = 0.05, target_return = returns[i], N_rep = 5, CVaR = TRUE)
   allocations_cvar[i,]=sol_func$allocation
   CVaRs[i]=sol_func$objective
   resulting_returns_cvar[i]= sol_func$expected_return
@@ -174,11 +178,14 @@ grid()
 
 
 # Excluding bitcoin
+max_return = exp(max(colMeans(my_returns[, 2*(2:N_assets)]))*255) # start from 2 to exclude bitcoin
+returns_no_btc= c(seq(1.0,max_return, by=0.005), max_return)
 
-returns_no_btc = c(1.00,1.025,1.05,1.1,1.15,1.2)
 
 t_beg = Sys.time()
 allocations_cvar_no_btc = matrix(rep(0,(N_assets-1)*length(returns_no_btc)), ncol=N_assets-1)
+colnames(allocations_cvar_no_btc) = asset_names[-1]
+
 CVaRs_no_btc = rep(0,length(returns_no_btc))
 resulting_returns_cvar_no_btc = rep(0,length(returns_no_btc)) # just as a check
 for (i in 1:length(returns_no_btc)){
@@ -191,7 +198,7 @@ for (i in 1:length(returns_no_btc)){
 t_end = Sys.time()
 t_end-t_beg
 
-plot(CVaRs_no_btc, (resulting_returns_cvar_no_btc)-1, type='l', col='orange', xlab = "CVaR 5%", ylab = "Annual return in %")
+plot(CVaRs_no_btc, (resulting_returns_cvar_no_btc), type='l', col='orange', xlab = "CVaR 5%", ylab = "Annual return in %")
 title("Efficient CVaR Frontier (bootstrap) without BTC")
 grid()
 

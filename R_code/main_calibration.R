@@ -19,28 +19,28 @@ source('CalibrationMVMerton.R')
 
 # CREATION OF THE DATASET OF LOG-RETURNS FROM EXCEL DATASET
 
-my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
-
-leng = dim(my_data)[1]
-N_assets = dim(my_data)[2] /2
-
-var_names = c('btc_date','btc', #btc
-              'bric_date','bric','sp500_date','sp500','eurostoxx_date','eurostoxx','nasdaq_date','nasdaq', #stock
-              'bond_europe_date','bond_europe','bond_us_date','bond_us','bond_eur_date','bond_eur', #bond
-              'eur_date','eur','gbp_date','gbp','chf_date','chf','jpy_date','jpy', #FX
-              'gold_date','gold','wti_date','wti','grain_date','grain','metal_date','metal', # commodities
-              'vix_date','vix')
-
-my_data = my_data[,var_names]
-
-my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
-my_returns =my_data[1:(leng-1),]
-
-my_returns[,2*(1:N_assets)]=my_returns_values
-
-
-save(my_returns, file = "returns.Rda")
-save(my_data, file = "data.Rda")
+# my_data<-read.xlsx("XBT_Correlations_nasdaq.xlsm",sheet = "DATA" , colNames =TRUE)
+# 
+# leng = dim(my_data)[1]
+# N_assets = dim(my_data)[2] /2
+# 
+# var_names = c('btc_date','btc', #btc
+#               'bric_date','bric','sp500_date','sp500','eurostoxx_date','eurostoxx','nasdaq_date','nasdaq', #stock
+#               'bond_europe_date','bond_europe','bond_us_date','bond_us','bond_eur_date','bond_eur', #bond
+#               'eur_date','eur','gbp_date','gbp','chf_date','chf','jpy_date','jpy', #FX
+#               'gold_date','gold','wti_date','wti','grain_date','grain','metal_date','metal', # commodities
+#               'vix_date','vix')
+# 
+# my_data = my_data[,var_names]
+# 
+# my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
+# my_returns =my_data[1:(leng-1),]
+# 
+# my_returns[,2*(1:N_assets)]=my_returns_values
+# 
+# 
+# save(my_returns, file = "returns.Rda")
+# save(my_data, file = "data.Rda")
 
 load("returns.Rda")
 load("data.Rda")
@@ -72,6 +72,7 @@ attach(my_returns)
 N = dim(my_returns)[1] #total number of observations
 
 dt = 1/255
+
 
 
 

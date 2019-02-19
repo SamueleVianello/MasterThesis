@@ -1,5 +1,41 @@
-\chapter{Markowitz Portfolio Optimization}
+\chapter{Optimal Portfolio Allocation}
 \label{chpr:markowitz}
+
+In this chapter we will explore what the optimal allocation is for our portfolio of assets. We will study the \textit{efficient frontier} using two different risk measures, volatility and expected shortfall. In all our analyses, we will be comparing the effects that including Bitcoin in our portfolio has on the optimal allocation.
+
+
+\section{Markowitz Mean-Variance Portfolio Optimization}
+
+Modern Portfolio Theory (MPT) is a mathematical framework for creating a portfolio of asset by maximizing the expected return for a given level of risk or by minizing the risk while maintaining the same expected gain. 
+Before the article \cite{MARKOWITZ1952} by Harry Markowitz in 1952, the concept of \textit{diversification} (the old warning \textit{not to put all your eggs in one basket}) was only driven by the experience of how markets behave.
+Moreover, investors used to base their decisions on expected return alone and thus when given a choice between two assets with different expected returns, they would put all their money on the top performing one.
+
+With its article, that would later grant him the Nobel Prize in Economics, Markowitz introduced a more rigorous and mathematically sound framework to assembly a portfolio of assets. His key insight is that an asset's return and risk risk should not be assessed by itself, but rather by how it affects the overall portfolio risk and return.
+To do so, the \textit{variance} is used as a proxy for risk. Hence the name \textit{mean-variance } analysis that is often used as a substitute for MPT.
+
+\bigskip
+Let's introduce the assumption underlying the MPT:
+\begin{enumerate}
+	\item Investors are \textit{risk averse}: they will always choose the less risky asset, when they offer the same return.  At the same time, an investor wanting a higher return has to be willing to accept a higher risk.
+	This equally holds for portfolios as a whole: given two portfolio with the different risk profiles, he will choose the less risky in case of same return and the most remunerating in case of same risk.
+	\item Portfolio return is the weighted sum of the single assets' returns: in general $\mathbb{E}[R_{ptf}] = \sum_{i=1}^{N} w_i \mathbb{E}[R_i]$.
+	\item Portfolio variance is a function of both the assets variances and their correlations: $V_{ptf} = \sum_{i=1}^{N} w_i \sigma_i^2 + \sum_{i=1}^{N}\sum_{j\neq i , j=1}^{N} w_i w_j \rho_{i,j}\sigma_i\sigma_j$
+\end{enumerate}
+
+Items 2 and 3 above can be more compactly stated using matrix notation, which will come in handy later on in our analysis:
+\begin{equation}
+\label{eq:ptf_return}
+r_{ptf} = \mathbf{w}^T \mathbf{r}
+\end{equation}
+\begin{equation}
+	V_{ptf} =  \mathbf{w}^T \Sigma \mathbf{w}
+\end{equation}
+
+where we have the weights vector $\mathbf{w} = [w_1, w_2, ... , w_N]^T$ , $\mathbf{r} = [r_1, r_2, ... , r_N]^T$, using the shorthand $r_i = \mathbb{E}[R_i]$ and finally $\Sigma$ is the $NxN$ covariance matrix of the assets.
+
+
+\textbf{TO DO: Efficient Frontier}
+
 
 
 
