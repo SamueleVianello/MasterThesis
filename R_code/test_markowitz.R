@@ -28,18 +28,18 @@ N_assets = dim(my_returns)[2]/2 -1 # -1 to exclude VIX from our analysis
 # ***** PERCENTAGE RETURNS ******
 expected_return_sample = colMeans(exp(my_returns[1:N_samples,2*(1:N_assets)]))^255
 SS = cov(exp(my_returns[1:N_samples,2*(1:N_assets)]))*255
-max_r = 1.8
+max_r = 1.6
 y_lim = c(1.00,max_r)
 
 
 
-# FIXME: add the same analysis done with calibrated results
+
+# Plots the efficient frontiers, w/ and w/o Bitcoin, w/ and w/o shortselling
+eff_front = PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r=max_r,
+                                  exclude_btc = TRUE, add_no_short_sell = T, full_plot = FALSE)
 
 
-eff_front = PlotEfficientFrontier(expected_return_sample, SS,  max_r=max_r, exclude = 1)
-
-
-# dev.copy2pdf(file = "efficient_frontier.pdf")
+# dev.copy2pdf(file = "efficient_frontier.pdf", height = 7, width=7 )
 # dev.off()
 
 

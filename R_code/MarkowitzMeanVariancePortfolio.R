@@ -3,20 +3,15 @@
 ###############################################################
 
 # Plotter for the efficient frontier
-PlotEfficientFrontier = function(exp_returns, covariance, min_r=NA, max_r,  exclude = NA, add_no_short_sell = TRUE, full_plot = FALSE)
+PlotEfficientFrontier = function(exp_returns, covariance, min_r=1.0, max_r,  exclude_btc = TRUE, add_no_short_sell = TRUE, full_plot = FALSE)
 {
+  # make sure bitcoin is the first assets
+  
   N_assets = length(exp_returns)
   full_idx = 1:N_assets
   
-  if (!is.na(exclude) ){
-    if (max(exclude)<=N_assets && min(exclude)>0){
-      idx = full_idx[-exclude]
-      #print(idx)
-    }
-    else{
-      warning("Wrong index format for excluded assets.")
-      idx = full_idx
-    }
+  if (exclude_btc ){
+    idx = full_idx[-1]
   }
   else{
     idx = full_idx
@@ -30,14 +25,17 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r=NA, max_r,  excl
   total_result[["simple"]]=res1
   total_result[["simple_excluded"]]=res2
   
+  
   # if plot is not working exchange x11 command for window or vice-versa
   x11()
   #windows(width = 10,height = 8)
-  y_lim = c(1.0, max_r)
-  plot(res1$sigma,res1$expected_return, type = 'l',col='darkgreen', ylim = y_lim, xlab = "Volatility", ylab = "Returns")
-  lines(res2$sigma,res2$expected_return, col = 'red')
-  points(sqrt(diag(covariance)),exp_returns, pch='+', col = 'blue')
-  text(sqrt(diag(covariance)),exp_returns, labels = colnames(my_returns[,2*(idx)]),pos = 3)
+  y_lim = c(min_r, max_r) -1
+  plot(res1$sigma,res1$expected_return-1, type = 'l',col='darkgreen', ylim = y_lim, xlab = "Annualized Volatility", ylab = "Annualized Returns")
+  if(exclude_btc){
+    lines(res2$sigma,res2$expected_return-1, col = 'red')
+    }
+  points(sqrt(diag(covariance)),exp_returns-1, pch='+', col = 'blue')
+  text(sqrt(diag(covariance)),exp_returns-1, labels = colnames(my_returns[,2*full_idx]),pos = 3)
   grid()
   
   
@@ -49,18 +47,40 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r=NA, max_r,  excl
     total_result[["no_short"]]=res_btc
     total_result[["no_short_excluded"]]=res_no_btc
     
-    lines(res_btc$sigma, res_btc$expected_return, col= 'green')
-    lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201], col = 'orange')
+    lines(res_btc$sigma, res_btc$expected_return-1, col= 'green')
     
-    legend("topleft", legend = c("btc", "NO btc", "btc, NO short sale","NO btc, NO short sale"),
-           col=c("darkgreen","red","green","orange"), lwd = 3, lty = c(1,1,1,1), cex=0.75, bg = 'white')
+    if(exclude_btc){
+      lines(res_no_btc$sigma[2:201], res_no_btc$expected_return[2:201]-1, col = 'orange')
+      my_legend = c("btc", "NO btc","btc, NO short sale","NO btc, NO short sale")
+      my_col =  c("darkgreen","red","green","orange")
+    }
+    else{
+      my_legend =c("w/ short sale", "w/o short sale")
+      my_col = c("darkgreen", "green")
+    }
+    
+    
+    print(my_legend)
+    legend("topleft", legend = my_legend,
+           col=my_col, lwd = 3, lty = 1, cex=0.75, bg = 'white')
   }
   else {
-    legend("topleft", legend = c("btc", "NO btc"),
-           col=c("darkgreen","red"), lwd = 3, lty = c(1,1), cex=0.75, bg = 'white')
+    if(exclude_btc){
+      my_legend = c("Include btc", "NO btc")
+      my_col = c("darkgreen","red")
+    }
+    else{
+      my_legend = "Include btc"
+      my_col = "darkgreen"
+    }
+
+    legend("topleft", legend = my_legend,
+           col=my_col, lwd = 3, lty = 1, cex=0.75, bg = 'white')
+    
   }
   
-  title(main = "Efficient Markowitz Mean Variance Frontier")
+  plot_title =ifelse(full_plot, "Markowitz Mean-Variance Frontier", "Efficient Markowitz Mean-Variance Frontier")
+  title(main = plot_title)
   
   total_result
 }
