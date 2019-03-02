@@ -19,11 +19,6 @@ N_samples = dim(my_returns)[1]
 # Number of assets
 N_assets = dim(my_returns)[2]/2 -1 # -1 to exclude VIX from our analysis
 
-# ***** LOG-RETURNS ********
-# SS = cov(my_returns[1:N_samples,2*(1:N_assets)]) * 255
-# expected_return_sample = colMeans(my_returns[1:N_samples,2*(1:N_assets)]) * 255
-# y_lim = c(-0.05,0.4)
-# max_r = 0.4
 
 # ***** PERCENTAGE RETURNS ******
 expected_return_sample = colMeans(exp(my_returns[1:N_samples,2*(1:N_assets)]))^255
@@ -36,7 +31,7 @@ y_lim = c(1.00,max_r)
 
 # Plots the efficient frontiers, w/ and w/o Bitcoin, w/ and w/o shortselling
 eff_front = PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r=max_r,
-                                  exclude_btc = TRUE, add_no_short_sell = T, full_plot = FALSE)
+                                  exclude_btc = T, add_no_short_sell = T, full_plot = F)
 
 
 # dev.copy2pdf(file = "efficient_frontier.pdf", height = 7, width=7 )
@@ -44,19 +39,48 @@ eff_front = PlotEfficientFrontier(expected_return_sample, SS, min_r = 1, max_r=m
 
 
 
-# # target return
-# target = 0.2
-# 
-# w = OptimalAllocation(r=expected_return_sample,S=SS, target_return = target)
-# w_no_btc = OptimalAllocation(r=expected_return_sample[2:14],S=SS[2:14,2:14], target_return = target)
-# 
-# cbind(w, c(0,w_no_btc))
+##################### ALLOCATIONS FOR GIVEN VOLATILITY ###################################
+
+vol_target = seq(from = 0.0275,to = 0.12, by = 0.0025)
+
+
+allocations_vol = zeros(length(vol_target), N_assets) 
+colnames(allocations_vol) = colnames(my_returns[,2*(1:N_assets)])
+returns_vol = zeros(length(vol_target),1)
+allocations_vol_no_btc = zeros(length(vol_target), N_assets) 
+colnames(allocations_vol_no_btc) = colnames(my_returns[,2*(1:N_assets)])
+returns_vol_no_btc = zeros(length(vol_target),1)
+
+for (i in 1:length(vol_target)) {
+  allocations_vol[i,] = OptimalAllocation(r=expected_return_sample,S=SS, sd=vol_target[i], no_short_sales=1:N_assets)
+  returns_vol[i,1] = sum(allocations_vol[i,]*expected_return_sample)
+
+  allocations_vol_no_btc[i,2:N_assets] = OptimalAllocation(r=expected_return_sample[2:N_assets],S=SS[2:N_assets,2:N_assets], sd=vol_target[i], no_short_sales=1:(N_assets-1))
+  returns_vol_no_btc[i,1] = sum(allocations_vol_no_btc[i,]*expected_return_sample)
+}
+
+# polish data for small allocation ( allocation of 1e-10 set to zero)
+allocations_vol[which(abs(allocations_vol)<1e-10)] = 0
+allocations_vol_no_btc[which(abs(allocations_vol_no_btc)<1e-10)] = 0
+
+points(vol_target,returns_vol_no_btc-1,col="orange")
+points(vol_target,returns_vol-1,col="green")
+
+res_btc = cbind(returns_vol-1,vol_target, allocations_vol)
+colnames(res_btc)[c(1,2)] = c("exp_return","volatility")
+res_no_btc = cbind(returns_vol_no_btc-1,vol_target, allocations_vol_no_btc)
+colnames(res_no_btc)[c(1,2)] = c("exp_return","volatility")
+
+write.csv(file = "allocation_on_vol.csv", x = res_btc)
+write.csv(file = "allocation_on_vol_no_btc.csv", x = res_no_btc)
+
+
+
+##################### ALLOCATIONS FOR GIVEN RETURNS #####################################
 
 # percentage ****************
 targets = seq(1.025, 1.17, by = 0.005)
 
-# log-returns *******************
-# targets = seq(0.05,0.30, by=0.01)
 
 
 l=length(targets)
@@ -78,10 +102,7 @@ alloc_no_btc
 library(ggplot2)
 library(RColorBrewer)
 
-# plot(targets,alloc_btc[1,], type='l', col=rainbow(14)[1], ylim = c(-1,1))
-# for(i in 2:14){
-#   lines(targets, alloc_btc[i,], col= rainbow(14)[i])
-# }
+
 
 
 Asset = rep(rownames(alloc_btc), l)

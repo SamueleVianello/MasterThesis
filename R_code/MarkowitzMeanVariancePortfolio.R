@@ -42,7 +42,7 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r=1.0, max_r,  exc
   if(add_no_short_sell){
     # constrained = no short sales for given assets
     res_btc = EfficientFrontier(r=exp_returns, S=covariance, full = full_plot, N=100, no_short_sales =1:N_assets, max_r = max_r)
-    res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = full_plot, N =200, no_short_sales = idx)
+    res_no_btc = EfficientFrontier(r= exp_returns[idx], S=covariance[idx,idx],full = full_plot, N =200, no_short_sales = idx-1)
     
     total_result[["no_short"]]=res_btc
     total_result[["no_short_excluded"]]=res_no_btc
@@ -106,7 +106,12 @@ OptimalAllocation=function(r,S, target_return = NA, sd = NA, no_short_sales=NA){
     return(OptimalAllocation_unconstr(r=r,S=S, target_return = target_return, sd=sd))
   }
   else{
-    return(OptimalAllocation_constr(r=r,S=S, target_return = target_return,no_short_sales = no_short_sales))
+    if (!is.na(target_return)){
+      return(OptimalAllocation_constr_return(r=r,S=S, target_return = target_return,no_short_sales = no_short_sales))
+    }
+    else if(!is.na(sd)){
+      return(OptimalAllocation_constr_sigma(r=r,S=S, target_sigma = sd, no_short_sales = no_short_sales))
+    }
     
   }
 }
@@ -114,7 +119,6 @@ OptimalAllocation=function(r,S, target_return = NA, sd = NA, no_short_sales=NA){
 
 
 OptimalAllocation_unconstr= function(r,S, target_return = NA, sd = NA){
-  
   if(is.na(target_return) & is.na(sd)){
     stop("Please specify expected return or standard deviation.")
   }
@@ -143,7 +147,7 @@ OptimalAllocation_unconstr= function(r,S, target_return = NA, sd = NA){
       stop("Computations of minimum standard deviation yield different results.")
     }
     
-    print(paste("Minimum standard deviation for given expected return is", sigma_opt))
+    print(paste("Minimum standard deviation for expected return of", target_return,"is", sigma_opt))
     
   }
   else if (!is.na(sd)){
@@ -159,7 +163,6 @@ OptimalAllocation_unconstr= function(r,S, target_return = NA, sd = NA){
     
     sigma_opt = sqrt(t(w_opt)%*%S%*%w_opt)
     
-    
     # test on the results:
     if (abs(sd - sigma_opt) > 1e-6){
       stop("Computation of minimum standard deviation yields a different result.")
@@ -172,9 +175,8 @@ OptimalAllocation_unconstr= function(r,S, target_return = NA, sd = NA){
 
 
 
-OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
-  
-  if(is.na(target_return)){
+OptimalAllocation_constr_return= function(r,S, target_return = NA, no_short_sales){
+  if(is.na(target_return) ){
     stop("Please specify expected return.")
   }
 
@@ -192,16 +194,13 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
   D = 2*S       #times 2 because there is a 1/2 in the implicit formulation
   d = rep(0,n)  # zeros
   
-  
   # Constraint on returns
   A = t(r)
-  
   b = target_return
   
   # Constraint on weights: sum(w)=1
   A = rbind(A,rep(1,n))
   b= rbind(b,1)
-  
   
   # Constraints on short selling ony on given assets
   for (i in no_short_sales){
@@ -218,6 +217,47 @@ OptimalAllocation_constr= function(r,S, target_return = NA, no_short_sales){
 }
 
 
+OptimalAllocation_constr_sigma= function(r,S, target_sigma, no_short_sales){
+  
+  # function that computes the difference between the given sigma_input 
+  # and the sigma of the optimal portfolio with expected_return = y
+  f_aux = function(y,sigma_input,expected_return, cov_matrix, no_short) {
+    w = OptimalAllocation(r=expected_return,S=cov_matrix, target_return = y, no_short_sales = no_short)
+    (sqrt(w%*%cov_matrix%*%w) - sigma_input)}
+  
+  # evaluate f_aux on a grid of points to find interval a suitable interval (r_low, r_high)
+  # such that f_aux(r_low) <= 0 <= f_aux(r_high)
+  default_grid = 0.004
+  r_low = NA
+  r_high = NA
+  ret_seq = seq(from = 1,to = max(r),by = default_grid)
+  while((is.na(r_low) || is.na(r_high)) &&  default_grid > 1e-5 ) {
+    f_ret = rep(1,length(ret_seq))
+    for (i in 1:length(ret_seq)) {
+      f_ret[i]=f_aux(y = ret_seq[i],sigma_input = target_sigma,expected_return = r,cov_matrix = S,no_short = no_short_sales)
+    }
+    print(paste("Grid:",default_grid))
+    r_low = ret_seq[max(which(f_ret <0))]
+    r_high = ret_seq [max(which(f_ret <0))+1]
+    default_grid = default_grid / 2
+  }
+  
+  if (is.na(r_low) || is.na(r_high)){
+    stop("No possible portfolio can have such a low volatility")
+  }
+  
+  # compute optimal portfolio return for given target_sigma by solving f_aux( y, target_sigma) = 0
+  r_optimal = uniroot(f = f_aux,
+                        interval = c(r_low, r_high), 
+                        sigma_input = target_sigma,
+                        expected_return =r,  cov_matrix = S, no_short = no_short_sales,
+                        trace = 2, tol = 1e-8)
+  
+  print(paste("sigma:", target_sigma, "return:",r_optimal$root))
+  w_opt = OptimalAllocation(r=r,S=S, target_return = r_optimal$root, no_short_sales = no_short_sales)
+  
+  return(w_opt)
+}
 
 
 
@@ -242,10 +282,9 @@ EfficientFrontier_unconstr = function(r,S,full=FALSE,plot=FALSE, N=100, max_r=NA
   b = drop(t(e)%*% invS %*% r)
   c = drop(t(r)%*% invS %*% r)
   d = drop(a*c - b^2)
-  
-  
+
   yy= seq(from = min_r, to = max_r,length.out = N+1)
-  xx = sqrt( (a*yy^2 - 2*b*yy + c)/d)
+  xx = sqrt( (a*yy^2 - 2*b*yy + c)/d) 
 
   if (!full){
     min_sigma = min(xx)
@@ -277,7 +316,8 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   # full: computes only upper section of frontier if FALSE
   # plot: if TRUE the frontier is plotted
   # N: how many expected returns to take into consideration to plot frontier
-
+  # print(r)
+  # print(S)
   library(quadprog)
   
   if (is.na(max_r)){
@@ -303,12 +343,14 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   A = rbind(A,rep(1,n))
   b= rbind(b,1)
   
-  
+  print(no_short_sales)
   # Constraint on short selling on given assets
   for (i in no_short_sales){
-    A_i = rep(0,n)
-    A_i[i]=1
+    A_i = matrix(0,nrow=1,ncol = n)
+    A_i[1,i]=1
     A = rbind(A,A_i)
+    print(paste("A",dim(A)))
+    print(paste("A_i",dim(A_i)))
     b = rbind(b,0)
   }
 
@@ -330,7 +372,7 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
     sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
     xx[i] = sqrt(sol$value)
     
-    # sigma = sqrt(t(sol$solution)%*%SS%*%sol$solution)
+    # sigma = sqrt(t(sol$solution)%*%S%*%sol$solution)
     # print(paste(xx[i], sigma))
   }
 
@@ -343,13 +385,6 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
     yy= yy[idx]
   }
 
-  # if(plot){
-  #   min_y = min(c(yy,r))
-  #   max_y = max(c(yy,r))
-  #   plot(xx,yy,type ='l', ylim = c(min_y,max_y))
-  #   points(sqrt(diag(S)),r,col='blue',pch='+')
-  #   #legend(c("Efficient Frontier","Single Assets"))
-  # }
   res = list(sigma = xx, expected_return=yy)
   return(res)
 }
