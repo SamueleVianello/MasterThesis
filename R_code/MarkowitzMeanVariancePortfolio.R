@@ -59,8 +59,6 @@ PlotEfficientFrontier = function(exp_returns, covariance, min_r=1.0, max_r,  exc
       my_col = c("darkgreen", "green")
     }
     
-    
-    print(my_legend)
     legend("topleft", legend = my_legend,
            col=my_col, lwd = 3, lty = 1, cex=0.75, bg = 'white')
   }
@@ -343,14 +341,11 @@ EfficientFrontier_constr = function(r,S,full=FALSE,plot=FALSE, N=100, no_short_s
   A = rbind(A,rep(1,n))
   b= rbind(b,1)
   
-  print(no_short_sales)
   # Constraint on short selling on given assets
   for (i in no_short_sales){
     A_i = matrix(0,nrow=1,ncol = n)
     A_i[1,i]=1
     A = rbind(A,A_i)
-    print(paste("A",dim(A)))
-    print(paste("A_i",dim(A_i)))
     b = rbind(b,0)
   }
 
