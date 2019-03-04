@@ -72,10 +72,6 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
 
 
 
-
-
-
-
 BoundsCreator= function(n, 
                         custom_jump_mean =FALSE,
                         max_jump_mean = rep(NA,n),

@@ -179,5 +179,32 @@ To do so, we can plot the values of $\mathbf{w}$ as resulting from \eqref{eq:mar
 
 
 \section{Portfolio Optimization with CVaR as a Risk Measure}
+We have so far studied the problem of optimal portfolio allocation through Markowitz MPT, considering the portfolio volatility as a proxy for its risk.
+This is only one of the possible choices in a more general framework in which the optimization problem to be solved maintains the same constraints but has a  different objective function. We can reformulate \eqref{eq:markowitz_opt} as follows:
 
+\begin{subequations}
+	\label{eq:general_opt}
+	\begin{align}
+	%	\label{eq:mark_min}
+	&\!\min_{\mathbf{w}\in \mathbb{R}^{N}}     &    & PtfRisk(\mathbf{w}) \\
+	%	\label{eq:mark_weights}
+	& \text{subject to}   &   & \mathbf{e}^T\mathbf{w} = 1 ,\\
+	%	\label{eq:mark_return}
+	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2} \\
+	%	\label{eq:mark_noshort}
+	&		   &      & w_{i} \geq 0, \text{for} \: i = 1\dots N. 
+	\end{align}
+\end{subequations}
 
+where we have substituted the portfolio volatility with a general measure of the portfolio risk as a function of the weights $\mathbf{w}$.
+
+Using the portfolio volatility as risk measure has its perks and downsides: it is an intuitive and simple way to evaluate how the possible returns vary from the expected value but it takes into account both the positive and the negative deviation from the mean. Thus, a high volatility may be caused by a few extremely high returns that are anything but something to avoid and penalize.
+For this reason, the notion of \textit{semi-volatility} was introduced to only consider variations towards lower returns than the one expected. This solution however is not very popular.
+
+A more common approach is to measure risk based on the quantile of the loss distribution \footnote{Depending on how the returns are expressed, we have different ways to compute the loss. In particular, considering the time interval $[0, T]$, for log-returns $r_{log}=log(S_T/S_0)$ the loss is simply the opposite $Loss_{log} = - r_{log}$ while for $r_\% = S_T/S_0$  the loss is $Loss_\% = 1 - r_\%$. As usual we indicate by $S_t$ the price  of the asset or the value of the portfolio at time $t$.}. The \textit{Value-at-Risk} of level $\alpha$ for a loss distribution is precisely defined as the quantile of order $\alpha$.  
+VaR is a vastly popular and common way to measure the so called ``tail-risk'': the intrinsic risk contained in loss events that happen very rarely. 
+Its advantage is that it considers only the downside of the expected return as opposed to what the volatility does.
+
+However, VaR has drawbacks as its mathematical definition does not make it a \textit{coherent measure of risk}. Specifically, it lacks the property of sub-additivity: the VaR of two different portfolios  considered as one may be greater than the sum of the two single VaRs. This is in direct contradiction with the principle of diversification.
+
+\textbf{aggiungere appendice dove si definisce una misura coerente di rischio con le 3/4 proprietà}

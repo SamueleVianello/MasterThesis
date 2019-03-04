@@ -74,7 +74,7 @@ dt = 1/255
 
 
 
-calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bric[1:N],sp500[1:N],eurostoxx[1:N]), n=4, dt = dt )
+calibrated_params = CalibrateMVMerton(x=cbind(btc[1:N],bric[1:N],sp500[1:N],eurostoxx[1:N]), n=4, dt = dt, custom_jump_bounds = F)
 calibrated_params
 
 print(calibrated_params$mu)
