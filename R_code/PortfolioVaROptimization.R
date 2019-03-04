@@ -1,7 +1,8 @@
 # PORTFOLIO VaR OPTIMIZATION 
+library(alabama)
 
 OptimalAllocationVaR = function(simulated_returns, alpha, target_return, N_rep=10, CVaR =  FALSE){
-  library(alabama)
+  
   if(CVaR){
     objective = ptf_cvar
   }
@@ -90,7 +91,7 @@ ptf_var_w_constr= function(w, sims, alpha,target_return){
 
 
 
-OptimalAllocationDailyVaR= function(daily_return, alpha, target_return, N_rep=10){
+OptimalAllocationDailyCVaR= function(daily_return, alpha, target_return, N_rep=10){
   # daily_return are the daily return of last 5 years as a matrix(N_days * N_assets)
   N_assets = dim(daily_return)[2]
   

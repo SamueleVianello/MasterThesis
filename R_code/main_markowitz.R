@@ -113,9 +113,9 @@ colnames(res2_btc)[c(1,2)] = c("exp_return","volatility")
 res2_no_btc = cbind(targets-1,sigma_ret_no_btc, alloc_no_btc)
 colnames(res2_no_btc)[c(1,2)] = c("exp_return","volatility")
 
-# # save to file
-# write.csv(file = "allocation_on_vol.csv", x = res_btc)
-# write.csv(file = "allocation_on_vol_no_btc.csv", x = res_no_btc)
+# save to file
+write.csv(file = "allocation_on_ret.csv", x = res2_btc)
+write.csv(file = "allocation_on_ret_no_btc.csv", x = res2_no_btc)
 
 
 

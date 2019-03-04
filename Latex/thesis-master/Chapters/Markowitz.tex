@@ -60,7 +60,7 @@ The optimization problem in \eqref{eq:markowitz_opt} has a quadratic objective f
 
 As we are going to explain in the following sections, we will be mainly focusing on the case where there is no short selling, as indeed so far there are no instruments on the market that allow an investor to go short on Bitcoin and our analysis shows that the main diversification advantage comes from including Bitcoin in our portfolio. Allowing short-selling improves our diversification capability only so slightly.
 
-\section{Efficient Frontier}
+\section{Markowitz Efficient Frontier}
 It is interesting to study the set of optimal allocation as a whole, rather than simply focus on one target return and minimizing the portfolio risk.
 To do so, we can consider a set of target returns and compute for each of them the respective minimum variance. We thus get a set of pairs $(\sigma^2, r)$ that represents the best allocation in terms of the minimum risk.
 
@@ -81,6 +81,8 @@ We can proceed with the same argument arguing in terms of best return for a give
 
 As a summary, let us keep in mind that any point in the volatility-expected return plane \textit{dominates} all the other portfolio allocations that are represented by points situated below and to the right of it. Conversely, that same point will be dominated by all other allocations above and to the left of it. 
 
+Another mathematical perk of considering only the efficient top section is that it renders the frontier a \textit{bijective} function. Hence, for each (attainable) level of risk there is one and only one corresponding expected portfolio return, and vice-versa.
+
 
 \subsection{Efficient Frontier with and without Bitcoin}
 
@@ -91,9 +93,74 @@ In Figure \ref{fig:efficient_frontier_comparison} we have plotted the efficient 
 Comparing the two green lines, we can clearly see that the exclusion of short-selling does not penalize our efficient allocation by much. The same can be stated for the red and orange curves, which represent our portfolio when excluding the digital asset.
 Thus, given our particular set of assets, allowing for short-selling does very little to improve the diversification of our portfolio.
 
-Let us now take a look of what happens when we include Bitcoin in the reference portfolio: we get a significant improvement in the expected return when considering a certain level of risk. Equivalently, for the same level of return we have a noticeable decrease in the volatility of our portfolio.
+Let us now take a look of what happens when we include Bitcoin in the reference portfolio: as we can see from Figure \ref{fig:efficient_frontier_comparison}, we get a significant improvement in the expected return when considering each level of risk . Equivalently, for the same level of return we have a noticeable decrease in the volatility of our portfolio.
 
-*****add numerical example, e.g. at vol=0.035 we double the return*****
+%This is indeed one of the main result of this work
+
+We can see some numerical proof of the diversification properties of adding Bitcoin to our portfolio in Table \ref{tab:markowitz_ret_on_vol} and Table	\ref{tab:markowitz_vol_on_ret}.
+
+\begin{table}
+\begin{tabular}{ccc}
+\toprule
+Volatility Level & Return without Bitcoin & Return including Bitcoin \\
+\midrule
+2,61\% & 3,00\% & 3,00\% \\
+2,75\% & 3,89\% & 7,70\% \\
+3,00\% & 4,59\% & 10,94\% \\
+3,25\% & 5,05\% & 13,37\% \\
+3,50\% & 5,43\% & 15,48\% \\
+3,75\% & 5,76\% & 17,41\% \\
+4,00\% & 6,06\% & 19,21\% \\
+4,25\% & 6,34\% & 20,94\% \\
+4,50\% & 6,61\% & 22,60\% \\
+4,75\% & 6,87\% & 24,21\% \\
+5,00\% & 7,12\% & 25,79\% \\
+5,25\% & 7,37\% & 27,34\% \\
+5,50\% & 7,61\% & 28,86\% \\
+5,75\% & 7,85\% & 30,37\% \\
+6,00\% & 8,08\% & 31,85\% \\
+\bottomrule
+\end{tabular}
+\caption{Expected return for different levels of volatility, both including and excluding Bitcoin.}
+\label{tab:markowitz_ret_on_vol}
+\end{table}
+
+\begin{table}
+\begin{tabular}{lll}
+	\toprule
+	Return Level & Volatiliy without Bitcoin & Volatility including Bitcoin \\
+	\midrule
+	3,00\% & 2,61\% & 2,61\% \\
+	3,50\% & 2,61\% & 2,67\% \\
+	4,00\% & 2,61\% & 2,78\% \\
+	4,50\% & 2,62\% & 2,96\% \\
+	5,00\% & 2,63\% & 3,22\% \\
+	5,50\% & 2,65\% & 3,55\% \\
+	6,00\% & 2,67\% & 3,95\% \\
+	6,50\% & 2,69\% & 4,40\% \\
+	7,00\% & 2,71\% & 4,88\% \\
+	7,50\% & 2,74\% & 5,39\% \\
+	8,00\% & 2,77\% & 5,91\% \\
+	8,50\% & 2,80\% & 6,45\% \\
+	9,00\% & 2,84\% & 7,00\% \\
+	9,50\% & 2,88\% & 7,56\% \\
+	10,00\% & 2,92\% & 8,12\% \\
+	10,50\% & 2,96\% & 8,69\% \\
+	11,00\% & 3,01\% & 9,27\% \\
+	11,50\% & 3,05\% & 9,85\% \\
+	12,00\% & 3,10\% & 10,43\% \\
+	12,50\% & 3,16\% & 11,01\% \\
+	13,00\% & 3,21\% & 11,60\% \\
+	13,50\% & 3,26\% & 12,19\% \\
+	14,00\% & 3,32\% & 12,78\% \\
+	14,50\% & 3,38\% & 13,37\% \\
+	15,00\% & 3,44\% & 13,96\% \\
+	\bottomrule
+\end{tabular}
+\caption{Volatility for different level of expected portfolio return, both including and excluding Bitcoin.}
+\label{tab:markowitz_vol_on_ret}
+\end{table}
+
 
 \begin{figure}
 	\centering
@@ -103,6 +170,14 @@ Let us now take a look of what happens when we include Bitcoin in the reference 
 \end{figure}
 
 
+\subsection{Portfolio Allocation}
+We have so far seen the implications of introducing the digital asset in our portfolio in terms of improvement in the expected return and of lowering the overall portfolio risk.
+Let us now take a look at how Markowitz MPT allocates the money in the different assets.
 
+To do so, we can plot the values of $\mathbf{w}$ as resulting from \eqref{eq:markowitz_opt} for different levels of volatilities ( and hence returns).
+
+
+
+\section{Portfolio Optimization with CVaR as a Risk Measure}
 
 
