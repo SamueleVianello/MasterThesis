@@ -19,7 +19,7 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
     min_jump = rep(0,n)
     max_jump = rep(0,n)
     
-    alpha_max = 0.995 # quantile for max jump
+    alpha_max = 0.99 # quantile for max jump
     alpha_min = 0.999 # quantile for min jump
     for (i in 1:n) {
       min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
@@ -61,7 +61,7 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
   print(paste("nlminb:", end_time_nlminb - start_time_nlminb))
   print(paste("TOTAL:", end_time_nlminb - start_time_deoptim))
   
-  res = ParametersReconstruction(out_nlminb$par,n=n,common = FALSE)
+  res = ParametersReconstruction(out_nlminb$par,n=n)
   res[["message"]] = out_nlminb$message
   res[["objective_function"]] = out_nlminb$objective
   res[["total_time"]] = end_time_nlminb - start_time_deoptim
@@ -83,23 +83,23 @@ BoundsCreator= function(n,
   max_mu = 5
   min_sigma = 1e-5
   max_sigma = 5
-  min_lambda = 0.0001
-  max_lambda = 100
+  min_lambda = 0.00001
+  max_lambda = 10
   min_theta = -1
   max_theta = -0.1
   min_delta = 0.0001
-  max_delta = 0.4
+  max_delta = 0.1
   min_corr = -1
   max_corr = 1
   
   
   if (n==1){
-    low = c(min_mu, min_sigma, min_lambda, min_theta, min_delta)
-    up = c(max_mu, max_sigma, max_lambda, max_theta, max_delta)
+    low = c(min_mu, min_sigma, min_theta, min_delta, min_lambda)
+    up = c(max_mu, max_sigma, max_theta, max_delta, max_lambda)
     
     if (custom_jump_mean){
-      low[4] = min_jump_mean
-      up[4] = max_jump_mean
+      low[3] = min_jump_mean
+      up[3] = max_jump_mean
     }
   }
   else {
@@ -158,14 +158,15 @@ BoundsCreator= function(n,
 
 
 
-ParametersReconstruction = function(params, n, common = FALSE){
+ParametersReconstruction = function(params, n){
   
   if (n==1){
+    print(params)
     mu = params[1]
     sigma = matrix(params[2])
-    lambda = params[3]
-    theta = params[4]
-    delta = params[5]
+    lambda = params[5]
+    theta = params[3]
+    delta = params[4]
     S=sigma^2
     corr=NA
   }

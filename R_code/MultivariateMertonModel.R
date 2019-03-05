@@ -310,7 +310,7 @@ negloglik_nocommon = function(params, x, dt, n) {
 #############################################################################
 
 
-MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lambda){
+MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lambda, a=T, b=T){
   # Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
   # NOTE: all vectors should be vertical [n*1]
   # ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
@@ -329,11 +329,11 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
   if(ldt>=1){
     stop("Error: lambda*dt should be lower than 1 (ideally close to 0).")
   }
-  mu_adj=mu -lambda*theta
-  pdf=(1-ldt)*dnorm(x, mean = mu_adj*dt, sd = sqrt(S*dt))+
-      ldt *dnorm(x, mean = mu_adj*dt+theta, sd = sqrt(S*dt + delta))
-
-
+  mu_adj= mu -lambda*theta - S/2#
+  pdf=a*(1-ldt)*dnorm(x, mean = mu_adj*dt, sd = sqrt(S*dt))+
+      b*ldt *dnorm(x, mean = mu_adj*dt + log(1+theta)-S/2, sd = sqrt(S*dt + delta^2))
+  
+  #print(ldt)
   return(pdf)
 }
 
@@ -551,13 +551,13 @@ MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, la
   
   pdf = 0
   
-  mean_y1 = c(theta[1],0)
+  mean_y1 = c(log(1+theta[1])-0.5 * delta[1],0)
   cov_y1 = matrix(c(delta[1]^2,0,0,0), 2,2)
   
-  mean_y2 = c(0,theta[2])
+  mean_y2 = c(0,log(1+theta[2])-0.5 * delta[2])
   cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
-  mean_x = mu*dt
+  mean_x = mu*dt - ldt * theta - diag(S)/2
   cov_x = S*(dt)
   
   
@@ -579,7 +579,6 @@ negloglik_2assets_nocommon= function(params, x, dt, n) {
   # x is a matrix [Npoints * n] of all the points for which we compute the likelihood
   # 
   ## add check on inputs
-  
   # reconstruction of parameters:
   idx =1
   mu = params[idx:(idx+n-1)]
@@ -620,7 +619,7 @@ negloglik_2assets_nocommon= function(params, x, dt, n) {
   # print(theta)
   # print(delta)
   # print(lambda)
-  # print(alpha)
+
   if( (idx-1)!=length(params))
     stop("Error in parameter reconstruction: number of parameters is wrong.")
   
@@ -820,7 +819,7 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   cov_y4 = matrix(rep(0,n*n),n,n)
   cov_y4[4,4] = delta[4]^2
   
-  mean_x = (mu - S[c(1,6,11,16)]*0.5) *dt #- lambda*theta*dt #FIXME ldt o non ldt?
+  mean_x = (mu - S[c(1,6,11,16)]*0.5 ) *dt #- lambda*theta*dt #FIXME ldt o non ldt?
   cov_x = S*(dt) # FIXED: check sqrt(dt) or dt -->FIXED dt because it is a covariance not a volatility
   
   #0000
