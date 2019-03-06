@@ -2,6 +2,7 @@
 # Created by https://www.gitignore.io/api/r
 
 R_code/*.csv
+R_code/*.txt
 
 ### R ###
 # History files

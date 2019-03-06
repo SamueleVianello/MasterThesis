@@ -19,7 +19,7 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
     min_jump = rep(0,n)
     max_jump = rep(0,n)
     
-    alpha_max = 0.99 # quantile for max jump
+    alpha_max = 0.995 # quantile for max jump
     alpha_min = 0.999 # quantile for min jump
     for (i in 1:n) {
       min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)

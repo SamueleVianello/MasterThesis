@@ -148,7 +148,6 @@ Its \textit{moment generating function}, which will be useful later as well, is 
 	M_{r_\infty}(z) = \Big(\frac{\omega}{\omega-z}\Big)^\nu
 \end{equation}
 
-
 \bigskip
 \section{Merton Model}
 
@@ -160,10 +159,10 @@ The asset price dynamics $S_t$ is modelled as a GBM to which a jump component dr
 
 \begin{equation}
 \label{merton_model}
-\frac{dS_t}{S_t} = \alpha dt + \sigma dW_t  + (Y_t-1)dN
+\frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt + \sigma dW_t  + Y_t dN
 \end{equation}
 
-where $\alpha$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y_t$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
+where $\mu$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y_t$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
 
 We can rewrite (\ref{merton_model}) in terms of the log-returns $X_t = log(S_t)$ and obtain, following the computations in \cite{MARTIN2007} and using theory from \cite{TANKOV2015}:
 \begin{equation}
@@ -449,9 +448,8 @@ In his paper \cite{BATES96}, Bates proposes his model as a way of capturing the 
 Thus, we will have to deal with a total of 8 parameters: $\mu, \kappa, \theta, \sigma_V$ and $ \rho$ for the stochastic volatility part, and $ \mu_J, \sigma_J$ and $ \lambda$ for the jump component. 
 
 
-\textbf{**** add jump component ****}
 \begin{equation}
-\frac{dS_t}{S_t} = \mu dt +\sqrt{ V_t} dW_t^S
+\frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt +\sqrt{ V_t} dW_t^S + Y_t dN 
 \end{equation}
 \begin{equation}
 dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V

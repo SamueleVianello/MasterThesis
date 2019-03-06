@@ -119,7 +119,7 @@ pairs(my_returns[,(1:4)*2])
 # from a 4 asset model
 
 
-N_assets = dim(my_returns)[2]/2
+N_assets = dim(my_returns)[2]/2 -1 # vix excluded by -1
 
 initial_time = Sys.time()
 
@@ -130,19 +130,12 @@ N_assets_even
 
 N=dim(my_returns)[1] 
 
+N_computations = (N_assets_even %/% 2)*(N_assets_even %/% 2 -1) /2
+
 idx_matrix = matrix(seq(from = 1, to = N_assets_even, by = 1),N_assets_even%/% 2,2, byrow = TRUE)
 
 final_cov = matrix(rep(0,N_assets_even*N_assets_even),N_assets_even,N_assets_even)
-
-
 w_matrix = matrix(rep(0,N_assets_even*N_assets_even),N_assets_even,N_assets_even)
-
-beg <- Sys.time()
-
-
-
-N_computations = (N_assets_even %/% 2)*(N_assets_even %/% 2 -1) /2
-
 names = colnames(my_returns[,2*(1:N_assets_even)])
 mus = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(mus) = names
@@ -151,37 +144,31 @@ colnames(thetas) = names
 deltas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
 colnames(deltas) = names
 lambdas = matrix(rep(0,N_computations*N_assets_even),N_computations,N_assets_even)
-
 colnames(lambdas) = names
 
-ctr = 1
+beg <- Sys.time()
+ctr = 1 # only used to store the full computations
 for (i in 1:(N_assets_even%/% 2 -1)){
   for (j in (i+1):(N_assets_even%/% 2)){
     idx =c(idx_matrix[i,],idx_matrix[j,])
-    
+    print(c(i,j))
     w_matrix[idx,idx]= w_matrix[idx,idx]+1
     calibrated = CalibrateMVMerton(x=cbind(my_returns[,2*idx[1]][1:N],my_returns[,2*idx[2]][1:N],my_returns[,2*idx[3]][1:N],my_returns[,2*idx[4]][1:N]),
-                                   n=4, dt = dt )
-    
+                                   n=4, dt = dt, custom_jump_bounds = TRUE )
+
     mus[ctr,idx] = calibrated$mu
     thetas[ctr,idx] = calibrated$theta
     deltas[ctr,idx] = calibrated$delta
     lambdas[ctr,idx] = calibrated$lambda
     ctr = ctr+1
-    
-    mus[ctr,idx] = calibrated$mu
-    thetas[ctr,idx] = calibrated$theta
-    deltas[ctr,idx] = calibrated$delta
-    lambdas[ctr,idx] = calibrated$lambda
-    ctr = ctr+1
-    
+
     SS = calibrated$S
     final_cov[idx,idx]= final_cov[idx,idx] + SS
-    # print(final_cov)
-    out = capture.output(calibrated)
-    cat(paste("Assets:", idx,sep = " "), out, 
-        file = paste0("computation_of_full_corr_matrix_nasdaq",format(Sys.time(), "%Y-%m-%d"),".txt"),
-        sep="\n", append=TRUE)
+    # # print(final_cov)
+    # out = capture.output(calibrated)
+    # cat(paste("Assets:", idx,sep = " "), out, 
+    #     file = paste0("computation_of_full_corr_matrix_nasdaq",format(Sys.time(), "%Y-%m-%d"),".txt"),
+    #     sep="\n", append=TRUE)
     }
 }
 
@@ -241,7 +228,8 @@ if(N_assets %% 2 == 1){
   complete_w_matrix
   covariance = complete_var/complete_w_matrix
   
-  correlation = cov2cor(covariance)
+  regularized_covariance = covariance_regularization(covariance)
+  correlation = cov2cor(regularized_covariance)
   
   out = capture.output(cov2cor(final_cov/w_matrix))
   cat("FINAL RESULT FOR CORRELATION", out, 
@@ -257,6 +245,7 @@ end-beg
 
 regularized_covariance = covariance_regularization(covariance)
 
+correlation = cov2cor(regularized_covariance)
 
 results = list(covariance = regularized_covariance, correlation = correlation, 
                full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas)
@@ -270,12 +259,13 @@ save(results, file= "results.Rda")
 
 ####### Save results to a .txt file #################
 # 
-# write.table(results$parameters, file = "results_txt_merton.txt")
-# write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
-# write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
-# write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
-# write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
-# write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
+write.table(results$parameters, file = "results_txt_merton.txt")
+write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
+write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
+write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
+write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
+write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
+
 
 
 

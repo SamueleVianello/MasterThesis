@@ -1,6 +1,9 @@
 ###untitled####
 ## # # # # # # # 
 
+source("MertonParsimoniousCalibration.R")
+source("MultivariateMertonModel.R")
+source("CalibrationMVMerton.R")
 attach(my_returns)
 
 
@@ -45,4 +48,19 @@ for (i in 1:N_assets){
   params
 }
   
+
+
+# calibrating model correlation matrix
+
+n=16
+
+corr_matrix = cor(my_returns[,2*(1:n)])
+beg = Sys.time()
+calibrate_full_correlation_merton(sample_corr_matrix = corr_matrix, Nasset = n,
+                                  mu =full_results[1:n,1] , vol = full_results[1:n,2],
+                                  mu_j = full_results[1:n,3], sigma_j = full_results[1:n,4], lambda = full_results[1:n,5],
+                                  dt = 1/255,final_t = 1,Nsim = 1000)
+corr_matrix
+Sys.time() -beg
+
   

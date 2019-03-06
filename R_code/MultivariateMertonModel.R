@@ -329,9 +329,9 @@ MultivariateMertonPdf_1asset_nocommon = function(x, dt, mu, S, theta, delta, lam
   if(ldt>=1){
     stop("Error: lambda*dt should be lower than 1 (ideally close to 0).")
   }
-  mu_adj= mu -lambda*theta - S/2#
+  mu_adj= mu - S/2 -lambda*theta 
   pdf=a*(1-ldt)*dnorm(x, mean = mu_adj*dt, sd = sqrt(S*dt))+
-      b*ldt *dnorm(x, mean = mu_adj*dt + log(1+theta)-S/2, sd = sqrt(S*dt + delta^2))
+      b*ldt *dnorm(x, mean = mu_adj*dt + log(1+theta)-delta^2/2, sd = sqrt(S*dt + delta^2))
   
   #print(ldt)
   return(pdf)
@@ -350,16 +350,6 @@ negloglik_1asset_nocommon= function(params, x, dt, n) {
   theta = params[3]
   delta = params[4]^2
   lambda = params[5]
-  
-  
-  # print(mu)
-  # print(S)
-  # print(theta)
-  # print(delta)
-  # print(lambda)
-  # print(alpha)
-
-  
   
   # computing pdf on each point and adding
   partial = MultivariateMertonPdf_1asset_nocommon(x, dt, mu, S, theta, delta, lambda)
@@ -547,17 +537,15 @@ MultivariateMertonPdf_2assets_nocommon = function(x, dt, mu, S, theta, delta, la
     stop("Error: lambda*dt should be lower than 1 (ideally closer to 0).")
   }
   
-  n = length(mu)
-  
   pdf = 0
   
-  mean_y1 = c(log(1+theta[1])-0.5 * delta[1],0)
+  mean_y1 = c(log(1+theta[1]) -0.5*delta[1]^2,0)
   cov_y1 = matrix(c(delta[1]^2,0,0,0), 2,2)
   
-  mean_y2 = c(0,log(1+theta[2])-0.5 * delta[2])
+  mean_y2 = c(0,log(1+theta[2]) -0.5*delta[2]^2)
   cov_y2 = matrix(c(0,0,0,delta[2]^2),2,2)
   
-  mean_x = mu*dt - ldt * theta - diag(S)/2
+  mean_x = (mu- diag(S)/2)*dt - ldt * theta
   cov_x = S*(dt)
   
   
@@ -800,26 +788,26 @@ MultivariateMertonPdf_4assets_nocommon = function(x, dt, mu, S, theta, delta, la
   pdf = 0
   
   mean_y1 = rep(0,n)
-  mean_y1[1] = theta[1]
+  mean_y1[1] = log(theta[1]+1) - 0.5 * delta[1]^2 
   cov_y1 = matrix(rep(0,n*n),n,n)
   cov_y1[1,1] = delta[1]^2
 
   mean_y2 = rep(0,n)
-  mean_y2[2] = theta[2]
+  mean_y2[2] = log(theta[2]+1) - 0.5 * delta[2]^2
   cov_y2 = matrix(rep(0,n*n),n,n)
   cov_y2[2,2] = delta[2]^2
   
   mean_y3 = rep(0,n)
-  mean_y3[3] = theta[3]
+  mean_y3[3] = log(theta[3]+1) - 0.5 * delta[3]^2
   cov_y3 = matrix(rep(0,n*n),n,n)
   cov_y3[3,3] = delta[3]^2
   
   mean_y4 = rep(0,n)
-  mean_y4[4] = theta[4]
+  mean_y4[4] = log(theta[4]+1) - 0.5 * delta[4]^2
   cov_y4 = matrix(rep(0,n*n),n,n)
   cov_y4[4,4] = delta[4]^2
   
-  mean_x = (mu - S[c(1,6,11,16)]*0.5 ) *dt #- lambda*theta*dt #FIXME ldt o non ldt?
+  mean_x = (mu - diag(S)*0.5 ) *dt - lambda*theta*dt #FIXME ldt o non ldt?
   cov_x = S*(dt) # FIXED: check sqrt(dt) or dt -->FIXED dt because it is a covariance not a volatility
   
   #0000
