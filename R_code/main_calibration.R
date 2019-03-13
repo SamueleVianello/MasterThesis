@@ -164,11 +164,11 @@ for (i in 1:(N_assets_even%/% 2 -1)){
 
     SS = calibrated$S
     final_cov[idx,idx]= final_cov[idx,idx] + SS
-    # # print(final_cov)
-    # out = capture.output(calibrated)
-    # cat(paste("Assets:", idx,sep = " "), out, 
-    #     file = paste0("computation_of_full_corr_matrix_nasdaq",format(Sys.time(), "%Y-%m-%d"),".txt"),
-    #     sep="\n", append=TRUE)
+    # print(final_cov)
+    out = capture.output(calibrated)
+    cat(paste("Assets:", idx,sep = " "), out,
+        file = paste0("computation_of_full_corr_matrix_nasdaq",format(Sys.time(), "%Y-%m-%d"),".txt"),
+        sep="\n", append=TRUE)
     }
 }
 
@@ -237,15 +237,20 @@ if(N_assets %% 2 == 1){
       sep="\n", append=TRUE)
 }
 
+regularized_covariance = covariance_regularization(covariance)
+correlation = cov2cor(regularized_covariance)
 
+parameters = matrix(0,nrow =N_assets, ncol = 5,dimnames =list(assets = colnames(my_returns[,2*(1:N_assets)]),parameters=c("mu", "sigma","theta","delta","lambda")))
+
+parameters[,1]= colSums(mus)/(N_assets/2 -1)
+parameters[,2]= sqrt(diag(regularized_covariance))
+parameters[,3]= colSums(thetas)/(N_assets/2 -1)
+parameters[,4]= colSums(deltas)/(N_assets/2 -1)
+parameters[,5]= colSums(lambdas)/(N_assets/2 -1)
 
 end<- Sys.time()
 end-beg
 
-
-regularized_covariance = covariance_regularization(covariance)
-
-correlation = cov2cor(regularized_covariance)
 
 results = list(covariance = regularized_covariance, correlation = correlation, 
                full_mu = mus, full_theta = thetas, full_delta= deltas, full_lambda = lambdas)
@@ -259,13 +264,10 @@ save(results, file= "results.Rda")
 
 ####### Save results to a .txt file #################
 # 
-write.table(results$parameters, file = "results_txt_merton.txt")
-write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
-write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
-
-
-
+# write.table(results$parameters, file = "results_txt_merton.txt")
+# write.table(results$covariance, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$correlation, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$mus, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$thetas, file = "results_txt_merton.txt", append = TRUE)
+# write.table(results$deltas, file = "results_txt_merton.txt", append = TRUE)
 

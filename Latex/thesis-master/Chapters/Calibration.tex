@@ -1,8 +1,195 @@
 \chapter{Calibration of the Models}
 \label{chpr:calibration}
 
-In this chapter we will explain how the different models were calibrated and what difficulties were overcome. Empirical results are include for each section.
+In this chapter we will explain how the different models were calibrated and what difficulties were overcome. Empirical results are included for each section.
+
+\textbf{*****aggiungere commento su diversi tipi di calibrazione e in particolare sul fatto che calibriamo su timeseries*****}
+\bigskip
+
+\section{Maximum Likelihood Calibration}
+The calibration method that we implemented is the \textit{maximum likelihood} approach, which is a statistical method to obtain the parameters of a target distribution family that best approximate the unknown distribution of the observed data.
+
+Let us call $X = \left\lbrace x_1, x_2, ... , x_N \right\rbrace$ the set of available observations and let $\psi= \left\lbrace \alpha_1, \alpha_2, ... \right\rbrace $ the set of parameters of the distribution $ \mathcal{D}$ that we want to calibrate.
+Moreover, define $f_\mathcal{D} (x ; \psi)$ to be the probability density function (pdf) of distribution $\mathcal{D}$ with parameters $\psi$ computed at $x \in \mathbb{D}$, where $\mathbb{D}$ is the domain of the density function.
+
+Our aim is to find the best set of parameters $\psi$ such that we can describe $X$ as samples taken from $\mathcal{D}$:
+\begin{equation}
+x_i \sim \mathcal{D} (\psi), \: i = 1, \dots, N.
+\end{equation}
+
+The estimation of the parameter set $\psi$ can then be obtained by:
+\begin{equation}
+	\hat{\psi} = \argmax_{\psi \in \Psi} \:\mathcal{L}(\psi |  X),
+\end{equation}
+
+where $\mathcal{L}(\psi |  X)$ is the likelihood function for distribution $\mathcal{D}(\psi)$ given the observed data $X$.
+
+In the case that the data in $X$ are i.i.d. we have that the likelihood function can be computed as the sum of the probability density function computed at each observation:
+
+\begin{equation}
+\label{eq:log_likelihood}
+\mathcal{L}(\psi |  X) = \prod_{i=1}^{N} f_{ \mathcal{D}}(x_{i}; \psi).
+\end{equation}
+
+In practice, it is often common to consider the \textit{log-likelihood} function $\ell(\psi |  X)  = \log \mathcal{L}(\psi |  X)$. The natural logarithm is a monotonic function so the maximum of the log-likelihood function is achieved in the same point as the basic likelihood function\footnote{By how the likelihood function is defined, it can attain only positive values so that the logarithm of  $\mathcal{L}(\psi |  X)$ is always well defined.}
+Taking the logarithm of \eqref{eq:likelihood} also simplifies the expression in that the product now becomes a sum:
+\begin{equation}
+\label{eq:likelihood}
+\ell (\psi |  X) =\mathcal{L}(\psi |  X) = \sum_{i=1}^{N} \log f_{ \mathcal{D}}(x_{i}; \psi).
+\end{equation}
+
+The issues that arise from the definition of a maximum likelihood estimator are mainly two.
+The first problem is that to use equation \eqref{eq:likelihood} we need to know the pdf of the distribution: this might not always be the case with complicated models that only have an explicit expression for their characteristic function. This is what happens for Heston and Bates model, and, as we will see, we are going to need to invert the chf via Fourier inversion and obtain the pdf numerically.
+
+The second issue is that we need to solve a maximization problem in order to obtain an estimate for the parameters of the distribution: it is well known how optimization routines might perform well for some special circumstance and badly under other, especially when the number of parameters increases. The trade-off is, as usual, between fast computations and robustness of the optimization. To solve this, we will opt for a combination of global and local optimizers.
+
+
+
+
+
+\section{Calibration of Merton Model}
+Let us start by considering how we calibrated the jump diffusion model by Merton. 
+We will first present how to obtain the parameters for a single asset model and then move to a multi-asset one.
+
+
+
+\subsection{Single Asset Merton Calibration}
+As we already introduced, the calibration method that we used is the maximum likelihood approach.
+
+We are going to calibrate the values of the 5 parameters $\psi= \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ of the jump diffusion model based on the observations of the log-returns $\Delta x_i = \log \frac{S_i}{S_{i-1}}$ for each time interval $\Delta t$. In our analysis, since we are going to use \textit{daily} log-returns, $\Delta t = 1/255$. 
+
+Considering daily log-returns allows us to assume that the different samples of $\Delta x$ are independent and identically distributed according to the distribution of returns in Merton model given in \textbf{*********REFERENCE TO MERTON ******}
+For ease of reading, we present it again here:
+\begin{equation}
+\label{eq:merton_full_pdf}
+f_{\Delta x } (x; \psi) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta x | N = k}(x ; \psi) .
+\end{equation}
+
+The formula represents an infinite mixture of Gaussian distributions, due to the infinite possible realization of the Poisson variable that accounts for the arrival of jumps. 
+This fact has a great downside in terms of maximum likelihood estimation. As discussed in \cite{HONORE1998}, the infinite Gaussian mixture causes the problem of maximizing the (log-)likelihood to be unbounded and thus intractable.
+
+To solve this issue we can introduce a first order approximation, as it has been proposed in \cite{BALLTOROUS1983}. 
+Since we are considering a small time interval $\Delta t $, only the first terms of the series in \eqref{eq:merton_full_pdf} become significant. 
+In particular, we have that the probabilities to have $k = 0, 1, 2$ jumps in a single time step, as presented in \eqref{eq:pois_pdf}, are:
+\begin{subequations}
+	\begin{align}
+	\mathbb{P}(N = 0) &= e^{-\lambda \Delta t}, \\
+	\mathbb{P}(N = 1) &= \lambda \Delta t \: e^{-\lambda \Delta t}, \\
+	\mathbb{P}(N = 2) &= \frac{(\lambda \Delta t)^2}{2} \: e^{-\lambda \Delta t}
+	\end{align}
+\end{subequations}
+
+since $N \sim Pois(\lambda \Delta t)$, which is the Poisson process counting jumps that happen in a $\Delta t$ interval.
+Considering $\lambda \Delta t$ as small, we can approximate to the first order  $e^{-\lambda \Delta t} =  1 - \lambda \Delta t +  o((\lambda \Delta t)^2)$. 
+We thus obtain that:
+\begin{subequations}
+	\begin{align}
+	\mathbb{P}(N = 0) &= 1-\lambda \Delta t , \\
+	\mathbb{P}(N = 1) &= \lambda \Delta t \: (1- \lambda \Delta t) = \lambda \Delta t + o((\lambda \Delta t)^2), \\
+	\mathbb{P}(N = 2) &= \frac{(\lambda \Delta t)^2}{2} \: (1-\lambda \Delta t) = o((\lambda \Delta t)^2).
+	\end{align}
+\end{subequations}
+
+
+The result is that the only relevant terms in \eqref{eq:merton_full_pdf} are the ones for $ k = 0, 1$.
+The formula for the transition density thus  becomes:
+\begin{equation}
+f_{\Delta x} (x; \psi) = \mathbb{P}(N = 0) f_{\Delta X | N = 0}(x; \psi) + \mathbb{P}(N = 1) f_{\Delta x | N = 1}(x; \psi)
+\end{equation}
+We can then write this equation explicitly by considering the different distributions of the log-returns in the case of no jumps and a single jump:
+\begin{equation}
+\label{eq:merton_pdf}
+f_{\Delta x} (x; \psi) = (1 - \lambda \Delta t) \;
+f_{\mathcal{N}}\Big(x ; \widetilde{\mu}\, \Delta t, \sigma^2 \Delta t\Big) + (\lambda \Delta t)\; f_{\mathcal{N}}(x ; \widetilde{\mu}\, \Delta t + \theta, \sigma^2 \Delta t+\delta^2)
+\end{equation}
+where $f_{\mathcal{N}}(x ; \mu, \sigma^2)$ indicates the pdf of a Gaussian with parameters $\mathcal{N}(\mu, \sigma^2)$ compute at $x$. We used $\widetilde{\mu} = \mu - \sigma^2/2 -\lambda \mu_J$ as a simpler notation to indicate the drift term in the return dynamics.
+
+The distribution of the sample log-returns is thus given by equation \eqref{eq:merton_pdf} and we can plug it into \eqref{eq:log_likelihood} to obtain the log-likelihood function that we are going to maximize:
+\begin{equation}
+\label{eq:merton_loglikelihood_single}
+	\ell(\psi |  X) = \sum_{i=1}^{N} \log f_{ \Delta x}(x_{i}; \psi).
+\end{equation}
+
+One can then proceed to maximizing equation \eqref{eq:merton_loglikelihood_single} to obtain the optimal parameter set $\psi$.
+
+\subsection{Multi-asset Merton Calibration}
+
+We now know  how to calibrate the Merton parameters when the underlying asset is one.
+In the case of multiple assets, we decided to adapt \cite{PARSIMONIOUS2011} both for the model definition and the calibration procedure.
+In the referenced paper, the authors present a \textit{parsimonious approach} to the extension of Heston Model to a multi-asset framework. Since this is the approach that we will follow for the multivariate Heston calibration and for Bates as well, we decided to also perform in the same way the calibration of the parameters for Merton.
+Using a common approach will allow us to better compare the results, especially in terms of the covariance structure that is what we are ultimately interested in.
+
+The first step in the calibration algorithm is to obtain the parameters of all the single asset models that we are studying. The general way to do this was explained in the previous section. 
+
+The next step involves computing the correlation matrix between the different Brownian motions that drive each single-asset model. 
+The way this computation is carried out in \cite{PARSIMONIOUS2011} is by asset pairs: we consider each possible couple of assets and try to obtain the model correlation that best approximates the observed correlation.
+Let us see how this is achieved more in detail in the case of only two assets.
+
+The problem we are trying to solve is, given the observed sample correlation $\rho_{obs}$ between two assets' returns, find the best model correlation $\rho_{model}$ that solves $\bar{\rho}(\rho_{model}) = \rho_{obs}$.
+$\bar{\rho}$ is the expectation of the correlation that we find when computing the  empirical correlation of the returns simulated using $\rho_{model}$.
+
+More precisely, we have to simulate $N_{sim}$ different realisations of the 2-asset model in a given time period $[0, T]$ with the same $\Delta t$ that we have in the observed data, using $\rho_{model}$ as the correlation between the two driving Brownian motions. We then proceed to compute the correlation of the simulated log-returns $\rho_{scen}$ in each scenario and then we take the average of this values. What we obtain is $\bar{\rho} = \mathbb{E}[\rho_{scen}] $.
+
+In order to simulate a two-asset Merton model, we used the following discretization for the log-returns:
+\begin{subequations}
+	\label{eq:merton_discretization}
+	\begin{align}
+	x_i^{(1)} &= x_{i-1}^{(1)} + (\mu_1 - \sigma_1^2/2 -\lambda_1 {\mu_J}_1) \Delta t + \sigma_1 \sqrt{\Delta t} \;  z_1 + N_1 {Y}_1 ,\\
+	x_i^{(2)} &= x_{i-1}^{(2)} + (\mu_2 - \sigma_2^2/2 -\lambda_2 {\mu_J}_2) \Delta t + \sigma_2 \sqrt{\Delta t} \; z_2 + N_2 {Y}_2 ,
+	\end{align}
+\end{subequations} 
+where:
+\begin{itemize}
+	\item $i = 1, \dots , N_{step}$ represents the i-th time-step in our simulation: $x_i = x_{t_i}$ and $N_{step} = T / \Delta t$ so that $t_i = i \Delta t$. The value of the initial return $x_{t_0}$ does not affects the final correlation so we can simply set it to zero.
+	\item $z_1$ and $z_2$ are the first and second component of a Gaussian vector $\mathbf{z} = (z_1,z_2)^T$ that is distributed as $\mathbf{z} \sim \mathcal{N}_2(\mathbf{0}, Corr)$. $Corr$ is the $2 \times 2$ matrix composed of ones in the main diagonal and $\rho_{model}$ in the remaining two spots. 
+	More simply, $\mathbf{z}$ is a two dimensional Gaussian with zero mean with covariance matrix equal to the correlation matrix of the model.
+	\item $N_1$ and $N_2$ are in general the realizations of two Poisson random variables with parameters $\lambda_1 \Delta t$ and $\lambda_2 \Delta t$ respectively. Given our first order approximation in the density and considering small $\Delta t$,  $N_1$ and $N_2$ are actually two Bernoulli with probability of success (i.e. a jump happens) equal to $\lambda_1 \Delta t$ and $\lambda_2 \Delta t$.
+	\item Finally, $Y_1$ and $Y_2$ are the jump intensities and are realisations of Gaussian variables with parameters $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ and $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ . 
+\end{itemize}
+
+Through \eqref{eq:merton_discretization} we can thus simulate $ x_i^{(1,k)}$ and 
+$ x_i^{(2,k)}$ for $k= 1, ... ,N_{sim}$  and compute for each scenario the correlation observed from the simulated returns $\rho_{scen}^{(k)} = corr(x_i^{(1,k)}, x_i^{(2,k)})$.
+From these values we can easily compute $\bar{\rho}$:
+\begin{equation}
+\label{eq:expected_model_correlation}
+	\bar{\rho} = \mathbb{E} [\rho_{scen}] = \frac{1 }{N_{sim}} \sum_{k=1}^{N_{sim}} \rho_{scen}^{(k)}
+\end{equation}
+
+
+We have that implicitly the value of the \textit{expected model correlation} $\bar{\rho}$ is a function of the model correlation $\rho_{model}$. The equation we need to solve is then represented by:
+\begin{equation}
+\label{eq:expected_observed}
+\bar{\rho}(\rho_{model}) = \rho_{obs},
+\end{equation}
+
+as we have already stated earlier in this section.
 
 \bigskip
+In the case of an $n$-asset model, we have to repeat the previous passages for all possible $n(n-1)/2 $ different pairs of assets. We then can build a $n \times n$ matrix $M$ that has ones in the main diagonal and in each element $(l,m), l \neq m$ stores the corresponding model correlation $\rho_{model}^{(l,m)}$.
+This matrix may not be a well defined correlation matrix: it may happen that $M$ is not positive definite.
+The last step to obtain a proper correlation matrix for our $n$-asset model is to perform some form of \textit{regularization} on $M$ that transforms it into a well defined correlation matrix: positive definite, with elements in the range $[-1,1]$ and ones in the main diagonal.
+
+Through empirical study performed in the reference paper \cite{PARSIMONIOUS2011}, it turns out the best algorithm between the one proposed by the authors is the regularization by J\"ackel, that we briefly present here.
+
+\bigskip
+\textbf{Regularization algorithm by J\"ackel:}
+\begin{enumerate}
+	\item[\textbf{Input}] Model correlation matrix $M$ (not necessarily positive definite).
+	\item Perform an eigenvalue decomposition on $M  = S \Lambda S^T$, where $\Lambda = diag(\lambda_l)$ and $\lambda_l$ are the eigenvalues of matrix $M$.
+	\item Define $\Lambda^{'} = diag(\lambda_l^{'}$ with $\lambda_l^{'} = \max(\lambda_l, 0))$ as the diagonal matrix that contains the positive part of each eigenvalue.
+	\item Create the diagonal matrix $T = diag(t_l)$ where $t_l =1 / \sum_{m} (S_{l,m})^2 \lambda_l^{'}$ .
+	\item Define $B = \sqrt{T} S \sqrt{\Lambda^{'}}$.
+	\item Set $\widehat{M} = B B^T$.
+	\item[\textbf{Output}] Positive definite correlation matrix $\widehat{M}$.
+\end{enumerate}
+
+Hence, $\widehat{M}$ is the model correlation matrix that best represents the observed correlation values and that forms the structure of dependence between the Brownian motions that drive each asset in a multivariate Merton model.
+
+\section{Calibration of Heston Model}
+problema di filtering
+
+utilizzare approx di dragulesku sulla V0
+
+fft
 
 

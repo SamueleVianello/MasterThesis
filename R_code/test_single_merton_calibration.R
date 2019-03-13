@@ -4,6 +4,7 @@
 source("MertonParsimoniousCalibration.R")
 source("MultivariateMertonModel.R")
 source("CalibrationMVMerton.R")
+load("returns.Rda")
 attach(my_returns)
 
 
@@ -15,6 +16,8 @@ dt = 1/255
 full_results = matrix(0, nrow = N_assets, ncol = 5)
 rownames(full_results) = colnames(my_returns)[2*(1:N_assets)]
 colnames(full_results) = c("mu", "sigma","theta","delta","lambda")
+pdf_mean = matrix(0, nrow = N_assets, ncol = 1)
+rownames(pdf_mean) = colnames(my_returns)[2*(1:N_assets)]
   
 for (i in 1:N_assets){
   asset = my_returns[,2*i]
@@ -29,7 +32,7 @@ for (i in 1:N_assets){
   
   full_results[i,]=c(calibrated_params$mu, sqrt(calibrated_params$S), calibrated_params$theta, calibrated_params$delta, calibrated_params$lambda)
   
-  xx = seq(-0.6,0.6, length.out = 1000)
+  xx = seq(-0.6,0.6, length.out = 4000)
   yy_merton = MultivariateMertonPdf_1asset_nocommon(x = xx,dt = dt, mu = calibrated_params$mu,S = calibrated_params$S,
                                                     theta = calibrated_params$theta, delta = calibrated_params$delta, lambda = calibrated_params$lambda)
   yy_gauss = dnorm(xx, mean = mean(asset), sd = sd(asset))
@@ -44,11 +47,12 @@ for (i in 1:N_assets){
   abline(v=sum(xx*yy_merton*(xx[2]-xx[1])), col = 'blue', lwd=3)
   abline(v=mean(asset))
   
+  pdf_mean[i,1]=sum(xx*yy_merton*(xx[2]-xx[1]))/dt
   cbind(res, res*255)
   params
 }
   
-
+full_results
 
 # calibrating model correlation matrix
 
@@ -56,11 +60,14 @@ n=16
 
 corr_matrix = cor(my_returns[,2*(1:n)])
 beg = Sys.time()
-calibrate_full_correlation_merton(sample_corr_matrix = corr_matrix, Nasset = n,
+c_mat = calibrate_full_correlation_merton(sample_corr_matrix = corr_matrix, Nasset = n,
                                   mu =full_results[1:n,1] , vol = full_results[1:n,2],
                                   mu_j = full_results[1:n,3], sigma_j = full_results[1:n,4], lambda = full_results[1:n,5],
-                                  dt = 1/255,final_t = 1,Nsim = 1000)
-corr_matrix
+                                  dt = 1/255,final_t = 1, Nsim = 1000)
 Sys.time() -beg
+c_mat
+corr_matrix[1:n,1:n]
+
+
 
   

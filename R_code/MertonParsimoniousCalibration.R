@@ -35,7 +35,8 @@ simulate_mv_merton = function(Nasset=length(mu), mu, vol=NA, mu_j, sigma_j, lamb
     z = mvrnorm(n = Nsim,mu=rep(0,Nasset) ,Sigma =CorrMatrix)
     for (m in 1:Nasset) {
       dq = rpois(Nsim, lambda = lambda[m]*dt)
-      jump = rnorm(Nsim, mean = log(1+mu_j) - 0.5*sigma_j^2, sd = sigma_j)
+      # jump = rnorm(Nsim, mean = log(1+mu_j[m]) - 0.5*sigma_j[m]^2, sd = sigma_j[m])
+      jump = rnorm(Nsim, mean = mu_j[m], sd = sigma_j[m])
       sim_x[, i+1,m] = sim_x[,i,m] + (mu[m] - vol[m]^2*0.5 -lambda[m]*mu_j[m] )* dt + vol[m]*sqrt(dt)*z[,m] + dq * (jump)
     }
   }

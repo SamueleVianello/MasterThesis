@@ -4,7 +4,7 @@ source("MarkowitzMeanVariancePortfolio.R")
 source("PortfolioVaROptimization.R")
 load("returns.Rda")
 load("data.Rda")
-load("results.Rda")
+
 
 
 N_samples=dim(my_returns)[1]
@@ -89,3 +89,27 @@ colnames(res_no_btc)[c(1,2)] = c("return_daily", "cvar_daily")
 # # save to file
 # write.csv(file = paste0("allocation_cvar",alpha_percentage, ".csv"), x = res_btc)
 # write.csv(file = paste0("allocation_cvar",alpha_percentage, "_no_btc.csv"), x = res_no_btc)
+
+idx_min_btc = which(daily_CVaRs  == min(daily_CVaRs))
+idx_min_no_btc = which(daily_CVaRs_no_btc  == min(daily_CVaRs_no_btc))
+
+L_btc = length(daily_CVaRs)
+L_no_btc = length(daily_CVaRs_no_btc)
+
+# create full plot
+x11()
+plot(daily_CVaRs_no_btc[idx_min_no_btc:L_no_btc], (daily_resulting_returns_cvar_no_btc[idx_min_no_btc:L_no_btc])-1, type='l',
+     col = "orange", xlab = paste0("Daily CVaR ", alpha_percentage,"%"), ylab = "Daily Returns",
+     ylim = c(0,0.0008))
+title("Daily CVaR Frontier ")
+grid()
+lines(daily_CVaRs[idx_min_btc:L_btc], (daily_resulting_returns_cvar[idx_min_btc:L_btc])-1, type='l',
+     col = "green")
+
+legend("topleft", legend = c("btc", "NO btc"),
+       col=c("green", "orange"), lwd = 3, lty = 1, cex=0.75, bg = 'white')
+
+# dev.copy2pdf(file = "efficient_frontier_CVaR.pdf", height = 7, width=7 )
+# dev.off()
+
+
