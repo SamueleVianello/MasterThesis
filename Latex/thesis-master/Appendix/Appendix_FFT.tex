@@ -1,0 +1,26 @@
+\chapter{Characteristic Function of a Compound Poisson Process }
+\label{app:FFT}
+
+The Fast Fourier Transform is an algorithm that enables us to compute the Discrete Fourier Transform faster. In particular, a \textit{na\"ive} implementation of the DFT requires a number of operations on the order of $\mathcal{O}(N^2)$, where $N$ is the number of points that we use for the discrete transform. An FFT algorithm performs the same computation using $\mathcal{O}(N \log N)$ operations.
+
+
+ The discrete Fourier transform for a set $x = x_0 , ..., x_{N-1}$ is  represented by $N$ values $u_k$, $k=0, ..., N-1$:
+\begin{equation}
+\label{eq:dft_single}
+	u_k = \sum_{n=0}^{N-1} x_n e^{-i  k n 2\pi / N}, \: k= 0, \dots, N-1.
+\end{equation}
+
+
+As we can see, we have to perform $\mathcal{O}(N)$ computations for each $u_k$, for a total of $\mathcal{O}(N^2)$ operations.
+The FFT is a smart way to compute the same quantities by dividing $ N = N_1N_2$ into two factors $ N_1$ and $N_2$, computing the DFT for the two smaller samples and then aggregating the results to return the final $N$ values of $u_k$.
+
+The factorization of $N$ can be performed recursively on $N_1$ and $N_2$ as long as they are not primes, so the usual approach is to take $N=2^n$ as the $n$-th power of 2. 
+The most common algorithm is the one by Cooley and Tuckey in \cite{COOLEY_FFT} and is the one that is usually implemented in most computational tools (in our case R).
+
+%If we compute it for $N$ equispaced values of $u$, $u_k = k \Delta u$ and from a similarly equispaced grid of $x$, $x_n = n \Delta x $ we can rewrite \ref{eq:dft_single} as:
+%\begin{equation}
+%F(u_k) = \sum_{n=0}^{N-1} f(x_n) e^{-i k n  \Delta u  \Delta x} \Delta x, \: k= 0, \dots, N-1
+%\end{equation}
+
+
+

@@ -150,34 +150,34 @@ Its \textit{moment generating function}, which will be useful later as well, is 
 
 \bigskip
 \section{Merton Model}
+Let us see now how the different building blocks that we just presented can be combined together by first taking a look at the jump diffusion model by Merton.
 
- ******maybe add some words right here ********
 %%% ORIGINAL MODEL
 \subsection{Original Univariate Model}
 The first jump diffusion model was originally introduced in \cite{MERTON1976} in order to account for the leptokurtic distribution of real market returns and to model sudden falls (or rises) in prices due to the arrival of new information.
 The asset price dynamics $S_t$ is modelled as a GBM to which a jump component driven by a compound Poisson process is added:
 
 \begin{equation}
-\label{merton_model}
+\label{eq:merton_model}
 \frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt + \sigma dW_t  + Y_t dN,
 \end{equation}
 
-where $\mu$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
+where $\mu$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y_t$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
 The jump intensity $Y_t$ is distributed as a log-normal with parameters $(\mu_J, \sigma_J^2)$. This means that $ y_t = \log(Y_t) \sim \mathcal{N}(\mu_J, \sigma_J^2)$
 
-We can rewrite (\ref{merton_model}) in terms of the log-returns $X_t = log(S_t)$ and obtain, following the computations in \cite{MARTIN2007} and using theory from \cite{TANKOV2015}:
+We can rewrite (\ref{eq:merton_model}) in terms of the log-returns $X_t = log(S_t)$ and obtain, following the computations in \cite{MARTIN2007} and using theory from \cite{TANKOV2015}:
 \begin{equation}
-dX_t = (\mu - \frac{\sigma^2}{2} - \lambda \mu_J)dt + \sigma dW_t + \log(Y_t)
+dX_t = (\mu - \frac{\sigma^2}{2} - \lambda \mu_J)dt + \sigma dW_t + \log(Y_t),
 \end{equation}
 
 that has as solution:
 \begin{equation}
 \label{merton_returns}
-X_t =X_0 +  \mu t + \sigma W_t + \sum_{k=1}^{N(t)} y_k
+X_t =X_0 +  \mu t + \sigma W_t + \sum_{k=1}^{N(t)} y_k,
 \end{equation}
 
 where $X_0$ is the initial value of the log-returns, $y_k= \log(Y_k) = \log(Y_{t_k})$ and $t_k$ is the time when the $k^{th}$ Poisson shock from $N(t)$ happens. 
-Following \cite{MERTON1976}, we take $y_k$ \textit{i.i.d.} (independent and identically distributed) and Gaussian, as we already stated.
+Following Merton in \cite{MERTON1976}, we take $y_k$ \textit{i.i.d.} (independent and identically distributed) and Gaussian, as we already stated.
 Another choice for the distribution of $y$ is given in \cite{KOU2002}, where an asymmetric distribution is used to account for positive and negative jump in two different ways. 
 
 %% AGGIUNGERE DENSITA' NEL caso generale [0,T] ?
@@ -192,14 +192,14 @@ X_i =  \mu \Delta t + \sigma \sqrt{\Delta t} \; z +  \sum_{k=1}^{N_{i+1} - N_i} 
 where we denote $X_i = X_{t_i}$, $N_i = N(t_i)$ and $t_i = i \Delta t$ with $i= 0 \dots N$, $t_N = N \Delta t= T$,  $z$ is distributed as a standard Gaussian $ z\sim \mathcal{N}(0,1)$.
 
 The Poisson process $N(t)$ in (\ref{discrete_returns}) is computed at times $t_{i+1}$ and $t_i$ and these quantities are subtracted. Following basic stochastic analysis, one can prove that the resulting value $N_{i+1} - N_i$,  is distributed as a Poisson random variable $N$ of parameter $\lambda \Delta t$.
-This allows us to provide an explicit formulation for the transition density of the returns using the theorem of total probability:
+This allows us to provide an explicit formulation for the transition density of the log-returns using the theorem of total probability:
 
 \begin{equation}
 \label{transitional}
 f_{\Delta x} (x) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta x | N = k}(x) 
 \end{equation}
 
-This equation is a good analytical results but it is not so practical for calibration purposes, as we will explain more in depth in chapter \ref{chpr:calibration}.
+This equation is a good analytical result but it is not so practical for calibration purposes, as we will explain more in depth in chapter \ref{chpr:calibration}.
 
 
 %%% MULTIVARIATE MODEL
@@ -236,7 +236,12 @@ In particular, the dynamics of the \textit{instantaneous} variance $V_t = \sigma
 
 where $\mu$ represents the drift in the asset prices, $\kappa>0$ and $\theta>0$ are respectively the \textit{mean-reversion} rate  and the long-run level for the $V_t$ process, $\sigma_V>0$ is often referred to as the \textit{volatility of volatility} parameter, in short vol-of-vol.
 The two brownian motions $W_t^S$ and $W_t^V$ are correlated with correlation coefficient equal to $\rho$.
-The variance process is always strictly positive if the Feller condition $2\kappa\theta > \sigma_V$ is satisfied.
+It can be proven that the variance process is always non-negative if the \textit{Feller} condition
+ \begin{equation}
+ \label{eq:feller_condition}
+	2\kappa\theta \geq \sigma_V
+ \end{equation} 
+ is satisfied. If the same inequalities holds strictly, we have that the variance process will always be strictly positive.
 
 Let us now consider the dynamics of the log-return $x_t = \log (S_t)$, as we did in the Merton case. 
 Unfortunately, given the increased complexity of the model due to the SV part, an explicit formula for the density of the log-return is not available and it has to be computed from the Fourier inversion of the characteristic function:
@@ -253,6 +258,7 @@ To derive the expression of the characteristic function $\phi_{x_t}(u)$, one has
 
 \begin{subequations}
 \begin{align}
+\label{eq:heston_chf+ABC}
 	\phi_{x_t}(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}\nonumber \\
 	A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i +d)t - 2 \log\Big[  \frac{1-ge^{dt}}{1-g} \Big] \bigg)\\
 	B(t,u) &= i u \\
@@ -332,6 +338,8 @@ and since $B(t,u)  = i u$, the second term in the exponential is equal to zero a
 
 This equation is however still dependent on the initial value of the variance process. In a simulation framework, this would not be an issue, since we can define the level of $V_0$ ourselves and then generate all the different scenarios. However, if we need to calibrate the model parameters from asset prices, the market data for the variance process are not available. We will address more in depth different ways to solve this problem later on in Chapter \ref{chpr:calibration}. As for now, we show that we can obtain an \textit{unconditional} expression for the characteristic function of a Heston process by approximating the distribution of $V_t$ with its stationary distribution.
 
+The idea of integrating out the variance was presented in \cite{DRAGULESCU2002} and here we follow a similar approach.
+The computations to obtain an unconditional characteristic function are the following:
 \begin{equation*}
 \begin{split}
 	\phi_{\Delta x_t}(u) &= \mathbb{E}\big[e^{i u \Delta x_t} \big] \\
@@ -343,11 +351,11 @@ This equation is however still dependent on the initial value of the variance pr
 \end{split}
 \end{equation*}
 
-where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as considered stationary, so that of a Gamma distribution. In particular, it will have the same expression as \eqref{eq:cir_mgf}.
+where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as considered stationary, so that of a Gamma distribution. In particular, it will have the same expression as in \eqref{eq:cir_mgf}.
 
 
 
-\subsection{Parsimonious Multiasset Heston Model}
+\subsection{Parsimonious Multi-asset Heston Model}
 The problem with generalizing Heston framework to include more than one underlying is that the model becomes quickly very complex: we need 5 parameters for each asset ($\mu, \kappa,\theta, \sigma_V$ and $ \rho$), and we can also model all types of correlation between the different stochastic drivers. In particular, we have 4 types of correlation: 
 \begin{itemize}
 	\item $ \rho^{S_i , V_i}$:  correlation that we already have in the unidimensional case, that models the way the price and the variance processes are linked ;
@@ -368,6 +376,7 @@ The $n$-dimensional model  hence becomes:
 %\end{equation}
 
  \begin{multline}
+ \label{eq:mv_heston}
 \begin{pmatrix}
 	dS_i(t) / S_i(t)\\
 	dV_i(t)
@@ -426,7 +435,7 @@ A detailed representation of a 2-asset \textit{parsimonious} Heston model can be
 Bates model is a way of combining both of the characteristics of Merton (price jumps) and Heston (stochastic volatility) in a single framework.  It was introduced in 1996 by David Bates, an American professor at University of Iowa.
 
 \subsection{Univariate Model}
-In his paper \cite{BATES96}, Bates proposes his model as a way of capturing the leptokurtosis in the distribution of log-differences of the USD/DeutscheMark exchange rate. He suggested to improve the versatility of Heston model by including \textit{log-normal, Poisson driven} jumps in the prices process, borrowing this addition from Merton model.
+In his paper \cite{BATES96}, Bates proposes his model as a way of capturing the leptokurtosis in the distribution of log-differences of the USD/DeutscheMark exchange rate. He suggested to improve the versatility of Heston model by including \textit{log-normal, Poisson driven} jumps in the price process, borrowing this addition from Merton model.
 
 Thus, we will have to deal with a total of 8 parameters: $\mu, \kappa, \theta, \sigma_V$ and $ \rho$ for the stochastic volatility part, and $ \mu_J, \sigma_J$ and $ \lambda$ for the jump component. 
 
@@ -438,8 +447,8 @@ Thus, we will have to deal with a total of 8 parameters: $\mu, \kappa, \theta, \
 dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
 \end{equation}
 
-Of course, as these equations are directly obtained from \eqref{eq:heston_price} and \eqref{eq:heston_variance}, we have that the variance process is strictly positive whenever the Feller condition $2\kappa\theta\geq \sigma_V$ is satisfied.
-\textbf{*** add explanation of jump part***}
+Of course, as these equations are directly obtained from \eqref{eq:heston_price} and \eqref{eq:heston_variance}, we have that the variance process is strictly positive whenever the Feller condition $2\kappa\theta\geq \sigma_V$ is satisfied. As in \eqref{eq:merton_model}, $Y_t$ is  the jump process and is such that $ y_t = \log(Y_t) \sim \mathcal{N}(\mu_J, \sigma_J^2)$, while $N(t)$ is a Poisson process with parameter $\lambda$.
+
 
 Unfortunately, for the same reason as in previous section, an explicit formula for the distribution of the log-returns $x_t = log(S_t)$ is not available and thus we have to make reference to their characteristic function.
 The silver lining is, though, that to obtain expression of   $\phi_{x_t}(u)$, we only have to include an extra additive term to the exponential in \eqref{eq:heston_chf_trap} to account for the jumps:
@@ -465,3 +474,40 @@ g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \fra
 \end{equation*} 
 
 We will used the  *  formulation for the same desirable numerical properties as already stated, while leaving out the * symbol from our notation from now on.
+
+\subsection{Parsimonious Multi-asset Bates Model}
+We will generalize the single-asset Bates model to a multi-asset model in the same way that we did with the Heston: we only model the asset-asset correlation $\rho^{S_i, S_j}$ for each pair of asset.
+
+The model definition becomes very similar to \eqref{eq:mv_heston}, with the addition of the jump part for the price processes:
+
+\begin{multline}
+\begin{pmatrix}
+dS_i(t) / S_i(t)\\
+dV_i(t)
+\end{pmatrix}
+= \begin{pmatrix}
+\mu_i\\
+\kappa_i (\theta_i - V_i(t))
+\end{pmatrix}
+dt  \:+\\ 
+\begin{pmatrix}
+\sqrt{V_i(t)} & 0 \\
+0 & \sigma_{V_i} \sqrt{V_i(t)} 
+\end{pmatrix}
+\begin{pmatrix}
+1 & 0 \\
+\rho_i & \sqrt{1-\rho_i^2} 
+\end{pmatrix}
+\begin{pmatrix}
+dW^{S_i}(t)\\
+dW^{V_i }(t)
+\end{pmatrix}
+\: + \\
+\begin{pmatrix}
+Y_i(t) dN^i_t  \\
+0   
+\end{pmatrix}.
+\end{multline}
+
+
+T

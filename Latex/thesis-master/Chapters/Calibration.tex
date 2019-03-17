@@ -24,14 +24,14 @@ The estimation of the parameter set $\psi$ can then be obtained by:
 
 where $\mathcal{L}(\psi |  X)$ is the likelihood function for distribution $\mathcal{D}(\psi)$ given the observed data $X$.
 
-In the case that the data in $X$ are i.i.d. we have that the likelihood function can be computed as the sum of the probability density function computed at each observation:
+In the case that the data in $X$ are i.i.d. we have that the likelihood function can be computed as the product of the probability density function computed at each observation $x_i$:
 
 \begin{equation}
 \label{eq:log_likelihood}
 \mathcal{L}(\psi |  X) = \prod_{i=1}^{N} f_{ \mathcal{D}}(x_{i}; \psi).
 \end{equation}
 
-In practice, it is often common to consider the \textit{log-likelihood} function $\ell(\psi |  X)  = \log \mathcal{L}(\psi |  X)$. The natural logarithm is a monotonic function so the maximum of the log-likelihood function is achieved in the same point as the basic likelihood function\footnote{By how the likelihood function is defined, it can attain only positive values so that the logarithm of  $\mathcal{L}(\psi |  X)$ is always well defined.}
+In practice, it is often common to consider the \textit{log-likelihood} function $\ell(\psi |  X)  = \log \mathcal{L}(\psi |  X)$. The natural logarithm is a monotonic function so the maximum of the log-likelihood function is achieved in the same point as the basic likelihood function.\footnote{By how the likelihood function is defined, it can attain only positive values so that the logarithm of  $\mathcal{L}(\psi |  X)$ is always well defined.}
 Taking the logarithm of \eqref{eq:likelihood} also simplifies the expression in that the product now becomes a sum:
 \begin{equation}
 \label{eq:likelihood}
@@ -58,7 +58,7 @@ As we already introduced, the calibration method that we used is the maximum lik
 
 We are going to calibrate the values of the 5 parameters $\psi= \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ of the jump diffusion model based on the observations of the log-returns $\Delta x_i = \log \frac{S_i}{S_{i-1}}$ for each time interval $\Delta t$. In our analysis, since we are going to use \textit{daily} log-returns, $\Delta t = 1/255$. 
 
-Considering daily log-returns allows us to assume that the different samples of $\Delta x$ are independent and identically distributed according to the distribution of returns in Merton model given in \textbf{*********REFERENCE TO MERTON ******}
+Considering daily log-returns allows us to assume that the different samples of $\Delta x$ are independent and identically distributed according to the distribution of log-returns in Merton model given in \eqref{transitional}.
 For ease of reading, we present it again here:
 \begin{equation}
 \label{eq:merton_full_pdf}
@@ -107,17 +107,24 @@ where $f_{\mathcal{N}}(x ; \mu, \sigma^2)$ indicates the pdf of a Gaussian with 
 The distribution of the sample log-returns is thus given by equation \eqref{eq:merton_pdf} and we can plug it into \eqref{eq:log_likelihood} to obtain the log-likelihood function that we are going to maximize:
 \begin{equation}
 \label{eq:merton_loglikelihood_single}
-	\ell(\psi |  X) = \sum_{i=1}^{N} \log f_{ \Delta x}(x_{i}; \psi).
+	\ell(\psi |  \Delta x) = \sum_{i=1}^{N} \log f_{ \Delta x}(\Delta x_{i}; \psi).
 \end{equation}
 
-One can then proceed to maximizing equation \eqref{eq:merton_loglikelihood_single} to obtain the optimal parameter set $\psi$.
+One can then proceed to maximize equation \eqref{eq:merton_loglikelihood_single} to obtain the optimal parameter set $\psi$:
+\begin{equation}
+\hat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\end{equation}
+\begin{equation}
+\Psi = \{ (\mu, \sigma, \mu_J, \sigma_J, \lambda) \in \mathbb{R}^5 \: |\: \sigma,\sigma_J, \lambda >0\}
+\end{equation}
 
 \subsection{Multi-asset Merton Calibration}
+\label{subsec:multi_merton_cal}
 
 We now know  how to calibrate the Merton parameters when the underlying asset is one.
 In the case of multiple assets, we decided to adapt \cite{PARSIMONIOUS2011} both for the model definition and the calibration procedure.
 In the referenced paper, the authors present a \textit{parsimonious approach} to the extension of Heston Model to a multi-asset framework. Since this is the approach that we will follow for the multivariate Heston calibration and for Bates as well, we decided to also perform in the same way the calibration of the parameters for Merton.
-Using a common approach will allow us to better compare the results, especially in terms of the covariance structure that is what we are ultimately interested in.
+Using a common approach will allow us to better compare the results, especially in terms of the correlation structure that is what we are ultimately interested in.
 
 The first step in the calibration algorithm is to obtain the parameters of all the single asset models that we are studying. The general way to do this was explained in the previous section. 
 
@@ -186,10 +193,149 @@ Through empirical study performed in the reference paper \cite{PARSIMONIOUS2011}
 Hence, $\widehat{M}$ is the model correlation matrix that best represents the observed correlation values and that forms the structure of dependence between the Brownian motions that drive each asset in a multivariate Merton model.
 
 \section{Calibration of Heston Model}
-problema di filtering
+Calibrating the Heston model on time-series data presents an added difficulty since we only have data on the price process, while the model also takes into consideration the dynamics of the variance as a stochastic process. 
 
-utilizzare approx di dragulesku sulla V0
+The problem of deducing the parameter of a \textit{non-observable} process from the observable states of a system is called \textit{filtering} and is in general a complicated numerical procedure. There are nonetheless a few studies in the literature on the subject of calibrating the Heston model through filtering. \textbf{***ADD REFERENCE***}
 
-fft
+In our analysis we preferred to keep the same approach to the calibration for all the three models. We will thus proceed to explain how we can perform a maximum likelihood calibration in the case of stochastic volatility and, in the next section, of both jumps and stochastic volatility.
 
+\subsection{Single Asset Heston Calibration}
+The first issue that we have to overcome is that an explicit formula for the probability density function of the log-returns is not available and we have to resort to performing a Fourier inversion on the characteristic function, as we already showed in equation \eqref{eq:chf_inversion}
+
+This allows us to have a pdf for the log-return $x_t = \log S_t $ but in order to be able to perform a maximum likelihood calibration in the same way that we did in the  previous section, we need to have the distribution for $\Delta x_t = \log (S_{t + \Delta t} / S_t)$ and make sure that they are i.i.d. so that we can apply \eqref{eq:log_likelihood}.
+
+In order to obtain the pdf for the incremental log-returns $\Delta x_t$, we first need the distribution of  $\Delta x_{[0, t] }= \log (S_t / S_0)$ we can simply proceed as we explained in Chapter \ref{chpr:models} in the section about Heston model to get the characteristic function for $\Delta x_{[0, t] }$ conditioned on the values of $V_0$: 
+
+\begin{equation}
+\phi_{\Delta x_{[0, t] }}(u|V_0) =  \exp\{A(t,u) + C(t,u) V_0\}.
+\end{equation}
+
+The full expressions for $A(t,u)$ and $C(t,u)$ are given in \eqref{eq:heston_chf+ABC}.
+Notice that we omitted the dependence on the model parameters $\psi = \{\mu, \kappa, \theta, \sigma_V, \rho \}$ for ease of notation.
+
+\bigskip
+We are now left with the distribution of $\Delta x_{[0, t] }$ as a function of $V_0$: this represents an issue since moving from $\Delta x_{[0, t] }$ to $\Delta x_t  = \Delta x_{[t, t + \Delta t]}$ we have a dependence on the value of $V_t$ which is not available. Moreover, even if data for $V_t$ was indeed available, considering different time-steps $t_i$ for $\Delta x_{t}$, the data samples of $\Delta x_{t_i}$ would not be identically distributed as they depend on levels of the variance $V_{t_i}$ which are different.
+
+Hence the need for an \textit{unconditional} characteristic function to get rid of the dependence on initial variance. We followed the approach that was introduced in \cite{DRAGULESCU2002} of integrating out the dependence on $V_0$. The computations to obtain it were presented in Chapter \ref{chpr:models}.
+The unconditional chf for the Heston model has the following expression:
+\begin{equation}
+ \phi_{\Delta x_t}(u) = \exp\{A(\Delta t,u) \} M_{\Gamma}(C(\Delta t,u))
+\end{equation}
+
+
+with $M_{\Gamma}$ as the moment generating function of a Gamma distribution:
+\begin{subequations}
+\begin{align}
+	M_{\Gamma} (z) &= \Big(\frac{\omega}{\omega-z}\Big)^\nu \nonumber \\
+	\omega&= \frac{2\kappa}{\sigma_V^2} \nonumber\\
+	\nu&= \frac{2\kappa\theta}{\sigma_V^2}\nonumber
+\end{align}
+\end{subequations}
+
+We now have a specific expression for the unconditional characteristic function of $\Delta x_t$ and we can obtain the corresponding density by Fourier inversion:
+
+\begin{equation}
+\label{eq:uncond_inversion}
+f_{\Delta x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty}  \phi_{\Delta x_t}(i u) e^{i u x} du
+\end{equation}
+
+
+Another advantage of using the uncoditional chf is that since all the observed log-returns $\Delta x_i = \Delta x_{t_i} $ are considered to be sampled from the same distribution, we can numerically perform the inversion in \eqref{eq:uncond_inversion} using the Fast Fourier Transform (FFT). This allows for a great increase in the speed of the numerical computations since we can obtain the value of the pdf for all different $\Delta x_i$ with a single inversion.
+The main ideas behind the FFT algorithm are explained in Appendix \ref{app:FFT}.
+
+
+Now that we have the density function of $\Delta x$ with parameters $\psi = \{\mu, \kappa, \theta, \sigma_V, \rho \}$ we are able to compute the log-likelihood function by substituting \eqref{eq:uncond_inversion} in \eqref{eq:likelihood}.
+
+
+In order to perform the maximization of the log-lokelihood function to calibrate the parameters, we have to make sure that the Feller condition \eqref{eq:feller_condition} is satisfied.
+
+The MLE procedure will thus need to be performed including an additional constraint in the optimization given by Feller condition:
+\begin{equation}
+\hat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\end{equation}
+\begin{equation}
+	\Psi = \{ (\mu, \kappa, \theta, \sigma_V, \rho) \in \mathbb{R}^5 \: |\: \kappa,\theta,\sigma_V >0, \rho \in [-1,1], 2\kappa\theta \geq \sigma_V \}
+\end{equation}
+
+\subsection{Multi-asset Heston Calibration}
+
+As we already stated in this paper, the approach to extending the Heston model to $N$ assets that we are taking into consideration is the parsimonious multi-asset model introduced by Dimitroff et al. in \cite{PARSIMONIOUS2011}.
+It's called \textit{parsimonious} since, as we explained in chapter \ref{chpr:models}, we are only modelling the asset-asset correlations.
+
+The procedure to calibrating a $N$ asset model is the same that we presented in the multi-asset Merton section and consists of three parts.
+
+Firstly, we have to calibrate all the single asset parameters by themselves. Then we can proceed to compute each asset-asset correlation by solving \eqref{eq:expected_observed} through the simulation of the realization of the log-returns in different scenarios.
+Finally, we perform J\"ackel regularization algorithm to make that the final output matrix is indeed a correlation matrix.
+
+The main steps were all presented in section \ref{subsec:multi_merton_cal}, here we will only give the details for the simulation of a two-asset Heston model.
+
+Since we now have two processes for each asset, we have to simulate the path for both, in each time-step.
+The discretized dynamics of the log-returns and the variance for a single asset are the following:
+
+\begin{subequations}
+	\label{eq:discrete_heston}
+	\begin{align}
+		x_i &= x_{i-1} + (\mu -  \frac{V_{i-1}}{2})\Delta t + \sqrt{V_{i-1} \Delta t} \:z_x, \\
+		V_i &= V_{i-1} + \kappa(\theta - V_{i-1} )\Delta t + \sigma_V \sqrt{V_{i-1} \Delta t} \: z_V
+	\end{align}
+\end{subequations}
+with $z_x$ and $z_V$ that are the two components of a Gaussian vector with mean zero and correlation $\rho$\footnote{In a more extensive form: $ \mathbf{z} = \begin{pmatrix}
+	z_x\\ z_V
+	\end{pmatrix} \sim \mathcal{N}_2 \Big(\begin{pmatrix}
+	0\\ 0\end{pmatrix}, \begin{pmatrix}
+	1& \rho\\ \rho&1
+	\end{pmatrix} \Big)$}. 
+
+The issue that arises when moving from a continuous dynamics to a discrete one as in \eqref{eq:discrete_heston} is that the variance $V_i$ might assume negative values even if the Feller condition is verified. This happens because the second and third term in the equation of the variance process may be so negative that combined with the first term $V_{i-1}$ the result is less than zero.
+Having $V_i < 0$ causes the next update at $i+1$ to be undefined since we would have to compute the square root of a negative value in a real framework.
+
+To solve this issue, a number of possible solutions have been proposed and are collected in \cite{LORD2010}. Among those we have:
+\textit{absorption}, which consists in setting $V_i = 0$ when it is negative, \textit{reflection}, taking the absolute value $V_i = |V_i|$, and finally \textit{full truncation}, which is the solution proposed in \cite{LORD2010} and the one we will implement. It is obtained modifying \eqref{eq:discrete_heston} as following:
+
+\begin{subequations}
+	\label{eq:full_truncation}
+	\begin{align}
+	x_i &= x_{i-1} + (\mu -  \frac{V_{i-1}^+}{2})\Delta t + \sqrt{V_{i-1}^+ \Delta t} \:z_x, \\
+	V_i &= V_{i-1} + \kappa(\theta - V_{i-1}^+ )\Delta t + \sigma_V \sqrt{V_{i-1}^+ \Delta t} \: z_V.
+	\end{align}
+\end{subequations}
+The notation $y^+ = \max(y, 0)$ indicates the positive part of $y$. 
+
+Equations \eqref{eq:full_truncation} represent the single asset simulation scheme but in order to calibrate the asset-asset correlations as already stated we need to simulate the time-series for a pair of assets.
+
+The updating computations only amount to repeating the single scheme twice:
+\begin{subequations}
+	\label{eq:full_truncation2}
+	\begin{align}
+	x_i^{(1)} &= x_{i-1}^{(1)} + (\mu_1 -  \frac{\Big(V_{i-1}^{(1)}\Big)^+}{2})\Delta t + \sqrt{\Big(V_{i-1}^{(1)}\Big)^+ \Delta t} \:z_{x^{(1)}}, \\
+	V_i^{(1)} &= V_{i-1}^{(1)} + \kappa_1(\theta_1 - \Big(V_{i-1}^{(1)}\Big)^+ )\Delta t + \sigma_{V^{(1)}} \sqrt{\Big(V_{i-1}^{(1)}\Big)^+ \Delta t} \: z_{V^(1)},\\
+	x_i^{(2)} &= x_{i-1}^{(2)} + (\mu_2 -  \frac{\Big(V_{i-1}^{(2)}\Big)^+}{2})\Delta t + \sqrt{\Big(V_{i-1}^{(2)}\Big)^+\Delta t} \:z_{x^{(2)}}, \\
+	V_i^{(2)} &= V_{i-1}^{(2)} + \kappa_2(\theta_2 - \Big(V_{i-1}^{(2)}\Big)^+ )\Delta t + \sigma_{V^{(2)}} \sqrt{\Big(V_{i-1}^{(2)}\Big)^+ \Delta t} \: z_{V^{(2)}}.
+	\end{align}
+\end{subequations}
+
+The important difference with the single asset case is the correlation structure. In order to simulate the random vector $\mathbf{z} = (z_{x^{(1)}}, z_{V^{(1)}}, z_{x^{(2)}}, z_{V^{(2)}})^T$ we have to extract it from a 4-dimensional Gaussian with zero mean and covariance given by $\Sigma$ where:
+\begin{equation}
+	\Sigma = \begin{pmatrix}
+	1 	& \rho_1 & \rho_{1,2} & \rho_{1,2} \rho_2\\
+	\rho_1 & 1 & \rho_1 \rho_{1,2} & \rho_1 \rho_{1,2} \rho_2\\
+	 \rho_{1,2} & \rho_1 \rho_{1,2}  & 1 & \rho_2 \\
+	 \rho_{1,2} \rho_2 & \rho_1 \rho_{1,2} \rho_2&\rho_2  & 1
+	\end{pmatrix}
+\end{equation}
+
+We could also use the Cholesky decomposition of $\Sigma = L L^T$ in order to obtain $\mathbf{z} = L \mathbf{\tilde{z}}$ from a standard 4-dimensional Gaussian vector $\mathbf{\tilde{z}}$. In this case matrix $L$ would be lower triangular and defined as:
+\begin{equation}
+	L = \begin{pmatrix}
+	1&0&0&0\\
+	\rho_1 & \sqrt{1- \rho_1^2} &0&0\\
+	\rho_{1,2} &0&\sqrt{1-\rho_{1,2}^2}&0\\
+	\rho_{1,2}\rho_2 & 0& \rho_2 \sqrt{1-\rho_{1,2}^2}&\sqrt{1- \rho_2^2} 
+	\end{pmatrix}.
+\end{equation}
+
+From here on, the procedure is the same as for Merton:
+we need to solve \eqref{eq:expected_observed} for every possible asset pair to obtain the model correlation M.
+
+The final step is to apply  J\"ackel regularization algorithm to obtain a valid correlation matrix $\widehat{M}$.
 
