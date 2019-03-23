@@ -152,10 +152,10 @@ calibrate_full_correlation_merton = function(sample_corr_matrix, Nasset=length(m
       else{
         print(paste("Cannot obtain a correlation of", sample_corr_matrix[i,j] , "with given parameters." ))
         if(abs(upper_val)>abs(lower_val)){
-          model_corr_matrix[i,j] = -10
+          model_corr_matrix[i,j] = -1
         }
         else{
-          model_corr_matrix[i,j] = 10
+          model_corr_matrix[i,j] = 1
         }
       }
       model_corr_matrix[j,i] = model_corr_matrix[i,j]
@@ -166,9 +166,36 @@ calibrate_full_correlation_merton = function(sample_corr_matrix, Nasset=length(m
   
   # print(model_corr_matrix)
   
- # model_corr_matrix = regularization(model_corr_matrix)
+ model_corr_matrix = regularization(model_corr_matrix, method = "jackel")
   
   return(model_corr_matrix)
 }
 
+regularization = function(mat, method =  'simple'){
+  decomp = eigen(mat,symmetric = TRUE)
+  S = decomp$vectors
+  eigval = decomp$values
+  
+  # print("Eigenvalues: ")
+  # print(eigval)
+  
+  if(method =="jackel"){
+    eigval[which(eigval<0)]=0
+    
+    Lambda = diag(eigval)
+    
+    t = rep(x=NA, length(eigval))
+    for (i in 1:length(eigval)) {
+      t[i] = 1/sum(S[i,]^2 * eigval)
+    }  
+    B = sqrt(diag(t)) %*% S %*% sqrt(Lambda)
+    
+    res = B %*% t(B)
+  }
+  else{
+    eigval[which(eigval<0)]=1e-5
+    res = S %*% diag(eigval)%*% t(S)
+  }
+  res
+}
 

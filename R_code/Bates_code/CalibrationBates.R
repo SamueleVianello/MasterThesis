@@ -141,7 +141,7 @@ CalibrateModel=function(x, dt,   # log-returns from data and the time interval l
 BoundsCreator= function(model = "heston",   # 'heston' or 'bates'
                         fixing=NA,          # which parameters to fix
                         fixing_values=NA,   # value to which fix range 
-                        eps=0.01,           # free range for fixed params
+                        eps=0.05,           # free range for fixed params
                         set_upper = NA,     # which upper bounds to custom set
                         upper_bnd = NA,     # values of custom upper bounds
                         set_lower = NA,     # which lower bounds to custom set
@@ -163,7 +163,7 @@ BoundsCreator= function(model = "heston",   # 'heston' or 'bates'
   min_mu = -3
   max_mu = 3
   
-  min_k = 0.001
+  min_k = 1e-5
   max_k = 2
   min_eta = 1e-5
   max_eta = 3

@@ -30,25 +30,25 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
     min_jump = rep(-0.1,n) # default jumps at -10%
     max_jump = rep(-1,n)
   }
-  
-  bounds_nocommon = BoundsCreator(n=n, custom_jump_mean = custom_jump_bounds, 
+
+  bounds_nocommon = BoundsCreator(n=n, custom_jump_mean = custom_jump_bounds,
                                   max_jump_mean = max_jump, min_jump_mean = min_jump)
-  
+
   print(rbind(bounds_nocommon$lower, bounds_nocommon$upper))
-  
+
   # First optimization using deoptim
   print("Starting calibration using DEoptim...")
   control_list_deoptim = list(itermax = 50, NP = 10*length(bounds_nocommon$lower), strategy = 6,trace=trace)
-  
+
   start_time_deoptim <- Sys.time()
-  outDE <- DEoptim(obj, 
-                   lower = bounds_nocommon$lower, upper = bounds_nocommon$upper, control = control_list_deoptim, 
+  outDE <- DEoptim(obj,
+                   lower = bounds_nocommon$lower, upper = bounds_nocommon$upper, control = control_list_deoptim,
                    dt = dt, x = x, n = n)
   end_time_deoptim <- Sys.time()
-  
+
   # Second and final optimization using nlminb
   print("Starting calibration using nlminb...")
-  
+
   initial=outDE$optim$bestmem
   start_time_nlminb <- Sys.time()
   out_nlminb = nlminb(initial,objective = obj,lower = bounds_nocommon$lower,
@@ -56,11 +56,11 @@ CalibrateMVMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
                       control=list(eval.max = 10000,iter.max = 1000, trace = trace))
   print(out_nlminb)
   end_time_nlminb <- Sys.time()
-  
+
   print(paste("DEoptim:",end_time_deoptim - start_time_deoptim))
   print(paste("nlminb:", end_time_nlminb - start_time_nlminb))
   print(paste("TOTAL:", end_time_nlminb - start_time_deoptim))
-  
+
   res = ParametersReconstruction(out_nlminb$par,n=n)
   res[["message"]] = out_nlminb$message
   res[["objective_function"]] = out_nlminb$objective
@@ -82,12 +82,12 @@ BoundsCreator= function(n,
   min_mu = -5
   max_mu = 5
   min_sigma = 1e-5
-  max_sigma = 5
+  max_sigma = 2
   min_lambda = 0.00001
   max_lambda = 10
   min_theta = -0.8
   max_theta = -0.1
-  min_delta = 0.0001
+  min_delta = 0.00001
   max_delta = 0.1
   min_corr = -1
   max_corr = 1
@@ -244,4 +244,111 @@ covariance_regularization = function(mat, method =  'simple'){
     res = S %*% diag(eigval)%*% t(S)
   }
   res
+}
+
+
+
+
+
+
+
+
+
+
+
+CalibrateMVMerton2=function(x, n, dt, trace = 10, custom_jump_bounds =T){
+  
+  library(DEoptim)
+  source("MultivariateMertonModel.R")
+  
+  # Choose objective function given the number of assets
+  if(n ==1) obj = negloglik_1asset_nocommon
+  else if(n ==2) obj = negloglik_2assets_nocommon
+  else if(n ==3) obj = negloglik_3assets_nocommon
+  else if(n ==4) obj = negloglik_4assets_nocommon
+  else obj = negloglik
+  
+  if(custom_jump_bounds){
+    min_jump = rep(0,n)
+    max_jump = rep(0,n)
+    
+    alpha_max = 0.995 # quantile for max jump
+    alpha_min = 0.999 # quantile for min jump
+    for (i in 1:n) {
+      min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
+      max_jump[i] = quantile(x= x[,i], probs = 1-alpha_max)
+      
+      
+      asset = x[,i]
+      dn = length(asset)
+      
+      sample_skew = skewness(asset[1:dn])*sqrt(dn*(dn-1))/(dn-2)
+      SES = sqrt(6*dn*(dn-1)/ ((dn-2)*(dn+1)*(dn+3)))
+      skew_significance = sample_skew/SES
+      #print(skew_significance)
+      
+      if(skew_significance <= -2) {
+        min_jump = 2*quantile(asset[1:dn], probs = 1-alpha_min)
+        max_jump = quantile(asset[1:dn], probs = 1-alpha_max)
+        min_rho = -1
+        max_rho = -0.0001
+      } else if(skew_significance >-2){
+        min_jump = quantile(asset[1:dn], probs = alpha_max)
+        max_jump = 2*quantile(asset[1:dn], probs = alpha_min)
+        min_rho = 0.0001
+        max_rho = +1
+      } else{
+        min_jump = 2*min(asset[1:dn])       # choose what is a significant bound for jumps
+        max_jump = 2*max(asset[1:dn])       # choose what is a significant bound for jumps
+        min_rho = -1
+        max_rho = +1
+      }
+      
+      print(paste("min=", min_jump, "    max=", max_jump))
+      
+      
+      
+    }
+  }
+  else{
+    min_jump = rep(-0.1,n) # default jumps at -10%
+    max_jump = rep(-1,n)
+  }
+
+  bounds_nocommon = BoundsCreator(n=n, custom_jump_mean = custom_jump_bounds,
+                                  max_jump_mean = max_jump, min_jump_mean = min_jump)
+
+  print(rbind(bounds_nocommon$lower, bounds_nocommon$upper))
+
+  # First optimization using deoptim
+  print("Starting calibration using DEoptim...")
+  control_list_deoptim = list(itermax = 50, NP = 10*length(bounds_nocommon$lower), strategy = 6,trace=trace)
+
+  start_time_deoptim <- Sys.time()
+  outDE <- DEoptim(obj,
+                   lower = bounds_nocommon$lower, upper = bounds_nocommon$upper, control = control_list_deoptim,
+                   dt = dt, x = x, n = n)
+  end_time_deoptim <- Sys.time()
+
+  # Second and final optimization using nlminb
+  print("Starting calibration using nlminb...")
+
+  initial=outDE$optim$bestmem
+  start_time_nlminb <- Sys.time()
+  out_nlminb = nlminb(initial,objective = obj,lower = bounds_nocommon$lower,
+                      upper = bounds_nocommon$upper,dt=dt, x=x, n=n,
+                      control=list(eval.max = 10000,iter.max = 1000, trace = trace))
+  print(out_nlminb)
+  end_time_nlminb <- Sys.time()
+
+  print(paste("DEoptim:",end_time_deoptim - start_time_deoptim))
+  print(paste("nlminb:", end_time_nlminb - start_time_nlminb))
+  print(paste("TOTAL:", end_time_nlminb - start_time_deoptim))
+
+  res = ParametersReconstruction(out_nlminb$par,n=n)
+  res[["message"]] = out_nlminb$message
+  res[["objective_function"]] = out_nlminb$objective
+  res[["total_time"]] = end_time_nlminb - start_time_deoptim
+  return(res)
+  
 }

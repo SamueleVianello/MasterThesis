@@ -243,7 +243,7 @@ In order to perform an  analysis similar to what we have done using Markowitz ap
 	%	\label{eq:mark_weights}
 	& \text{subject to}   &   & \mathbf{e}^T\mathbf{w} = 1 ,\\
 	%	\label{eq:mark_return}
-	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2} \\
+	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2b} \\
 	%	\label{eq:mark_noshort}
 	&		   &      & w_{i} \geq 0, \text{for} \: i = 1\dots N. 
 	\end{align}
@@ -268,14 +268,59 @@ The improvement in portfolio diversification when including Bitcoin in our baske
 We can easily tell from the picture that for the same level of return an investor has to be willing to risk losing more money (higher CVaR) when he does not include Bitcoin in his portfolio of asset.
 Similarly, for a given level of risk, including the digital asset in our basket allows for a significant increase in the daily expected return,  hence also for a higher annual profit.
 
-\textbf{*****ADD TABLE OF RESULTS*********}
+Numerical results for this section are given in Table \ref{tab:return_cvar}.
+
+\begin{table}
+\begin{tabular}{ccc}
+	\toprule
+	Daily Return & $DailyCVaR_{95\%}$ without Bitcoin & $DailyCVaR_{95\%}$ including Bitcoin \\
+	\midrule
+	0,012\% & 0,376\% & 0,373\% \\
+	0,014\% & 0,383\% & 0,374\% \\
+	0,015\% & 0,396\% & 0,375\% \\
+	0,017\% & 0,425\% & 0,377\% \\
+	0,018\% & 0,457\% & 0,381\% \\
+	0,020\% & 0,505\% & 0,387\% \\
+	0,021\% & 0,560\% & 0,394\% \\
+	0,023\% & 0,617\% & 0,406\% \\
+	0,024\% & 0,684\% & 0,411\% \\
+	0,026\% & 0,753\% & 0,423\% \\
+	0,027\% & 0,870\% & 0,436\% \\
+	0,029\% & 0,883\% & 0,455\% \\
+	0,030\% & 0,973\% & 0,472\% \\
+	0,032\% & 1,026\% & 0,487\% \\
+	0,033\% & 1,121\% & 0,495\% \\
+	0,035\% & 1,190\% & 0,528\% \\
+	0,036\% & 1,256\% & 0,536\% \\
+	0,037\% & 1,334\% & 0,565\% \\
+	0,039\% & 1,403\% & 0,585\% \\
+	0,040\% & 1,478\% & 0,595\% \\
+	0,042\% & 1,557\% & 0,612\% \\
+	0,043\% & 1,637\% & 0,643\% \\
+	0,044\% & 1,700\% & 0,679\% \\
+	0,046\% & 1,787\% & 0,689\% \\
+	0,047\% & 1,870\% & 0,699\% \\
+	0,049\% & 1,936\% & 0,729\% \\
+	0,050\% & 2,036\% & 0,763\% \\
+	0,051\% & 2,077\% & 0,767\% \\
+	0,053\% & 2,152\% & 0,802\% \\
+	0,054\% & 2,241\% & 0,820\% \\
+	0,056\% & 2,295\% & 0,831\% \\
+	0,057\% & 2,361\% & 0,882\% \\
+	0,058\% & 2,386\% & 0,892\% \\
+	0,060\% & 2,421\% & 0,918\% \\
+	0,061\% & 2,448\% & 0,950\% \\
+	\bottomrule
+\end{tabular}
+\caption{Results for the optimal daily portfolio CVaR of level $95\%$ for a number of daily expected returns, both including and excluding Bitcoin from our basket.}
+\label{tab:return_cvar}
+\end{table}
 
 \subsection{Portfolio Allocation}
 We have seen again the implications of introducing the digital asset in our portfolio in terms of improvement in the expected return and of lowering the daily CVaR of the portfolio.
 Let us now take a look at how this second type of optimization allocates the money in the different assets.
 
 To do so, we will plot the values of $\mathbf{w}$ as resulting from \eqref{eq:general_opt_CVaR} for different levels of daily CVaR (and hence returns).
-
 
 
 

@@ -141,8 +141,8 @@ In order to simulate a two-asset Merton model, we used the following discretizat
 \begin{subequations}
 	\label{eq:merton_discretization}
 	\begin{align}
-	x_i^{(1)} &= x_{i-1}^{(1)} + (\mu_1 - \sigma_1^2/2 -\lambda_1 {\mu_J}_1) \Delta t + \sigma_1 \sqrt{\Delta t} \;  z_1 + N_1 {Y}_1 ,\\
-	x_i^{(2)} &= x_{i-1}^{(2)} + (\mu_2 - \sigma_2^2/2 -\lambda_2 {\mu_J}_2) \Delta t + \sigma_2 \sqrt{\Delta t} \; z_2 + N_2 {Y}_2 ,
+	x_i^{(1)} &= x_{i-1}^{(1)} + (\mu_1 - \sigma_1^2/2 -\lambda_1 {\mu_J}_1) \Delta t + \sigma_1 \sqrt{\Delta t} \;  z_1 + N_1 {y}_1 ,\\
+	x_i^{(2)} &= x_{i-1}^{(2)} + (\mu_2 - \sigma_2^2/2 -\lambda_2 {\mu_J}_2) \Delta t + \sigma_2 \sqrt{\Delta t} \; z_2 + N_2 {y}_2 ,
 	\end{align}
 \end{subequations} 
 where:
@@ -151,7 +151,7 @@ where:
 	\item $z_1$ and $z_2$ are the first and second component of a Gaussian vector $\mathbf{z} = (z_1,z_2)^T$ that is distributed as $\mathbf{z} \sim \mathcal{N}_2(\mathbf{0}, Corr)$. $Corr$ is the $2 \times 2$ matrix composed of ones in the main diagonal and $\rho_{model}$ in the remaining two spots. 
 	More simply, $\mathbf{z}$ is a two dimensional Gaussian with zero mean with covariance matrix equal to the correlation matrix of the model.
 	\item $N_1$ and $N_2$ are in general the realizations of two Poisson random variables with parameters $\lambda_1 \Delta t$ and $\lambda_2 \Delta t$ respectively. Given our first order approximation in the density and considering small $\Delta t$,  $N_1$ and $N_2$ are actually two Bernoulli with probability of success (i.e. a jump happens) equal to $\lambda_1 \Delta t$ and $\lambda_2 \Delta t$.
-	\item Finally, $Y_1$ and $Y_2$ are the jump intensities and are realisations of Gaussian variables with parameters $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ and $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ . 
+	\item Finally, $y_1$ and $y_2$ are the jump intensities and are realisations of Gaussian variables with parameters $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ and $\mathcal{N}({\mu_J}_1, {\sigma_J}_1^2)$ . 
 \end{itemize}
 
 Through \eqref{eq:merton_discretization} we can thus simulate $ x_i^{(1,k)}$ and 
@@ -251,14 +251,14 @@ In order to perform the maximization of the log-lokelihood function to calibrate
 
 The MLE procedure will thus need to be performed including an additional constraint in the optimization given by Feller condition:
 \begin{equation}
-\hat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\widehat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
 \end{equation}
 \begin{equation}
 	\Psi = \{ (\mu, \kappa, \theta, \sigma_V, \rho) \in \mathbb{R}^5 \: |\: \kappa,\theta,\sigma_V >0, \rho \in [-1,1], 2\kappa\theta \geq \sigma_V \}
 \end{equation}
 
 \subsection{Multi-asset Heston Calibration}
-
+\label{sec:multi_heston_cal}
 As we already stated in this paper, the approach to extending the Heston model to $N$ assets that we are taking into consideration is the parsimonious multi-asset model introduced by Dimitroff et al. in \cite{PARSIMONIOUS2011}.
 It's called \textit{parsimonious} since, as we explained in chapter \ref{chpr:models}, we are only modelling the asset-asset correlations.
 
@@ -316,6 +316,7 @@ The updating computations only amount to repeating the single scheme twice:
 
 The important difference with the single asset case is the correlation structure. In order to simulate the random vector $\mathbf{z} = (z_{x^{(1)}}, z_{V^{(1)}}, z_{x^{(2)}}, z_{V^{(2)}})^T$ we have to extract it from a 4-dimensional Gaussian with zero mean and covariance given by $\Sigma$ where:
 \begin{equation}
+\label{eq:corr_matrix}
 	\Sigma = \begin{pmatrix}
 	1 	& \rho_1 & \rho_{1,2} & \rho_{1,2} \rho_2\\
 	\rho_1 & 1 & \rho_1 \rho_{1,2} & \rho_1 \rho_{1,2} \rho_2\\
@@ -324,7 +325,7 @@ The important difference with the single asset case is the correlation structure
 	\end{pmatrix}
 \end{equation}
 
-We could also use the Cholesky decomposition of $\Sigma = L L^T$ in order to obtain $\mathbf{z} = L \mathbf{\tilde{z}}$ from a standard 4-dimensional Gaussian vector $\mathbf{\tilde{z}}$. In this case matrix $L$ would be lower triangular and defined as:
+We could also use the Cholesky decomposition of $\Sigma = L L^T$ in order to obtain $\mathbf{z} = L \mathbf{\tilde{z}}$ from a standard 4-dimensional Gaussian vector\footnote{The standard Gaussian vector of dimension $n$ is a normal random vector with mean vector zero and the identity matrix as covariance matrix: $\mathcal{N}_n (\mathbf{0}, \mathbf{I}_n)$. This means that all the components are independent from one another.} $\mathbf{\tilde{z}}$. In this case matrix $L$ would be lower triangular and defined as:
 \begin{equation}
 	L = \begin{pmatrix}
 	1&0&0&0\\
@@ -338,4 +339,368 @@ From here on, the procedure is the same as for Merton:
 we need to solve \eqref{eq:expected_observed} for every possible asset pair to obtain the model correlation M.
 
 The final step is to apply  J\"ackel regularization algorithm to obtain a valid correlation matrix $\widehat{M}$.
+
+\section{Calibration of Bates Model}
+The algorithm to compute the value for the parameters of the Bates model is the same as the two previous ones, so in the following sections we will only focus on the main differences in the functions and equations.
+
+\subsection{Single Asset Bates Calibration}
+As it was the case for the Heston model, there is no explicit formula for the density of the log-returns $\Delta x_t$. Moreover, the characteristic function is dependent on the initial value of the variance process, unless we use the approximation that we presented in Chapter \ref{chpr:models} to obtain \eqref{eq:bates_uncond_chf}.
+
+We can then go ahead and compute the corresponding density function by Fourier inversion: we can perform this computation using the FFT algorithm that allows for an increase in the performance speed. 
+Arguing in the same way as in previous sections, having the pdf of $\Delta x$ we can compute it for all the observations of $\Delta x_i$ with a single inversion.
+
+Finally, to calibrate the model we need to perform the maximization of the log-likelihood function, making sure the parameters satisfy the Feller condition:
+
+\begin{equation}
+\widehat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\end{equation}
+\begin{multline}
+\Psi = \{ (\mu, \kappa, \theta, \sigma_V, \rho, \mu_J, \sigma_J, \lambda) \in \mathbb{R}^8 \: |\: \\
+\kappa,\theta,\sigma_V,\sigma_J, \lambda >0, \rho \in [-1,1], 2\kappa\theta \geq \sigma_V \}
+\end{multline}
+
+\subsection{Multi-asset Bates Calibration}
+Again, the generalization to the multivariate case we present is an adaptation from \cite{PARSIMONIOUS2011}. The model is be the same as the one in section \ref{sec:multi_heston_cal} with the addition of the jump component.
+
+The calibration algorithm is composed of the three parts concerning the calibration of all the single asset models, computing the asset-asset correlations by simulating the processes, and regularizing the model correlation matrix in order to obtain an acceptable correlation matrix, with ones in the main diagonal, all other elements in the $[-1,1]$ range and that is positive definite.
+
+The simulation for a single asset is performed through the following scheme, implementing the \textit{full truncation} approach to solving the issue with the variance being negative:
+
+\begin{subequations}
+	\label{eq:bates_sim}
+	\begin{align}
+	x_i &= x_{i-1} + (\mu -  \frac{V_{i-1}^+}{2}- \lambda \mu_J)\Delta t + \sqrt{V_{i-1}^+ \Delta t} \:z_x + N y, \\
+	V_i &= V_{i-1} + \kappa(\theta - V_{i-1}^+ )\Delta t + \sigma_V \sqrt{V_{i-1}^+ \Delta t} \: z_V,
+	\end{align}
+\end{subequations}
+
+where $y$ is the jump intensity and is distributed as a Gaussian $\mathcal{N}(\mu_J, \sigma_J^2)$ and $N$ is the Poisson variable with parameter $\lambda \Delta t$ which, given our approximation for small $\Delta t$, is equivalent to a Bernoulli with probability of success equal to $\lambda \Delta t$. 
+$z_x$ and $z_V$ are the two components of a Gaussian vector with mean zero and correlation $\rho$.
+
+The same scheme applied to a  2-asset model is the following:
+\begin{subequations}
+	\label{eq:bates_full_truncation2}
+	\begin{align}
+	x_i^{(1)} &= x_{i-1}^{(1)} + (\mu_1 -  \frac{\Big(V_{i-1}^{(1)}\Big)^+}{2} \lambda_1\mu_{J_1})\Delta t + \sqrt{\Big(V_{i-1}^{(1)}\Big)^+ \Delta t} \:z_{x^{(1)}} + N_1 y_1, \\
+	V_i^{(1)} &= V_{i-1}^{(1)} + \kappa_1(\theta_1 - \Big(V_{i-1}^{(1)}\Big)^+ )\Delta t + \sigma_{V^{(1)}} \sqrt{\Big(V_{i-1}^{(1)}\Big)^+ \Delta t} \: z_{V^(1)},\\
+	x_i^{(2)} &= x_{i-1}^{(2)} + (\mu_2 -  \frac{\Big(V_{i-1}^{(2)}\Big)^+}{2} \lambda_2 \mu_{J_2})\Delta t + \sqrt{\Big(V_{i-1}^{(2)}\Big)^+\Delta t} \:z_{x^{(2)}} + N_2 y_2, \\
+	V_i^{(2)} &= V_{i-1}^{(2)} + \kappa_2(\theta_2 - \Big(V_{i-1}^{(2)}\Big)^+ )\Delta t + \sigma_{V^{(2)}} \sqrt{\Big(V_{i-1}^{(2)}\Big)^+ \Delta t} \: z_{V^{(2)}},
+	\end{align}
+\end{subequations}
+where the parameters and variables have the same meaning as in the single asset framework.
+The random vector $\mathbf{z} = (z_{x^{(1)}}, z_{V^{(1)}}, z_{x^{(2)}}, z_{V^{(2)}})^T$ is a 4-dimensional Gaussian with zero mean and covariance $\Sigma$ expressed in \eqref{eq:corr_matrix}. We can also consider the Cholesky decomposition $\Sigma= L L^T$ to sample the vector $\mathbf{z}$ from the independent Gaussian vector $\mathbf{\tilde{z}}$ by doing $\mathbf{z} = L \mathbf{\tilde{z}}$.
+
+After we have calibrate each asset-asset correlation by solving \eqref{eq:expected_observed}, we need to perform J\"ackel regularization algorithm to obtain a valid model correlation matrix.
+
+\section{Empirical results}
+We will now present the specifics of how the calibration procedure was implemented in our study, including the numerical results that it yielded.
+All the code to perform the computations was developed in R for greater portability across platforms.
+
+\subsection{Merton Calibration Results}
+One of the core aims of this study is to compare the values of the empirical correlation of Bitcoin with other main assets as presented in Chapter \ref{chpr:corr_analysis} with the same correlations computed using more sophisticated models, in our case Merton, Heston and Bates.
+
+The calibration algorithm to compute the parameters of the Merton model was implemented step by step as presented in the previous sections.
+
+In order to perform the single-asset calibration we need to specify the boundaries for the domain of the parameter set $\psi =  \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ and which optimizer we are going to use.
+In our analysis, the optimization is carried out by first taking advantage of a global optimizer and then performing a local maximization\footnote{Since most optimization packages implemented in R usually perform minimization as default, we coded the minimization of the \textit{negative} log-likelihood instead of the maximization of the (positive) log-lkelihood.}
+
+The global optimizer we adopted is implemented in the R package \texttt{DEoptim} and performs \textit{Differential Evolution} optimization: the DE algorithm starts with a population of points randomly sampled from the search space and at each iterations creates new candidate solutions and only keeps the one that best improve the objective function. More information on the package can be found in \cite{DEoptim_manual} and an example of its usage in calibrating a JD process in \cite{DEoptim_jumpdiffusion}. The general DE algorithm was first introduced in \cite{DEoptim_book}.
+
+The local optimizer we used is instead implemented in the function \texttt{nlminb} and it performs a quasi-Newton optimization with box constraints. The function is included in the \texttt{stats} package which is native in most versions of R.
+
+The minimization of the log-likelihood function is notoriously a difficult task since its shape has many different maxima and most of them have similar values for the function. It is thus necessary to restrict the search domain to values that make both numerical and financial sense.
+For the calibration of the parameters in the Merton model, we used the  boundaries reported in the following table:
+\bigskip
+
+\begin{center}
+	\begin{tabular}{lccccc}
+		
+		&$\mu$ & $\sigma$ & $\mu_J$ & $\sigma_J$ & $\lambda$ \\
+		\midrule
+		lower bound & -5 & $10^{-5}$ & $2*q_{0.1\%}(r_{sample})$ &$10^{-4}$ &$10^{-5}$\\
+		upper bound & 5 & 2 & $q_{0.5\%}(r_{sample})$ & 0.1& 10\\
+		\midrule
+	\end{tabular}
+\end{center}
+
+
+\bigskip
+We choose to use a different boundary on each asset for the jump mean $\mu_J$  because we aim to consider as jumps only true shocks: that is why we base our boundaries on the quantiles $q_{\alpha}(r_{sample})$ of the daily log-return distribution of our sampled data. 
+Moreover, we limit the volatility of the jumps to 0.1 in order the have  a jump distribution that is more concentrated around the value of $\mu_J$.
+This way, we also avoid having extremely high values of $\lambda$, which instead is the case in \cite{HONORE1998}. 
+For our assets, the values of the boundaries for $\mu_J$ are reported in Table \ref{tab:mu_J_bounds}.
+\begin{table}
+	\centering
+	\caption{Upper and lower bounds for the parameter $\mu_J$.}
+\begin{tabular}{lll}
+	
+	& lower bound & upper bound \\
+		\midrule
+	btc & -0.9316 & -0.2541 \\
+	bric & -0.1085 & -0.0342 \\
+	sp500 & -0.0911 & -0.0324 \\
+	eurostoxx & -0.1350 & -0.0448 \\
+	nasdaq & -0.1020 & -0.0363 \\
+	bond\_europe & -0.0413 & -0.0148 \\
+	bond\_us & -0.0163 & -0.0058 \\
+	bond\_eur & -0.0380 & -0.0160 \\
+	eur & -0.0372 & -0.0166 \\
+	gbp & -0.0402 & -0.0148 \\
+	chf & -0.0445 & -0.0163 \\
+	jpy & -0.0576 & -0.0196 \\
+	gold & -0.1108 & -0.0343 \\
+	wti & -0.1776 & -0.0608 \\
+	grain & -0.1143 & -0.0462 \\
+	metal & -0.1076 & -0.0344 \\
+	\midrule
+	
+\end{tabular}
+
+\label{tab:mu_J_bounds}
+\end{table}
+
+
+
+The results for all the single asset calibration are presented in Table \ref{tab:merton_params}. We can see that for some assets the calibration procedure yields values of $\mu_J$ and $ \sigma_{J}$ that are on the boundaries: this is because the model is trying to explain most of the daily variations as jumps and setting boundaries avoids this phenomenon.
+\bigskip
+
+
+\begin{table}
+	\centering
+	\caption{Numerical results for the calibration of the parameters of the Merton model for each asset.}
+	\begin{tabular}{lrrrrr}
+		& $\mu$ & $\sigma$ & $\mu_{J}$ & $\sigma_{J}$ & $\lambda$ \\
+		\midrule
+		btc & 1.791 & 0.9591 & -0.315 & 0.1000 & 2.152 \\
+		bric & 0.001 & 0.1628 & -0.034 & 0.1000 & 3.106 \\
+		sp500 & 0.109 & 0.1245 & -0.032 & 0.0928 & 5.196 \\
+		eurostoxx & 0.025 & 0.1985 & -0.045 & 0.1000 & 5.577 \\
+		nasdaq & 0.146 & 0.1455 & -0.036 & 0.0865 & 4.935 \\
+		bond\_europe & 0.026 & 0.0784 & -0.015 & 0.0015 & 3.027 \\
+		bond\_us & 0.024 & 0.0300 & -0.006 & 0.0001 & 3.778 \\
+		bond\_eur & 0.025 & 0.0836 & -0.016 & 0.0012 & 3.085 \\
+		eur & -0.010 & 0.0819 & -0.017 & 0.0001 & 2.766 \\
+		gbp & -0.013 & 0.0783 & -0.040 & 0.1000 & 0.308 \\
+		chf & -0.018 & 0.0877 & -0.016 & 0.1000 & 3.055 \\
+		jpy & -0.027 & 0.0838 & -0.020 & 0.0659 & 3.094 \\
+		gold & 0.009 & 0.140 & -0.034 & 0.1000 & 4.100 \\
+		wti & 0.023 & 0.299 & -0.061 & 0.0002 & 3.953 \\
+		grain & -0.041 & 0.206 & -0.046 & 0.0017 & 2.505 \\
+		metal & -0.013 & 0.176 & -0.034 & 0.1000 & 2.215 \\
+		\midrule
+	\end{tabular}
+\label{tab:merton_params}
+\end{table}
+
+The next step is to perform the calibration of the model correlation matrix by solving equation \eqref{eq:expected_observed} numerically, for each possible asset pair.
+To do so, we used the function \texttt{uniroot} which is included in the \texttt{stats} package. \texttt{uniroot} implements a bisection method to find the zero of a univariate function $f(x)$ in a given interval $[a,b]$. The only thing we have to make sure is that $f(a)f(b)< 0 $ otherwise the algorithm will return an error.
+With highly positive or negative values of the observed correlation, there might not be a corresponding value in $[-1,1]$ for the model correlation that solves the equation. For this reason, whenever we encounter such an issue we set $\rho_{model}$ to be 1 or -1, depending on the sign of $\rho_{obs}$.
+
+Finally, the different values of $\rho_{model}$ are stored in a matrix for which we perform J\"ackel's regularization.
+The resulting correlation structure is shown in Table \ref{tab:merton_corr}, with the usual colour notation.
+
+
+The entire procedure of calibration for the Merton model is fairly fast and only takes about 10 minutes when executed in our computer: 
+
+
+
+% Table generated by Excel2LaTeX from sheet 'Foglio2'
+\begin{table}%[htbp]
+  \centering
+  \tiny
+  \caption{Resulting model correlation matrix for Merton. The values are in percentages and the colour goes from red for $\rho= 100\%$, to white for $\rho=0\%$ and to blue for $\rho=-100\%$.}
+    \noindent\makebox[\textwidth]{\begin{tabular}{lrrrrrrrrrrrrrrrr}
+          & \multicolumn{1}{c}{\begin{sideways}btc\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bric\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}sp500\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eurostoxx\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}nasdaq\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_europe\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_us\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gbp\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}chf\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}jpy\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gold\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}wti\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}grain\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}metal\end{sideways}} \\
+    btc   & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .988,  .945,  .957}7.7 & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .988,  .953,  .965}6.4 & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .973,  .976,  .992}-2.4 & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .988,  .973,  .984}2.7 & \cellcolor[rgb]{ .988,  .984,  .996}1.2 & \cellcolor[rgb]{ .988,  .965,  .976}4.4 & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .984,  .984,  .996}-0.6 & \cellcolor[rgb]{ .988,  .984,  .996}1.1 & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .988,  .965,  .976}4.2 \\
+    bric  & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .502,  .51}84.9 & \cellcolor[rgb]{ .976,  .51,  .522}83.1 & \cellcolor[rgb]{ .976,  .455,  .463}92.8 & \cellcolor[rgb]{ .984,  .816,  .824}30.5 & \cellcolor[rgb]{ .827,  .875,  .941}-24.8 & \cellcolor[rgb]{ .984,  .812,  .82}31.1 & \cellcolor[rgb]{ .984,  .812,  .824}31.0 & \cellcolor[rgb]{ .984,  .761,  .773}39.8 & \cellcolor[rgb]{ .988,  .882,  .89}19.0 & \cellcolor[rgb]{ .773,  .835,  .922}-33.9 & \cellcolor[rgb]{ .988,  .847,  .859}24.7 & \cellcolor[rgb]{ .984,  .718,  .725}47.5 & \cellcolor[rgb]{ .988,  .855,  .867}23.4 & \cellcolor[rgb]{ .976,  .529,  .541}79.7 \\
+    sp500 & \cellcolor[rgb]{ .988,  .945,  .957}7.7 & \cellcolor[rgb]{ .976,  .502,  .51}84.9 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .482,  .49}88.3 & \cellcolor[rgb]{ .976,  .447,  .455}94.1 & \cellcolor[rgb]{ .988,  .867,  .878}21.1 & \cellcolor[rgb]{ .588,  .706,  .859}-62.5 & \cellcolor[rgb]{ .988,  .851,  .863}24.3 & \cellcolor[rgb]{ .984,  .804,  .816}32.2 & \cellcolor[rgb]{ .984,  .761,  .769}40.1 & \cellcolor[rgb]{ .988,  .957,  .969}6.0 & \cellcolor[rgb]{ .639,  .741,  .875}-54.6 & \cellcolor[rgb]{ .988,  .988,  1}0.6 & \cellcolor[rgb]{ .98,  .62,  .627}64.5 & \cellcolor[rgb]{ .984,  .827,  .839}28.1 & \cellcolor[rgb]{ .98,  .573,  .584}72.2 \\
+    eurostoxx & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .976,  .51,  .522}83.1 & \cellcolor[rgb]{ .976,  .482,  .49}88.3 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .51,  .518}83.6 & \cellcolor[rgb]{ .98,  .647,  .659}59.2 & \cellcolor[rgb]{ .729,  .804,  .906}-40.6 & \cellcolor[rgb]{ .98,  .631,  .643}62.1 & \cellcolor[rgb]{ .98,  .6,  .608}67.9 & \cellcolor[rgb]{ .98,  .612,  .624}65.5 & \cellcolor[rgb]{ .984,  .729,  .741}45.1 & \cellcolor[rgb]{ .839,  .882,  .945}-23.2 & \cellcolor[rgb]{ .984,  .839,  .847}26.4 & \cellcolor[rgb]{ .984,  .718,  .729}47.1 & \cellcolor[rgb]{ .988,  .863,  .871}22.3 & \cellcolor[rgb]{ .976,  .553,  .565}75.6 \\
+    nasdaq & \cellcolor[rgb]{ .988,  .953,  .965}6.4 & \cellcolor[rgb]{ .976,  .455,  .463}92.8 & \cellcolor[rgb]{ .976,  .447,  .455}94.1 & \cellcolor[rgb]{ .976,  .51,  .518}83.6 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .882,  .894}18.4 & \cellcolor[rgb]{ .643,  .745,  .878}-53.7 & \cellcolor[rgb]{ .988,  .871,  .882}20.9 & \cellcolor[rgb]{ .984,  .843,  .855}25.4 & \cellcolor[rgb]{ .984,  .796,  .808}33.7 & \cellcolor[rgb]{ .984,  .984,  .996}-0.2 & \cellcolor[rgb]{ .635,  .741,  .875}-55.0 & \cellcolor[rgb]{ .976,  .98,  .996}-1.4 & \cellcolor[rgb]{ .98,  .694,  .706}51.0 & \cellcolor[rgb]{ .988,  .847,  .859}24.5 & \cellcolor[rgb]{ .98,  .612,  .62}65.6 \\
+    bond\_europe & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .984,  .816,  .824}30.5 & \cellcolor[rgb]{ .988,  .867,  .878}21.1 & \cellcolor[rgb]{ .98,  .647,  .659}59.2 & \cellcolor[rgb]{ .988,  .882,  .894}18.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .875,  .886}20.1 & \cellcolor[rgb]{ .976,  .424,  .431}98.6 & \cellcolor[rgb]{ .976,  .435,  .443}96.2 & \cellcolor[rgb]{ .98,  .573,  .58}72.5 & \cellcolor[rgb]{ .976,  .459,  .467}92.1 & \cellcolor[rgb]{ .98,  .651,  .663}58.5 & \cellcolor[rgb]{ .98,  .588,  .596}69.9 & \cellcolor[rgb]{ .988,  .89,  .902}17.6 & \cellcolor[rgb]{ .988,  .914,  .925}13.3 & \cellcolor[rgb]{ .984,  .78,  .788}36.7 \\
+    bond\_us & \cellcolor[rgb]{ .973,  .976,  .992}-2.4 & \cellcolor[rgb]{ .827,  .875,  .941}-24.8 & \cellcolor[rgb]{ .588,  .706,  .859}-62.5 & \cellcolor[rgb]{ .729,  .804,  .906}-40.6 & \cellcolor[rgb]{ .643,  .745,  .878}-53.7 & \cellcolor[rgb]{ .988,  .875,  .886}20.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .945,  .957,  .984}-6.5 & \cellcolor[rgb]{ .984,  .824,  .835}28.6 & \cellcolor[rgb]{ .98,  .635,  .643}61.9 & \cellcolor[rgb]{ .984,  .773,  .78}38.0 & \cellcolor[rgb]{ .827,  .875,  .941}-25.2 & \cellcolor[rgb]{ .937,  .949,  .98}-8.0 & \cellcolor[rgb]{ .831,  .878,  .945}-24.4 \\
+    bond\_eur & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .984,  .812,  .82}31.1 & \cellcolor[rgb]{ .988,  .851,  .863}24.3 & \cellcolor[rgb]{ .98,  .631,  .643}62.1 & \cellcolor[rgb]{ .988,  .871,  .882}20.9 & \cellcolor[rgb]{ .976,  .424,  .431}98.6 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .424,  .431}98.4 & \cellcolor[rgb]{ .98,  .62,  .627}64.5 & \cellcolor[rgb]{ .976,  .471,  .478}90.0 & \cellcolor[rgb]{ .98,  .678,  .686}54.2 & \cellcolor[rgb]{ .98,  .604,  .616}66.9 & \cellcolor[rgb]{ .988,  .89,  .902}17.5 & \cellcolor[rgb]{ .988,  .914,  .925}13.0 & \cellcolor[rgb]{ .984,  .765,  .773}39.3 \\
+    eur   & \cellcolor[rgb]{ .988,  .973,  .984}2.7 & \cellcolor[rgb]{ .984,  .812,  .824}31.0 & \cellcolor[rgb]{ .984,  .804,  .816}32.2 & \cellcolor[rgb]{ .98,  .6,  .608}67.9 & \cellcolor[rgb]{ .984,  .843,  .855}25.4 & \cellcolor[rgb]{ .976,  .435,  .443}96.2 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .976,  .424,  .431}98.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .596,  .608}68.1 & \cellcolor[rgb]{ .976,  .482,  .49}87.9 & \cellcolor[rgb]{ .984,  .722,  .733}46.3 & \cellcolor[rgb]{ .98,  .635,  .647}61.2 & \cellcolor[rgb]{ .988,  .871,  .882}20.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .984,  .745,  .757}42.3 \\
+    gbp   & \cellcolor[rgb]{ .988,  .984,  .996}1.2 & \cellcolor[rgb]{ .984,  .761,  .773}39.8 & \cellcolor[rgb]{ .984,  .761,  .769}40.1 & \cellcolor[rgb]{ .98,  .612,  .624}65.5 & \cellcolor[rgb]{ .984,  .796,  .808}33.7 & \cellcolor[rgb]{ .98,  .573,  .58}72.5 & \cellcolor[rgb]{ .945,  .957,  .984}-6.5 & \cellcolor[rgb]{ .98,  .62,  .627}64.5 & \cellcolor[rgb]{ .98,  .596,  .608}68.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .592,  .6}69.1 & \cellcolor[rgb]{ .988,  .855,  .867}23.4 & \cellcolor[rgb]{ .984,  .737,  .749}43.6 & \cellcolor[rgb]{ .984,  .835,  .843}27.2 & \cellcolor[rgb]{ .988,  .906,  .918}14.6 & \cellcolor[rgb]{ .984,  .769,  .776}38.5 \\
+    chf   & \cellcolor[rgb]{ .988,  .965,  .976}4.4 & \cellcolor[rgb]{ .988,  .882,  .89}19.0 & \cellcolor[rgb]{ .988,  .957,  .969}6.0 & \cellcolor[rgb]{ .984,  .729,  .741}45.1 & \cellcolor[rgb]{ .984,  .984,  .996}-0.2 & \cellcolor[rgb]{ .976,  .459,  .467}92.1 & \cellcolor[rgb]{ .984,  .824,  .835}28.6 & \cellcolor[rgb]{ .976,  .471,  .478}90.0 & \cellcolor[rgb]{ .976,  .482,  .49}87.9 & \cellcolor[rgb]{ .98,  .592,  .6}69.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .561,  .569}74.8 & \cellcolor[rgb]{ .976,  .49,  .498}86.7 & \cellcolor[rgb]{ .988,  .914,  .925}12.9 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .984,  .733,  .741}44.9 \\
+    jpy   & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .773,  .835,  .922}-33.9 & \cellcolor[rgb]{ .639,  .741,  .875}-54.6 & \cellcolor[rgb]{ .839,  .882,  .945}-23.2 & \cellcolor[rgb]{ .635,  .741,  .875}-55.0 & \cellcolor[rgb]{ .98,  .651,  .663}58.5 & \cellcolor[rgb]{ .98,  .635,  .643}61.9 & \cellcolor[rgb]{ .98,  .678,  .686}54.2 & \cellcolor[rgb]{ .984,  .722,  .733}46.3 & \cellcolor[rgb]{ .988,  .855,  .867}23.4 & \cellcolor[rgb]{ .98,  .561,  .569}74.8 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .533,  .541}79.1 & \cellcolor[rgb]{ .91,  .933,  .973}-12.2 & \cellcolor[rgb]{ .988,  .973,  .984}3.0 & \cellcolor[rgb]{ .957,  .965,  .988}-4.6 \\
+    gold  & \cellcolor[rgb]{ .984,  .984,  .996}-0.6 & \cellcolor[rgb]{ .988,  .847,  .859}24.7 & \cellcolor[rgb]{ .988,  .988,  1}0.6 & \cellcolor[rgb]{ .984,  .839,  .847}26.4 & \cellcolor[rgb]{ .976,  .98,  .996}-1.4 & \cellcolor[rgb]{ .98,  .588,  .596}69.9 & \cellcolor[rgb]{ .984,  .773,  .78}38.0 & \cellcolor[rgb]{ .98,  .604,  .616}66.9 & \cellcolor[rgb]{ .98,  .635,  .647}61.2 & \cellcolor[rgb]{ .984,  .737,  .749}43.6 & \cellcolor[rgb]{ .976,  .49,  .498}86.7 & \cellcolor[rgb]{ .976,  .533,  .541}79.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .851,  .863}24.2 & \cellcolor[rgb]{ .988,  .859,  .867}23.0 & \cellcolor[rgb]{ .98,  .667,  .675}56.3 \\
+    wti   & \cellcolor[rgb]{ .988,  .984,  .996}1.1 & \cellcolor[rgb]{ .984,  .718,  .725}47.5 & \cellcolor[rgb]{ .98,  .62,  .627}64.5 & \cellcolor[rgb]{ .984,  .718,  .729}47.1 & \cellcolor[rgb]{ .98,  .694,  .706}51.0 & \cellcolor[rgb]{ .988,  .89,  .902}17.6 & \cellcolor[rgb]{ .827,  .875,  .941}-25.2 & \cellcolor[rgb]{ .988,  .89,  .902}17.5 & \cellcolor[rgb]{ .988,  .871,  .882}20.9 & \cellcolor[rgb]{ .984,  .835,  .843}27.2 & \cellcolor[rgb]{ .988,  .914,  .925}12.9 & \cellcolor[rgb]{ .91,  .933,  .973}-12.2 & \cellcolor[rgb]{ .988,  .851,  .863}24.2 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .871,  .882}20.6 & \cellcolor[rgb]{ .984,  .702,  .714}49.8 \\
+    grain & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .988,  .855,  .867}23.4 & \cellcolor[rgb]{ .984,  .827,  .839}28.1 & \cellcolor[rgb]{ .988,  .863,  .871}22.3 & \cellcolor[rgb]{ .988,  .847,  .859}24.5 & \cellcolor[rgb]{ .988,  .914,  .925}13.3 & \cellcolor[rgb]{ .937,  .949,  .98}-8.0 & \cellcolor[rgb]{ .988,  .914,  .925}13.0 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .988,  .906,  .918}14.6 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .988,  .973,  .984}3.0 & \cellcolor[rgb]{ .988,  .859,  .867}23.0 & \cellcolor[rgb]{ .988,  .871,  .882}20.6 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .827,  .839}28.1 \\
+    metal & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .976,  .529,  .541}79.7 & \cellcolor[rgb]{ .98,  .573,  .584}72.2 & \cellcolor[rgb]{ .976,  .553,  .565}75.6 & \cellcolor[rgb]{ .98,  .612,  .62}65.6 & \cellcolor[rgb]{ .984,  .78,  .788}36.7 & \cellcolor[rgb]{ .831,  .878,  .945}-24.4 & \cellcolor[rgb]{ .984,  .765,  .773}39.3 & \cellcolor[rgb]{ .984,  .745,  .757}42.3 & \cellcolor[rgb]{ .984,  .769,  .776}38.5 & \cellcolor[rgb]{ .984,  .733,  .741}44.9 & \cellcolor[rgb]{ .957,  .965,  .988}-4.6 & \cellcolor[rgb]{ .98,  .667,  .675}56.3 & \cellcolor[rgb]{ .984,  .702,  .714}49.8 & \cellcolor[rgb]{ .984,  .827,  .839}28.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 \\
+    \end{tabular}%
+}
+  \label{tab:merton_corr}
+\end{table}%
+\subsection{Heston Calibration Results}
+
+The implementation of the calibration of Heston model for each asset is very similar to the one that we presented in the previous section for Merton. We use two optimizer, one global and one local.
+
+The main difference in the maximization of the log-likelihood function is that now we have an extra constraint given by the Feller condition: the same will be true for the calibration of the parameters in Bates model.
+
+To include this constraint in the global optimizer we used the package \texttt{DEoptimR} and the function \texttt{JDEoptim}: this performs the same differential evolution optimization but allows for the specification of extra constraints. The relative manual can be found in \cite{DEoptimR_manual}.
+
+For the local optimization we still used the \texttt{nlminb} function: to include the constraint we added a penalty to the negative log-likelihood function that would set its value to a high positive number (e.g. $10^8$).
+
+The box constraints for the Heston parameters $\psi =  \left\{ \mu, \kappa, \theta, \sigma_V, \rho \right\}$ are given in the following table:
+
+\bigskip
+
+\begin{center}
+	\begin{tabular}{lccccc}
+		&$\mu$ & $\kappa$ & $\theta$ & $\sigma_V$ & $\rho$ \\
+		\midrule
+		lower bound & $\mu_{sample}-0.05$ & $10^{-3}$ & $10^{-3}$ &$10^{-5}$ &$10^{-4}$ or -1\\
+		upper bound & $\mu_{sample}+0.05 $& 2 & 3 & 2& 1 or $-10^-4$ \\
+		\midrule
+	\end{tabular}
+\end{center}
+
+\bigskip
+
+By running the calibration a few times we noticed that the resulting values of $\mu$ coming from the calibration procedure with the same bounds as in Merton were nonsensical both in magnitude and in sign. Thus, we resort to impose that the boundary for the drift is the expected return obtained from the sample with the possibility to move up or down of 0.05.
+
+For the parameter $\rho$ that models the asymmetry of the return distribution we restrict the boundary to positive values when the skewness of the return distribution is positive and to negative values if the skewness is negative. 
+The calibrated parameters for each asset are shown in Table \ref{tab:heston_params}.
+
+\begin{table}
+	\centering
+	\caption{Numerical results for the calibration of the parameters of the Heston model for each asset.}
+	\label{tab:heston_params}
+	\begin{tabular}{lrrrrr}
+		
+		& $\mu$ & $\kappa$ & $\theta$ & $\sigma_V$ & $\rho$ \\
+		\midrule
+		btc & 1.377 & 0.677 & 0.738 & 0.9998 & -0.0002 \\
+		bric & -0.005 & 2.000 & 0.030 & 0.2588 & -1.0000 \\
+		sp500 & 0.100 & 0.460 & 0.017 & 0.1267 & -0.0040 \\
+		eurostoxx & 0.014 & 0.964 & 0.047 & 0.2977 & -0.3063 \\
+		nasdaq & 0.153 & 1.286 & 0.025 & 0.2554 & -0.3667 \\
+		bond\_europe & 0.028 & 0.621 & 0.007 & 0.0562 & 0.0031 \\
+		bond\_us & 0.031 & 1.726 & 0.001 & 0.0378 & -0.9606 \\
+		bond\_eur & 0.030 & 0.568 & 0.008 & 0.0638 & 0.0059 \\
+		eur & -0.004 & 1.498 & 0.007 & 0.1077 & 0.0522 \\
+		gbp & -0.023 & 1.291 & 0.006 & 0.0901 & -0.0175 \\
+		chf & 0.011 & 0.001 & 0.008 & 0.0034 & 0.0001 \\
+		jpy & -0.030 & 0.985 & 0.008 & 0.1045 & -0.9874 \\
+		gold & 0.008 & 0.364 & 0.023 & 0.1234 & -1.0000 \\
+		wti & -0.009 & 0.293 & 0.103 & 0.2460 & 0.0001 \\
+		grain & -0.069 & 2.000 & 0.046 & 0.3348 & 0.7014 \\
+		metal & -0.032 & 0.001 & 0.035 & 0.0079 & 0.0001 \\
+		\midrule
+	\end{tabular}
+\end{table}
+
+
+Next we perform the calibration of the  $\rho_{model}$ for each pair of assets, by using the same algorithm coded in \texttt{uniroot} that we presented  in the  previous section. Again, in case that the observed sample correlation is too high in absolute value, we set $\rho_{model}$ equal to 1 or -1.
+
+Lastly, we perform the usual regularization to obtain a valid model correlation matrix.
+The final result is shown in Table \ref{tab:heston_corr}.
+
+The increase in the complexity in terms of the formulation of the model generates a great increase in the computation time for the calibration. Each time we have compute the (negative) log-likelihood function we need to invert the characteristic function: even when taking advantage of the FFT algorithm there still is a great increase with respect to the calibration time in Merton's case. The total time amounts to about three hour, with a single asset calibration taking up to fifteen minutes.
+
+\begin{table}
+	\tiny
+  \centering
+  \caption{Resulting correlation matrix for Heston. The values are percentages and the colour scheme is the usual.}
+    \noindent\makebox[\textwidth]{\begin{tabular}{lrrrrrrrrrrrrrrrr}
+          & \multicolumn{1}{c}{\begin{sideways}btc\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bric\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}sp500\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eurostoxx\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}nasdaq\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_europe\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_us\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gbp\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}chf\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}jpy\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gold\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}wti\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}grain\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}metal\end{sideways}} \\
+    btc   & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .98,  .992}1.8 & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .988,  .957,  .969}5.9 & \cellcolor[rgb]{ .988,  .961,  .969}5.4 & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .973,  .976,  .992}-2.2 & \cellcolor[rgb]{ .988,  .976,  .988}2.6 & \cellcolor[rgb]{ .988,  .973,  .984}2.8 & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .988,  .973,  .984}3.2 & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .984,  .984,  .996}-0.5 & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .988,  .965,  .976}4.5 & \cellcolor[rgb]{ .988,  .973,  .984}3.3 \\
+    bric  & \cellcolor[rgb]{ .988,  .98,  .992}1.8 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .647,  .659}59.5 & \cellcolor[rgb]{ .98,  .604,  .612}67.3 & \cellcolor[rgb]{ .98,  .655,  .667}58.0 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .878,  .91,  .961}-17.0 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .984,  .835,  .847}26.8 & \cellcolor[rgb]{ .988,  .937,  .949}9.2 & \cellcolor[rgb]{ .863,  .898,  .953}-19.7 & \cellcolor[rgb]{ .988,  .902,  .914}15.5 & \cellcolor[rgb]{ .984,  .796,  .804}33.8 & \cellcolor[rgb]{ .988,  .89,  .902}17.1 & \cellcolor[rgb]{ .984,  .725,  .733}46.3 \\
+    sp500 & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .98,  .647,  .659}59.5 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .537,  .549}78.3 & \cellcolor[rgb]{ .976,  .42,  .427}99.0 & \cellcolor[rgb]{ .988,  .898,  .91}15.8 & \cellcolor[rgb]{ .729,  .804,  .906}-40.5 & \cellcolor[rgb]{ .988,  .886,  .898}17.8 & \cellcolor[rgb]{ .988,  .867,  .878}21.5 & \cellcolor[rgb]{ .984,  .843,  .855}25.3 & \cellcolor[rgb]{ .988,  .988,  1}0.4 & \cellcolor[rgb]{ .808,  .863,  .937}-27.9 & \cellcolor[rgb]{ .98,  .98,  .996}-0.9 & \cellcolor[rgb]{ .984,  .749,  .761}41.8 & \cellcolor[rgb]{ .988,  .886,  .894}18.3 & \cellcolor[rgb]{ .984,  .761,  .773}39.8 \\
+    eurostoxx & \cellcolor[rgb]{ .988,  .957,  .969}5.9 & \cellcolor[rgb]{ .98,  .604,  .612}67.3 & \cellcolor[rgb]{ .976,  .537,  .549}78.3 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .58,  .588}71.2 & \cellcolor[rgb]{ .984,  .71,  .722}48.5 & \cellcolor[rgb]{ .78,  .843,  .925}-32.2 & \cellcolor[rgb]{ .98,  .698,  .706}51.0 & \cellcolor[rgb]{ .98,  .675,  .682}54.9 & \cellcolor[rgb]{ .984,  .714,  .722}48.3 & \cellcolor[rgb]{ .988,  .847,  .859}24.9 & \cellcolor[rgb]{ .855,  .894,  .953}-20.4 & \cellcolor[rgb]{ .988,  .925,  .937}11.3 & \cellcolor[rgb]{ .984,  .773,  .784}37.6 & \cellcolor[rgb]{ .988,  .89,  .902}17.5 & \cellcolor[rgb]{ .98,  .694,  .702}51.5 \\
+    nasdaq & \cellcolor[rgb]{ .988,  .961,  .969}5.4 & \cellcolor[rgb]{ .98,  .655,  .667}58.0 & \cellcolor[rgb]{ .976,  .42,  .427}99.0 & \cellcolor[rgb]{ .98,  .58,  .588}71.2 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .918,  .925}12.9 & \cellcolor[rgb]{ .749,  .82,  .914}-37.0 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .988,  .89,  .898}17.6 & \cellcolor[rgb]{ .988,  .863,  .875}22.2 & \cellcolor[rgb]{ .973,  .976,  .992}-2.0 & \cellcolor[rgb]{ .82,  .867,  .937}-26.5 & \cellcolor[rgb]{ .976,  .98,  .996}-1.5 & \cellcolor[rgb]{ .984,  .792,  .8}34.7 & \cellcolor[rgb]{ .988,  .894,  .906}16.9 & \cellcolor[rgb]{ .984,  .776,  .788}36.9 \\
+    bond\_europe & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .988,  .898,  .91}15.8 & \cellcolor[rgb]{ .984,  .71,  .722}48.5 & \cellcolor[rgb]{ .988,  .918,  .925}12.9 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .871,  .882}20.7 & \cellcolor[rgb]{ .976,  .42,  .427}98.9 & \cellcolor[rgb]{ .976,  .435,  .443}96.1 & \cellcolor[rgb]{ .98,  .604,  .612}67.0 & \cellcolor[rgb]{ .98,  .624,  .631}63.7 & \cellcolor[rgb]{ .984,  .741,  .749}43.4 & \cellcolor[rgb]{ .984,  .702,  .714}49.8 & \cellcolor[rgb]{ .988,  .902,  .91}15.6 & \cellcolor[rgb]{ .988,  .918,  .929}12.4 & \cellcolor[rgb]{ .984,  .831,  .839}27.9 \\
+    bond\_us & \cellcolor[rgb]{ .973,  .976,  .992}-2.2 & \cellcolor[rgb]{ .878,  .91,  .961}-17.0 & \cellcolor[rgb]{ .729,  .804,  .906}-40.5 & \cellcolor[rgb]{ .78,  .843,  .925}-32.2 & \cellcolor[rgb]{ .749,  .82,  .914}-37.0 & \cellcolor[rgb]{ .988,  .871,  .882}20.7 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .984,  .984,  .996}-0.6 & \cellcolor[rgb]{ .949,  .961,  .984}-5.7 & \cellcolor[rgb]{ .988,  .902,  .914}15.1 & \cellcolor[rgb]{ .984,  .741,  .753}43.0 & \cellcolor[rgb]{ .988,  .851,  .859}24.4 & \cellcolor[rgb]{ .843,  .886,  .949}-22.6 & \cellcolor[rgb]{ .941,  .953,  .98}-7.3 & \cellcolor[rgb]{ .875,  .906,  .957}-17.6 \\
+    bond\_eur & \cellcolor[rgb]{ .988,  .976,  .988}2.6 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .988,  .886,  .898}17.8 & \cellcolor[rgb]{ .98,  .698,  .706}51.0 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .976,  .42,  .427}98.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .427,  .435}97.9 & \cellcolor[rgb]{ .98,  .659,  .667}57.7 & \cellcolor[rgb]{ .98,  .635,  .643}61.6 & \cellcolor[rgb]{ .984,  .757,  .769}40.2 & \cellcolor[rgb]{ .984,  .722,  .729}46.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.3 & \cellcolor[rgb]{ .988,  .922,  .933}11.9 & \cellcolor[rgb]{ .984,  .824,  .835}28.8 \\
+    eur   & \cellcolor[rgb]{ .988,  .973,  .984}2.8 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .988,  .867,  .878}21.5 & \cellcolor[rgb]{ .98,  .675,  .682}54.9 & \cellcolor[rgb]{ .988,  .89,  .898}17.6 & \cellcolor[rgb]{ .976,  .435,  .443}96.1 & \cellcolor[rgb]{ .984,  .984,  .996}-0.6 & \cellcolor[rgb]{ .976,  .427,  .435}97.9 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .639,  .647}60.8 & \cellcolor[rgb]{ .98,  .627,  .639}62.6 & \cellcolor[rgb]{ .984,  .792,  .804}34.2 & \cellcolor[rgb]{ .984,  .749,  .761}41.7 & \cellcolor[rgb]{ .988,  .878,  .89}19.1 & \cellcolor[rgb]{ .988,  .91,  .922}14.1 & \cellcolor[rgb]{ .984,  .808,  .82}31.5 \\
+    gbp   & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .984,  .835,  .847}26.8 & \cellcolor[rgb]{ .984,  .843,  .855}25.3 & \cellcolor[rgb]{ .984,  .714,  .722}48.3 & \cellcolor[rgb]{ .988,  .863,  .875}22.2 & \cellcolor[rgb]{ .98,  .604,  .612}67.0 & \cellcolor[rgb]{ .949,  .961,  .984}-5.7 & \cellcolor[rgb]{ .98,  .659,  .667}57.7 & \cellcolor[rgb]{ .98,  .639,  .647}60.8 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .765,  .773}39.3 & \cellcolor[rgb]{ .988,  .898,  .906}16.3 & \cellcolor[rgb]{ .984,  .824,  .835}28.7 & \cellcolor[rgb]{ .988,  .851,  .863}23.9 & \cellcolor[rgb]{ .988,  .918,  .929}12.7 & \cellcolor[rgb]{ .984,  .831,  .843}27.4 \\
+    chf   & \cellcolor[rgb]{ .988,  .973,  .984}3.2 & \cellcolor[rgb]{ .988,  .937,  .949}9.2 & \cellcolor[rgb]{ .988,  .988,  1}0.4 & \cellcolor[rgb]{ .988,  .847,  .859}24.9 & \cellcolor[rgb]{ .973,  .976,  .992}-2.0 & \cellcolor[rgb]{ .98,  .624,  .631}63.7 & \cellcolor[rgb]{ .988,  .902,  .914}15.1 & \cellcolor[rgb]{ .98,  .635,  .643}61.6 & \cellcolor[rgb]{ .98,  .627,  .639}62.6 & \cellcolor[rgb]{ .984,  .765,  .773}39.3 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .757,  .769}40.3 & \cellcolor[rgb]{ .984,  .741,  .749}43.5 & \cellcolor[rgb]{ .988,  .949,  .961}6.9 & \cellcolor[rgb]{ .988,  .945,  .957}7.8 & \cellcolor[rgb]{ .988,  .867,  .875}21.7 \\
+    jpy   & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .863,  .898,  .953}-19.7 & \cellcolor[rgb]{ .808,  .863,  .937}-27.9 & \cellcolor[rgb]{ .855,  .894,  .953}-20.4 & \cellcolor[rgb]{ .82,  .867,  .937}-26.5 & \cellcolor[rgb]{ .984,  .741,  .749}43.4 & \cellcolor[rgb]{ .984,  .741,  .753}43.0 & \cellcolor[rgb]{ .984,  .757,  .769}40.2 & \cellcolor[rgb]{ .984,  .792,  .804}34.2 & \cellcolor[rgb]{ .988,  .898,  .906}16.3 & \cellcolor[rgb]{ .984,  .757,  .769}40.3 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .71,  .722}48.4 & \cellcolor[rgb]{ .937,  .953,  .98}-7.4 & \cellcolor[rgb]{ .988,  .976,  .988}2.3 & \cellcolor[rgb]{ .965,  .973,  .992}-3.3 \\
+    gold  & \cellcolor[rgb]{ .984,  .984,  .996}-0.5 & \cellcolor[rgb]{ .988,  .902,  .914}15.5 & \cellcolor[rgb]{ .98,  .98,  .996}-0.9 & \cellcolor[rgb]{ .988,  .925,  .937}11.3 & \cellcolor[rgb]{ .976,  .98,  .996}-1.5 & \cellcolor[rgb]{ .984,  .702,  .714}49.8 & \cellcolor[rgb]{ .988,  .851,  .859}24.4 & \cellcolor[rgb]{ .984,  .722,  .729}46.9 & \cellcolor[rgb]{ .984,  .749,  .761}41.7 & \cellcolor[rgb]{ .984,  .824,  .835}28.7 & \cellcolor[rgb]{ .984,  .741,  .749}43.5 & \cellcolor[rgb]{ .984,  .71,  .722}48.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .89,  .902}17.1 & \cellcolor[rgb]{ .988,  .898,  .91}15.9 & \cellcolor[rgb]{ .984,  .784,  .796}35.7 \\
+    wti   & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .984,  .796,  .804}33.8 & \cellcolor[rgb]{ .984,  .749,  .761}41.8 & \cellcolor[rgb]{ .984,  .773,  .784}37.6 & \cellcolor[rgb]{ .984,  .792,  .8}34.7 & \cellcolor[rgb]{ .988,  .902,  .91}15.6 & \cellcolor[rgb]{ .843,  .886,  .949}-22.6 & \cellcolor[rgb]{ .988,  .902,  .914}15.3 & \cellcolor[rgb]{ .988,  .878,  .89}19.1 & \cellcolor[rgb]{ .988,  .851,  .863}23.9 & \cellcolor[rgb]{ .988,  .949,  .961}6.9 & \cellcolor[rgb]{ .937,  .953,  .98}-7.4 & \cellcolor[rgb]{ .988,  .89,  .902}17.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .878,  .89}19.1 & \cellcolor[rgb]{ .984,  .773,  .784}37.4 \\
+    grain & \cellcolor[rgb]{ .988,  .965,  .976}4.5 & \cellcolor[rgb]{ .988,  .89,  .902}17.1 & \cellcolor[rgb]{ .988,  .886,  .894}18.3 & \cellcolor[rgb]{ .988,  .89,  .902}17.5 & \cellcolor[rgb]{ .988,  .894,  .906}16.9 & \cellcolor[rgb]{ .988,  .918,  .929}12.4 & \cellcolor[rgb]{ .941,  .953,  .98}-7.3 & \cellcolor[rgb]{ .988,  .922,  .933}11.9 & \cellcolor[rgb]{ .988,  .91,  .922}14.1 & \cellcolor[rgb]{ .988,  .918,  .929}12.7 & \cellcolor[rgb]{ .988,  .945,  .957}7.8 & \cellcolor[rgb]{ .988,  .976,  .988}2.3 & \cellcolor[rgb]{ .988,  .898,  .91}15.9 & \cellcolor[rgb]{ .988,  .878,  .89}19.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .867,  .878}21.4 \\
+    metal & \cellcolor[rgb]{ .988,  .973,  .984}3.3 & \cellcolor[rgb]{ .984,  .725,  .733}46.3 & \cellcolor[rgb]{ .984,  .761,  .773}39.8 & \cellcolor[rgb]{ .98,  .694,  .702}51.5 & \cellcolor[rgb]{ .984,  .776,  .788}36.9 & \cellcolor[rgb]{ .984,  .831,  .839}27.9 & \cellcolor[rgb]{ .875,  .906,  .957}-17.6 & \cellcolor[rgb]{ .984,  .824,  .835}28.8 & \cellcolor[rgb]{ .984,  .808,  .82}31.5 & \cellcolor[rgb]{ .984,  .831,  .843}27.4 & \cellcolor[rgb]{ .988,  .867,  .875}21.7 & \cellcolor[rgb]{ .965,  .973,  .992}-3.3 & \cellcolor[rgb]{ .984,  .784,  .796}35.7 & \cellcolor[rgb]{ .984,  .773,  .784}37.4 & \cellcolor[rgb]{ .988,  .867,  .878}21.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 \\
+    \end{tabular}%
+}
+  \label{tab:heston_corr}%
+\end{table}%
+
+
+
+\subsection{Bates Calibration Results}
+The procedure to calibrate the parameters $\psi =  \left\{ \mu, \kappa, \theta, \sigma_V, \rho, \mu_J, \sigma_J, \lambda \right\}$ for Bates model we proceed exactly in the same way as we did for Heston. We first perform a global optimization using \texttt{JDEoptim} and then a local one through \texttt{nlminb} adding a penalty to the neg-log-likelihood function. 
+
+The boundaries for each parameter are the combination of the intervals that we use for Merton and Heston and are reported in the following table:
+
+\bigskip 
+
+\begin{center}
+	\noindent\makebox[\textwidth]{
+		\begin{tabular}{lcccccccc}
+		&$\mu$ &$\kappa$&$\theta$& $\sigma_V$ & $\rho$& $\mu_J$ & $\sigma_J$ & $\lambda$ \\
+		\midrule
+		lower bound & $\mu_{sample}-0.05$ & $10^{-3}$ & $10^{-3}$ &$10^{-5}$ &$10^{-4}$ or -1 & $q_{\alpha_{low}}(r_{sample})$ &$10^{-4}$ &$10^{-5}$\\
+		upper bound & $\mu_{sample}-0.05$ & 2 & 3 & 2 &1 or $-10^{-4}$ & $q_{\alpha_{up}}(r_{sample})$ & 0.1& 10\\
+		\midrule
+	\end{tabular}
+	}
+\end{center}
+
+\bigskip
+
+We also introduce conditional bounds on the skewness also for the $\mu_J$ variable: we set $\alpha_{low} = 0.1\%$ and $\alpha_{up} = 0.5\%$ if the skewness is negative and $\alpha_{low} = 99.5\%$ and $\alpha_{up} = 99.9\%$.
+The parameters for each single asset in the Bates case are shown in Table \ref{tab:bates_params}.
+
+The increased number of parameters causes an increase complexity in the shape of the log-likelihood function and hence it is harder for the optimizers to find the exact global optimum.
+
+\textit{\textbf{****aggiungere altro commento sui valori numerici?**** }}
+
+
+
+\begin{table}
+	\centering
+	\caption{Numerical results for the calibration of the parameters of the Bates model for each asset.}
+	\label{tab:bates_params}
+	\noindent\makebox[\textwidth]{
+	\begin{tabular}{lrrrrrrrr}
+		& $\mu$ & $\kappa$ & $\theta$ & $\sigma_V$ & $\rho$ & $\mu_J$ & $\sigma_J$ & $\lambda$ \\
+		\midrule
+		btc & 1.380 & 0.879 & 0.6703 & 1.0855 & -0.0036 & -0.2388 & 0.09973 & 0.928 \\
+		bric & -0.005 & 2.000 & 0.0290 & 0.2443 & -0.9381 & -0.0600 & 0.00001 & 0.327 \\
+		sp500 & 0.100 & 1.636 & 0.0168 & 0.2344 & -0.0019 & -0.0340 & 0.00020 & 1.342 \\
+		eurostoxx & 0.002 & 1.303 & 0.0456 & 0.3311 & -0.1511 & -0.0506 & 0.00072 & 0.812 \\
+		nasdaq & 0.135 & 1.289 & 0.0242 & 0.2498 & -0.0001 & -0.0368 & 0.00012 & 1.478 \\
+		bond\_europe & 0.031 & 2.000 & 0.0066 & 0.1005 & 0.0001 & 0.0197 & 0.00001 & 0.196 \\
+		bond\_us & 0.023 & 1.951 & 0.0010 & 0.0424 & -0.9963 & -0.0134 & 0.01021 & 0.001 \\
+		bond\_eur & 0.028 & 1.389 & 0.0076 & 0.0960 & 0.0018 & 0.0186 & 0.01057 & 0.006 \\
+		eur & -0.004 & 0.318 & 0.0071 & 0.0477 & 0.1526 & 0.0250 & 0.00001 & 0.163 \\
+		gbp & -0.021 & 2.000 & 0.0060 & 0.0938 & -1.0000 & -0.0149 & 0.00119 & 0.805 \\
+		chf & 0.005 & 0.932 & 0.0079 & 0.0925 & 0.7125 & 0.0215 & 0.00497 & 0.731 \\
+		jpy & -0.034 & 2.000 & 0.0075 & 0.1360 & -0.0001 & -0.0250 & 0.00001 & 1.026 \\
+		gold & 0.008 & 2.000 & 0.0220 & 0.2668 & -0.0467 & -0.0343 & 0.00089 & 1.166 \\
+		wti & -0.009 & 0.278 & 0.1035 & 0.2400 & 0.0001 & 0.0654 & 0.00347 & 0.000 \\
+		grain & -0.069 & 0.235 & 0.0443 & 0.1080 & 1.0000 & 0.0628 & 0.00001 & 0.571 \\
+		metal & -0.032 & 0.001 & 0.0349 & 0.0079 & 0.0001 & 0.0369 & 0.00044 & 0.000 \\
+		\midrule
+	\end{tabular}
+}
+\end{table}
+
+As for the calibration of the model correlation, we maintain the same approach of using \texttt{uniroot} to solve equation \eqref{eq:expected_observed} and setting $\rho_{model}$ to 1 or -1 in case the solver cannot come up with a solution.
+The regularization using J\"ackel algorithm represents as usual the final step to obtain the full model correlation. The resulting matrix is reported in Table \ref{tab:bates_corr}.
+
+
+\begin{table}  
+	\tiny
+	\centering  
+	\caption{Resulting correlation matrix for Bates. Values are percentages and the colour scheme is the same used for the other correlation matrices.}
+	\label{tab:bates_corr}    
+	\noindent\makebox[\textwidth]{
+	\begin{tabular}{lrrrrrrrrrrrrrrrr} 
+		         & \multicolumn{1}{c}{\begin{sideways}btc\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bric\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}sp500\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eurostoxx\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}nasdaq\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_europe\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_us\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gbp\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}chf\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}jpy\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gold\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}wti\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}grain\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}metal\end{sideways}} \\    btc   & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .98,  .992}1.5 & \cellcolor[rgb]{ .988,  .961,  .973}5.2 & \cellcolor[rgb]{ .988,  .965,  .976}4.7 & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .988,  .98,  .992}1.4 & \cellcolor[rgb]{ .973,  .976,  .992}-2.3 & \cellcolor[rgb]{ .988,  .976,  .988}2.2 & \cellcolor[rgb]{ .988,  .973,  .984}3.1 & \cellcolor[rgb]{ .988,  .988,  1}0.5 & \cellcolor[rgb]{ .988,  .976,  .988}2.5 & \cellcolor[rgb]{ .98,  .98,  .996}-1.2 & \cellcolor[rgb]{ .984,  .984,  .996}-0.1 & \cellcolor[rgb]{ .988,  .984,  .996}1.0 & \cellcolor[rgb]{ .988,  .973,  .984}3.3 & \cellcolor[rgb]{ .988,  .973,  .984}2.8 \\    bric  & \cellcolor[rgb]{ .988,  .98,  .992}1.5 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .69,  .702}51.8 & \cellcolor[rgb]{ .98,  .635,  .643}61.8 & \cellcolor[rgb]{ .98,  .698,  .706}50.7 & \cellcolor[rgb]{ .988,  .871,  .882}20.6 & \cellcolor[rgb]{ .882,  .914,  .961}-16.3 & \cellcolor[rgb]{ .988,  .871,  .878}21.1 & \cellcolor[rgb]{ .988,  .867,  .875}21.6 & \cellcolor[rgb]{ .984,  .839,  .851}25.9 & \cellcolor[rgb]{ .988,  .941,  .953}8.2 & \cellcolor[rgb]{ .875,  .91,  .961}-17.3 & \cellcolor[rgb]{ .988,  .91,  .922}13.8 & \cellcolor[rgb]{ .984,  .804,  .816}32.3 & \cellcolor[rgb]{ .988,  .894,  .906}16.4 & \cellcolor[rgb]{ .984,  .733,  .741}44.8 \\    sp500 & \cellcolor[rgb]{ .988,  .961,  .973}5.2 & \cellcolor[rgb]{ .98,  .69,  .702}51.8 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .604,  .612}67.2 & \cellcolor[rgb]{ .976,  .416,  .424}99.6 & \cellcolor[rgb]{ .988,  .91,  .922}13.8 & \cellcolor[rgb]{ .757,  .827,  .918}-35.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .988,  .878,  .89}19.5 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .988,  .988,  1}0.2 & \cellcolor[rgb]{ .839,  .882,  .945}-23.0 & \cellcolor[rgb]{ .984,  .984,  .996}-0.5 & \cellcolor[rgb]{ .984,  .776,  .788}36.9 & \cellcolor[rgb]{ .988,  .894,  .906}16.4 & \cellcolor[rgb]{ .984,  .784,  .792}35.8 \\    eurostoxx & \cellcolor[rgb]{ .988,  .965,  .976}4.7 & \cellcolor[rgb]{ .98,  .635,  .643}61.8 & \cellcolor[rgb]{ .98,  .604,  .612}67.2 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .631,  .643}61.9 & \cellcolor[rgb]{ .984,  .733,  .745}44.4 & \cellcolor[rgb]{ .796,  .855,  .933}-29.7 & \cellcolor[rgb]{ .984,  .718,  .725}47.4 & \cellcolor[rgb]{ .98,  .686,  .698}52.4 & \cellcolor[rgb]{ .984,  .729,  .741}45.3 & \cellcolor[rgb]{ .988,  .863,  .871}22.4 & \cellcolor[rgb]{ .875,  .91,  .961}-17.5 & \cellcolor[rgb]{ .988,  .933,  .945}9.8 & \cellcolor[rgb]{ .984,  .788,  .8}34.9 & \cellcolor[rgb]{ .988,  .894,  .906}16.9 & \cellcolor[rgb]{ .984,  .706,  .718}49.1 \\    nasdaq & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .98,  .698,  .706}50.7 & \cellcolor[rgb]{ .976,  .416,  .424}99.6 & \cellcolor[rgb]{ .98,  .631,  .643}61.9 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .925,  .937}11.4 & \cellcolor[rgb]{ .769,  .835,  .922}-34.1 & \cellcolor[rgb]{ .988,  .918,  .929}12.7 & \cellcolor[rgb]{ .988,  .894,  .906}16.5 & \cellcolor[rgb]{ .988,  .875,  .886}20.0 & \cellcolor[rgb]{ .973,  .976,  .992}-1.9 & \cellcolor[rgb]{ .839,  .882,  .945}-23.2 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .984,  .808,  .82}31.7 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .984,  .792,  .804}34.1 \\    bond\_europe & \cellcolor[rgb]{ .988,  .98,  .992}1.4 & \cellcolor[rgb]{ .988,  .871,  .882}20.6 & \cellcolor[rgb]{ .988,  .91,  .922}13.8 & \cellcolor[rgb]{ .984,  .733,  .745}44.4 & \cellcolor[rgb]{ .988,  .925,  .937}11.4 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .875,  .886}20.1 & \cellcolor[rgb]{ .976,  .42,  .427}98.9 & \cellcolor[rgb]{ .976,  .447,  .455}94.2 & \cellcolor[rgb]{ .98,  .624,  .635}63.5 & \cellcolor[rgb]{ .98,  .639,  .651}60.6 & \cellcolor[rgb]{ .984,  .757,  .765}40.6 & \cellcolor[rgb]{ .984,  .737,  .745}44.0 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .988,  .922,  .933}12.0 & \cellcolor[rgb]{ .984,  .835,  .847}27.0 \\    bond\_us & \cellcolor[rgb]{ .973,  .976,  .992}-2.3 & \cellcolor[rgb]{ .882,  .914,  .961}-16.3 & \cellcolor[rgb]{ .757,  .827,  .918}-35.9 & \cellcolor[rgb]{ .796,  .855,  .933}-29.7 & \cellcolor[rgb]{ .769,  .835,  .922}-34.1 & \cellcolor[rgb]{ .988,  .875,  .886}20.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .902,  .914}15.1 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .953,  .965,  .988}-5.1 & \cellcolor[rgb]{ .988,  .91,  .918}14.3 & \cellcolor[rgb]{ .984,  .761,  .773}39.5 & \cellcolor[rgb]{ .988,  .863,  .871}22.3 & \cellcolor[rgb]{ .847,  .886,  .949}-22.2 & \cellcolor[rgb]{ .941,  .953,  .98}-7.3 & \cellcolor[rgb]{ .875,  .906,  .957}-17.6 \\    bond\_eur & \cellcolor[rgb]{ .988,  .976,  .988}2.2 & \cellcolor[rgb]{ .988,  .871,  .878}21.1 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .984,  .718,  .725}47.4 & \cellcolor[rgb]{ .988,  .918,  .929}12.7 & \cellcolor[rgb]{ .976,  .42,  .427}98.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .976,  .431,  .443}96.6 & \cellcolor[rgb]{ .98,  .671,  .682}55.3 & \cellcolor[rgb]{ .98,  .651,  .659}58.9 & \cellcolor[rgb]{ .984,  .773,  .784}37.7 & \cellcolor[rgb]{ .984,  .749,  .761}41.6 & \cellcolor[rgb]{ .988,  .906,  .914}14.9 & \cellcolor[rgb]{ .988,  .922,  .933}11.8 & \cellcolor[rgb]{ .984,  .827,  .839}28.0 \\    eur   & \cellcolor[rgb]{ .988,  .973,  .984}3.1 & \cellcolor[rgb]{ .988,  .867,  .875}21.6 & \cellcolor[rgb]{ .988,  .878,  .89}19.5 & \cellcolor[rgb]{ .98,  .686,  .698}52.4 & \cellcolor[rgb]{ .988,  .894,  .906}16.5 & \cellcolor[rgb]{ .976,  .447,  .455}94.2 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .976,  .431,  .443}96.6 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .98,  .647,  .655}59.7 & \cellcolor[rgb]{ .98,  .639,  .647}60.8 & \cellcolor[rgb]{ .984,  .804,  .816}32.3 & \cellcolor[rgb]{ .984,  .769,  .776}38.6 & \cellcolor[rgb]{ .988,  .882,  .89}19.0 & \cellcolor[rgb]{ .988,  .91,  .922}13.9 & \cellcolor[rgb]{ .984,  .808,  .82}31.6 \\    gbp   & \cellcolor[rgb]{ .988,  .988,  1}0.5 & \cellcolor[rgb]{ .984,  .839,  .851}25.9 & \cellcolor[rgb]{ .988,  .863,  .875}22.0 & \cellcolor[rgb]{ .984,  .729,  .741}45.3 & \cellcolor[rgb]{ .988,  .875,  .886}20.0 & \cellcolor[rgb]{ .98,  .624,  .635}63.5 & \cellcolor[rgb]{ .953,  .965,  .988}-5.1 & \cellcolor[rgb]{ .98,  .671,  .682}55.3 & \cellcolor[rgb]{ .98,  .647,  .655}59.7 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .78,  .792}36.1 & \cellcolor[rgb]{ .988,  .906,  .918}14.7 & \cellcolor[rgb]{ .984,  .839,  .851}26.1 & \cellcolor[rgb]{ .988,  .859,  .871}22.9 & \cellcolor[rgb]{ .988,  .918,  .925}12.9 & \cellcolor[rgb]{ .984,  .835,  .847}26.9 \\    chf   & \cellcolor[rgb]{ .988,  .976,  .988}2.5 & \cellcolor[rgb]{ .988,  .941,  .953}8.2 & \cellcolor[rgb]{ .988,  .988,  1}0.2 & \cellcolor[rgb]{ .988,  .863,  .871}22.4 & \cellcolor[rgb]{ .973,  .976,  .992}-1.9 & \cellcolor[rgb]{ .98,  .639,  .651}60.6 & \cellcolor[rgb]{ .988,  .91,  .918}14.3 & \cellcolor[rgb]{ .98,  .651,  .659}58.9 & \cellcolor[rgb]{ .98,  .639,  .647}60.8 & \cellcolor[rgb]{ .984,  .78,  .792}36.1 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .776,  .784}37.3 & \cellcolor[rgb]{ .984,  .773,  .78}37.9 & \cellcolor[rgb]{ .988,  .953,  .965}6.7 & \cellcolor[rgb]{ .988,  .945,  .957}7.9 & \cellcolor[rgb]{ .988,  .871,  .878}21.0 \\    jpy   & \cellcolor[rgb]{ .98,  .98,  .996}-1.2 & \cellcolor[rgb]{ .875,  .91,  .961}-17.3 & \cellcolor[rgb]{ .839,  .882,  .945}-23.0 & \cellcolor[rgb]{ .875,  .91,  .961}-17.5 & \cellcolor[rgb]{ .839,  .882,  .945}-23.2 & \cellcolor[rgb]{ .984,  .757,  .765}40.6 & \cellcolor[rgb]{ .984,  .761,  .773}39.5 & \cellcolor[rgb]{ .984,  .773,  .784}37.7 & \cellcolor[rgb]{ .984,  .804,  .816}32.3 & \cellcolor[rgb]{ .988,  .906,  .918}14.7 & \cellcolor[rgb]{ .984,  .776,  .784}37.3 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .984,  .757,  .769}40.5 & \cellcolor[rgb]{ .941,  .953,  .98}-7.1 & \cellcolor[rgb]{ .988,  .976,  .988}2.5 & \cellcolor[rgb]{ .965,  .973,  .992}-3.3 \\    gold  & \cellcolor[rgb]{ .984,  .984,  .996}-0.1 & \cellcolor[rgb]{ .988,  .91,  .922}13.8 & \cellcolor[rgb]{ .984,  .984,  .996}-0.5 & \cellcolor[rgb]{ .988,  .933,  .945}9.8 & \cellcolor[rgb]{ .98,  .984,  .996}-0.7 & \cellcolor[rgb]{ .984,  .737,  .745}44.0 & \cellcolor[rgb]{ .988,  .863,  .871}22.3 & \cellcolor[rgb]{ .984,  .749,  .761}41.6 & \cellcolor[rgb]{ .984,  .769,  .776}38.6 & \cellcolor[rgb]{ .984,  .839,  .851}26.1 & \cellcolor[rgb]{ .984,  .773,  .78}37.9 & \cellcolor[rgb]{ .984,  .757,  .769}40.5 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .898,  .91}15.7 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .984,  .804,  .812}32.6 \\    wti   & \cellcolor[rgb]{ .988,  .984,  .996}1.0 & \cellcolor[rgb]{ .984,  .804,  .816}32.3 & \cellcolor[rgb]{ .984,  .776,  .788}36.9 & \cellcolor[rgb]{ .984,  .788,  .8}34.9 & \cellcolor[rgb]{ .984,  .808,  .82}31.7 & \cellcolor[rgb]{ .988,  .902,  .914}15.0 & \cellcolor[rgb]{ .847,  .886,  .949}-22.2 & \cellcolor[rgb]{ .988,  .906,  .914}14.9 & \cellcolor[rgb]{ .988,  .882,  .89}19.0 & \cellcolor[rgb]{ .988,  .859,  .871}22.9 & \cellcolor[rgb]{ .988,  .953,  .965}6.7 & \cellcolor[rgb]{ .941,  .953,  .98}-7.1 & \cellcolor[rgb]{ .988,  .898,  .91}15.7 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .882,  .894}18.9 & \cellcolor[rgb]{ .984,  .78,  .788}36.6 \\    grain & \cellcolor[rgb]{ .988,  .973,  .984}3.3 & \cellcolor[rgb]{ .988,  .894,  .906}16.4 & \cellcolor[rgb]{ .988,  .894,  .906}16.4 & \cellcolor[rgb]{ .988,  .894,  .906}16.9 & \cellcolor[rgb]{ .988,  .902,  .914}15.4 & \cellcolor[rgb]{ .988,  .922,  .933}12.0 & \cellcolor[rgb]{ .941,  .953,  .98}-7.3 & \cellcolor[rgb]{ .988,  .922,  .933}11.8 & \cellcolor[rgb]{ .988,  .91,  .922}13.9 & \cellcolor[rgb]{ .988,  .918,  .925}12.9 & \cellcolor[rgb]{ .988,  .945,  .957}7.9 & \cellcolor[rgb]{ .988,  .976,  .988}2.5 & \cellcolor[rgb]{ .988,  .906,  .918}14.4 & \cellcolor[rgb]{ .988,  .882,  .894}18.9 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .867,  .878}21.5 \\    metal & \cellcolor[rgb]{ .988,  .973,  .984}2.8 & \cellcolor[rgb]{ .984,  .733,  .741}44.8 & \cellcolor[rgb]{ .984,  .784,  .792}35.8 & \cellcolor[rgb]{ .984,  .706,  .718}49.1 & \cellcolor[rgb]{ .984,  .792,  .804}34.1 & \cellcolor[rgb]{ .984,  .835,  .847}27.0 & \cellcolor[rgb]{ .875,  .906,  .957}-17.6 & \cellcolor[rgb]{ .984,  .827,  .839}28.0 & \cellcolor[rgb]{ .984,  .808,  .82}31.6 & \cellcolor[rgb]{ .984,  .835,  .847}26.9 & \cellcolor[rgb]{ .988,  .871,  .878}21.0 & \cellcolor[rgb]{ .965,  .973,  .992}-3.3 & \cellcolor[rgb]{ .984,  .804,  .812}32.6 & \cellcolor[rgb]{ .984,  .78,  .788}36.6 & \cellcolor[rgb]{ .988,  .867,  .878}21.5 & \cellcolor[rgb]{ .973,  .412,  .42}100.0 \\    \end{tabular}%
+	         }
+\end{table}%
+
+
+The time it takes to calibrate the entire Bates model is of about 5 hours: the same argumentation holds here about the need to invert the characteristic function, but the additional computational time with respect to Heston is due to the increasing number of parameters that expand the dimensionality of the calibration problem.
 

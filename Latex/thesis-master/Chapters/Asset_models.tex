@@ -1,7 +1,7 @@
 \chapter{Presentation of the Models}
 \label{chpr:models}
 In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce a \textit{jump diffusion} (JD) model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple B\&S dynamics of the asset price. Then we move to the \textit{stochastic volatility} (SV) model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying which evolves as a B\&S  with a stochastic volatility term.
-The last model we will present was introduced by Bates in 1996 and it is the combination of the former two: an asset dynamics which include jumps and is driven by a stochastic volatility.
+The last model we will present was introduced by Bates in 1996 and it is the combination of the former two: an asset dynamics which includes jumps and is driven by a stochastic volatility.
 All models are first introduced in the one dimensional case and then generalised to the $n$ dimensional case which was then implemented in our code.
 
 \bigskip
@@ -219,7 +219,7 @@ where $\mathbf{S}_t$ are the prices of the assets, $j = 1, ...  ,n$ represents t
 The Heston model was presented in 1993 in \cite{HESTON93} as a new framework to model stochastic volatility in the asset price dynamics, which allows to better fit the skewness and kurtosis of the log-return distribution.
 
 \subsection{Univariate Heston Model}
-The Heston model belongs to the family of SD processes, generalizations of B\&S model in which the volatility is no more constant but is itself  stochastic.
+The Heston model belongs to the family of SV processes: generalizations of B\&S model in which the volatility is no more constant but is itself  stochastic.
 \textcolor{red}{***add examples?***}
 %Example of SD processes are Heston, CEV, sabr, 3/2 model....
 
@@ -457,7 +457,7 @@ The silver lining is, though, that to obtain expression of   $\phi_{x_t}(u)$, we
 \begin{equation}
 % heston trap solution
 \begin{split}
-\label{eq:heston_chf_trap}
+\label{eq:bates_chf_trap}
 \phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0 + D(t,u)\}\\
 A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg)\\
 B(t,u) &= i u \\
@@ -475,10 +475,19 @@ g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \fra
 
 We will used the  *  formulation for the same desirable numerical properties as already stated, while leaving out the * symbol from our notation from now on.
 
+We can perform the same computations as in the Heston case to obtain the \textit{unconditional} characteristic function of the log-returns to obtain:
+
+\begin{equation}
+\label{eq:bates_uncond_chf}
+\phi_{\Delta x_t}(u) =  \exp\{A(t,u) + D(t,u)\} M_{V_0}(C(t,u))
+\end{equation}
+where $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as considered stationary and is distributed as a Gamma distribution. In particular, it will have the same expression as in \eqref{eq:cir_mgf} with $\omega = {2\kappa} / {\sigma_V^2} $
+and $\nu= \frac{2\kappa\theta}{\sigma_V^2}$.
+
 \subsection{Parsimonious Multi-asset Bates Model}
 We will generalize the single-asset Bates model to a multi-asset model in the same way that we did with the Heston: we only model the asset-asset correlation $\rho^{S_i, S_j}$ for each pair of asset.
 
-The model definition becomes very similar to \eqref{eq:mv_heston}, with the addition of the jump part for the price processes:
+The model definition becomes is similar to \eqref{eq:mv_heston}, with the addition of the jump part for the price processes:
 
 \begin{multline}
 \begin{pmatrix}
@@ -486,7 +495,7 @@ dS_i(t) / S_i(t)\\
 dV_i(t)
 \end{pmatrix}
 = \begin{pmatrix}
-\mu_i\\
+\mu_i - \lambda_i \mu_{J_i}\\
 \kappa_i (\theta_i - V_i(t))
 \end{pmatrix}
 dt  \:+\\ 
@@ -509,5 +518,15 @@ Y_i(t) dN^i_t  \\
 \end{pmatrix}.
 \end{multline}
 
+$Y_i(t)$ are the jump intensities for each asset, such that $\log Y_i(t) \sim \mathcal{N}(\mu_{J_i}, \sigma_{J_i})$ and $N_i(t)$ are the Poisson processes that drive the arrival of the jumps with parameters $\lambda_i$.
+We have explicitly expressed the correlation between the two Brownian motions for each asset in the matrix that multiplies the stochastic differential, so that $W^{S_i}(t)$ and $W^{V_i}(t)$ are independent from each other for all $i$.
 
-T
+The only correlations that are left to specify are the ones that exist between $W^{S_i}$ and $W^{S_j}$. Following the same notation as in the previous section, the complete correlation structure is the following:
+\begin{equation}
+\label{eq:bates_cor}
+\Sigma^{(S,V)} = cor(\boldsymbol{W}^{S}, \boldsymbol{W}^{V}) = \begin{pmatrix}
+\Sigma^{S} & 0 \\
+0& I_n
+\end{pmatrix}.
+\end{equation}
+
