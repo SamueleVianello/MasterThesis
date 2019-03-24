@@ -7,6 +7,7 @@ In this chapter we will explain how the different models were calibrated and wha
 \bigskip
 
 \section{Maximum Likelihood Calibration}
+\label{sec:calib_overview}
 The calibration method that we implemented is the \textit{maximum likelihood} approach, which is a statistical method to obtain the parameters of a target distribution family that best approximate the unknown distribution of the observed data.
 
 Let us call $X = \left\lbrace x_1, x_2, ... , x_N \right\rbrace$ the set of available observations and let $\psi= \left\lbrace \alpha_1, \alpha_2, ... \right\rbrace $ the set of parameters of the distribution $ \mathcal{D}$ that we want to calibrate.
@@ -46,8 +47,9 @@ The second issue is that we need to solve a maximization problem in order to obt
 
 
 
-
+\bigskip
 \section{Calibration of Merton Model}
+\label{sec:merton_cal}
 Let us start by considering how we calibrated the jump diffusion model by Merton. 
 We will first present how to obtain the parameters for a single asset model and then move to a multi-asset one.
 
@@ -66,9 +68,9 @@ f_{\Delta x } (x; \psi) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta x | N 
 \end{equation}
 
 The formula represents an infinite mixture of Gaussian distributions, due to the infinite possible realization of the Poisson variable that accounts for the arrival of jumps. 
-This fact has a great downside in terms of maximum likelihood estimation. As discussed in \cite{HONORE1998}, the infinite Gaussian mixture causes the problem of maximizing the (log-)likelihood to be unbounded and thus intractable.
+This fact has a great downside in terms of maximum likelihood estimation. As discussed in \citep{HONORE1998}, the infinite Gaussian mixture causes the problem of maximizing the (log-)likelihood to be unbounded and thus intractable.
 
-To solve this issue we can introduce a first order approximation, as it has been proposed in \cite{BALLTOROUS1983}. 
+To solve this issue we can introduce a first order approximation, as it has been proposed in \citep{BALLTOROUS1983}. 
 Since we are considering a small time interval $\Delta t $, only the first terms of the series in \eqref{eq:merton_full_pdf} become significant. 
 In particular, we have that the probabilities to have $k = 0, 1, 2$ jumps in a single time step, as presented in \eqref{eq:pois_pdf}, are:
 \begin{subequations}
@@ -122,14 +124,14 @@ One can then proceed to maximize equation \eqref{eq:merton_loglikelihood_single}
 \label{subsec:multi_merton_cal}
 
 We now know  how to calibrate the Merton parameters when the underlying asset is one.
-In the case of multiple assets, we decided to adapt \cite{PARSIMONIOUS2011} both for the model definition and the calibration procedure.
+In the case of multiple assets, we decided to adapt \citep{PARSIMONIOUS2011} both for the model definition and the calibration procedure.
 In the referenced paper, the authors present a \textit{parsimonious approach} to the extension of Heston Model to a multi-asset framework. Since this is the approach that we will follow for the multivariate Heston calibration and for Bates as well, we decided to also perform in the same way the calibration of the parameters for Merton.
 Using a common approach will allow us to better compare the results, especially in terms of the correlation structure that is what we are ultimately interested in.
 
 The first step in the calibration algorithm is to obtain the parameters of all the single asset models that we are studying. The general way to do this was explained in the previous section. 
 
 The next step involves computing the correlation matrix between the different Brownian motions that drive each single-asset model. 
-The way this computation is carried out in \cite{PARSIMONIOUS2011} is by asset pairs: we consider each possible couple of assets and try to obtain the model correlation that best approximates the observed correlation.
+The way this computation is carried out in \citep{PARSIMONIOUS2011} is by asset pairs: we consider each possible couple of assets and try to obtain the model correlation that best approximates the observed correlation.
 Let us see how this is achieved more in detail in the case of only two assets.
 
 The problem we are trying to solve is, given the observed sample correlation $\rho_{obs}$ between two assets' returns, find the best model correlation $\rho_{model}$ that solves $\bar{\rho}(\rho_{model}) = \rho_{obs}$.
@@ -176,7 +178,7 @@ In the case of an $n$-asset model, we have to repeat the previous passages for a
 This matrix may not be a well defined correlation matrix: it may happen that $M$ is not positive definite.
 The last step to obtain a proper correlation matrix for our $n$-asset model is to perform some form of \textit{regularization} on $M$ that transforms it into a well defined correlation matrix: positive definite, with elements in the range $[-1,1]$ and ones in the main diagonal.
 
-Through empirical study performed in the reference paper \cite{PARSIMONIOUS2011}, it turns out the best algorithm between the one proposed by the authors is the regularization by J\"ackel, that we briefly present here.
+Through empirical study performed in the reference paper \citep{PARSIMONIOUS2011}, it turns out the best algorithm between the one proposed by the authors is the regularization by J\"ackel, that we briefly present here.
 
 \bigskip
 \textbf{Regularization algorithm by J\"ackel:}
@@ -192,7 +194,10 @@ Through empirical study performed in the reference paper \cite{PARSIMONIOUS2011}
 
 Hence, $\widehat{M}$ is the model correlation matrix that best represents the observed correlation values and that forms the structure of dependence between the Brownian motions that drive each asset in a multivariate Merton model.
 
+
+\bigskip
 \section{Calibration of Heston Model}
+\label{sec:heston_cal}
 Calibrating the Heston model on time-series data presents an added difficulty since we only have data on the price process, while the model also takes into consideration the dynamics of the variance as a stochastic process. 
 
 The problem of deducing the parameter of a \textit{non-observable} process from the observable states of a system is called \textit{filtering} and is in general a complicated numerical procedure. There are nonetheless a few studies in the literature on the subject of calibrating the Heston model through filtering. \textbf{***ADD REFERENCE***}
@@ -216,7 +221,7 @@ Notice that we omitted the dependence on the model parameters $\psi = \{\mu, \ka
 \bigskip
 We are now left with the distribution of $\Delta x_{[0, t] }$ as a function of $V_0$: this represents an issue since moving from $\Delta x_{[0, t] }$ to $\Delta x_t  = \Delta x_{[t, t + \Delta t]}$ we have a dependence on the value of $V_t$ which is not available. Moreover, even if data for $V_t$ was indeed available, considering different time-steps $t_i$ for $\Delta x_{t}$, the data samples of $\Delta x_{t_i}$ would not be identically distributed as they depend on levels of the variance $V_{t_i}$ which are different.
 
-Hence the need for an \textit{unconditional} characteristic function to get rid of the dependence on initial variance. We followed the approach that was introduced in \cite{DRAGULESCU2002} of integrating out the dependence on $V_0$. The computations to obtain it were presented in Chapter \ref{chpr:models}.
+Hence the need for an \textit{unconditional} characteristic function to get rid of the dependence on initial variance. We followed the approach that was introduced in \citep{DRAGULESCU2002} of integrating out the dependence on $V_0$. The computations to obtain it were presented in Chapter \ref{chpr:models}.
 The unconditional chf for the Heston model has the following expression:
 \begin{equation}
  \phi_{\Delta x_t}(u) = \exp\{A(\Delta t,u) \} M_{\Gamma}(C(\Delta t,u))
@@ -259,7 +264,7 @@ The MLE procedure will thus need to be performed including an additional constra
 
 \subsection{Multi-asset Heston Calibration}
 \label{sec:multi_heston_cal}
-As we already stated in this paper, the approach to extending the Heston model to $N$ assets that we are taking into consideration is the parsimonious multi-asset model introduced by Dimitroff et al. in \cite{PARSIMONIOUS2011}.
+As we already stated in this paper, the approach to extending the Heston model to $N$ assets that we are taking into consideration is the parsimonious multi-asset model introduced by Dimitroff et al. in \citep{PARSIMONIOUS2011}.
 It's called \textit{parsimonious} since, as we explained in chapter \ref{chpr:models}, we are only modelling the asset-asset correlations.
 
 The procedure to calibrating a $N$ asset model is the same that we presented in the multi-asset Merton section and consists of three parts.
@@ -289,8 +294,8 @@ with $z_x$ and $z_V$ that are the two components of a Gaussian vector with mean 
 The issue that arises when moving from a continuous dynamics to a discrete one as in \eqref{eq:discrete_heston} is that the variance $V_i$ might assume negative values even if the Feller condition is verified. This happens because the second and third term in the equation of the variance process may be so negative that combined with the first term $V_{i-1}$ the result is less than zero.
 Having $V_i < 0$ causes the next update at $i+1$ to be undefined since we would have to compute the square root of a negative value in a real framework.
 
-To solve this issue, a number of possible solutions have been proposed and are collected in \cite{LORD2010}. Among those we have:
-\textit{absorption}, which consists in setting $V_i = 0$ when it is negative, \textit{reflection}, taking the absolute value $V_i = |V_i|$, and finally \textit{full truncation}, which is the solution proposed in \cite{LORD2010} and the one we will implement. It is obtained modifying \eqref{eq:discrete_heston} as following:
+To solve this issue, a number of possible solutions have been proposed and are collected in \citep{LORD2010}. Among those we have:
+\textit{absorption}, which consists in setting $V_i = 0$ when it is negative, \textit{reflection}, taking the absolute value $V_i = |V_i|$, and finally \textit{full truncation}, which is the solution proposed in \citep{LORD2010} and the one we will implement. It is obtained modifying \eqref{eq:discrete_heston} as following:
 
 \begin{subequations}
 	\label{eq:full_truncation}
@@ -340,7 +345,9 @@ we need to solve \eqref{eq:expected_observed} for every possible asset pair to o
 
 The final step is to apply  J\"ackel regularization algorithm to obtain a valid correlation matrix $\widehat{M}$.
 
+\bigskip
 \section{Calibration of Bates Model}
+\label{sec:bates_cal}
 The algorithm to compute the value for the parameters of the Bates model is the same as the two previous ones, so in the following sections we will only focus on the main differences in the functions and equations.
 
 \subsection{Single Asset Bates Calibration}
@@ -360,7 +367,7 @@ Finally, to calibrate the model we need to perform the maximization of the log-l
 \end{multline}
 
 \subsection{Multi-asset Bates Calibration}
-Again, the generalization to the multivariate case we present is an adaptation from \cite{PARSIMONIOUS2011}. The model is be the same as the one in section \ref{sec:multi_heston_cal} with the addition of the jump component.
+Again, the generalization to the multivariate case we present is an adaptation from \citep{PARSIMONIOUS2011}. The model is be the same as the one in section \ref{sec:multi_heston_cal} with the addition of the jump component.
 
 The calibration algorithm is composed of the three parts concerning the calibration of all the single asset models, computing the asset-asset correlations by simulating the processes, and regularizing the model correlation matrix in order to obtain an acceptable correlation matrix, with ones in the main diagonal, all other elements in the $[-1,1]$ range and that is positive definite.
 
@@ -392,7 +399,9 @@ The random vector $\mathbf{z} = (z_{x^{(1)}}, z_{V^{(1)}}, z_{x^{(2)}}, z_{V^{(2
 
 After we have calibrate each asset-asset correlation by solving \eqref{eq:expected_observed}, we need to perform J\"ackel regularization algorithm to obtain a valid model correlation matrix.
 
+\bigskip
 \section{Empirical results}
+\label{sec:results_cal}
 We will now present the specifics of how the calibration procedure was implemented in our study, including the numerical results that it yielded.
 All the code to perform the computations was developed in R for greater portability across platforms.
 
@@ -404,7 +413,7 @@ The calibration algorithm to compute the parameters of the Merton model was impl
 In order to perform the single-asset calibration we need to specify the boundaries for the domain of the parameter set $\psi =  \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ and which optimizer we are going to use.
 In our analysis, the optimization is carried out by first taking advantage of a global optimizer and then performing a local maximization\footnote{Since most optimization packages implemented in R usually perform minimization as default, we coded the minimization of the \textit{negative} log-likelihood instead of the maximization of the (positive) log-lkelihood.}
 
-The global optimizer we adopted is implemented in the R package \texttt{DEoptim} and performs \textit{Differential Evolution} optimization: the DE algorithm starts with a population of points randomly sampled from the search space and at each iterations creates new candidate solutions and only keeps the one that best improve the objective function. More information on the package can be found in \cite{DEoptim_manual} and an example of its usage in calibrating a JD process in \cite{DEoptim_jumpdiffusion}. The general DE algorithm was first introduced in \cite{DEoptim_book}.
+The global optimizer we adopted is implemented in the R package \texttt{DEoptim} and performs \textit{Differential Evolution} optimization: the DE algorithm starts with a population of points randomly sampled from the search space and at each iterations creates new candidate solutions and only keeps the one that best improve the objective function. More information on the package can be found in \citep{DEoptim_manual} and an example of its usage in calibrating a JD process in \citep{DEoptim_jumpdiffusion}. The general DE algorithm was first introduced in \citep{DEoptim_book}.
 
 The local optimizer we used is instead implemented in the function \texttt{nlminb} and it performs a quasi-Newton optimization with box constraints. The function is included in the \texttt{stats} package which is native in most versions of R.
 
@@ -427,11 +436,11 @@ For the calibration of the parameters in the Merton model, we used the  boundari
 \bigskip
 We choose to use a different boundary on each asset for the jump mean $\mu_J$  because we aim to consider as jumps only true shocks: that is why we base our boundaries on the quantiles $q_{\alpha}(r_{sample})$ of the daily log-return distribution of our sampled data. 
 Moreover, we limit the volatility of the jumps to 0.1 in order the have  a jump distribution that is more concentrated around the value of $\mu_J$.
-This way, we also avoid having extremely high values of $\lambda$, which instead is the case in \cite{HONORE1998}. 
+This way, we also avoid having extremely high values of $\lambda$, which instead is the case in \citep{HONORE1998}. 
 For our assets, the values of the boundaries for $\mu_J$ are reported in Table \ref{tab:mu_J_bounds}.
 \begin{table}
 	\centering
-	\caption{Upper and lower bounds for the parameter $\mu_J$.}
+	\caption[Upper and lower bounds for jump mean in Merton]{Upper and lower bounds for the parameter $\mu_J$.}
 \begin{tabular}{lll}
 	
 	& lower bound & upper bound \\
@@ -467,7 +476,7 @@ The results for all the single asset calibration are presented in Table \ref{tab
 
 \begin{table}
 	\centering
-	\caption{Numerical results for the calibration of the parameters of the Merton model for each asset.}
+	\caption[Merton calibrated parameters]{Numerical results for the calibration of the parameters of the Merton model for each asset.}
 	\begin{tabular}{lrrrrr}
 		& $\mu$ & $\sigma$ & $\mu_{J}$ & $\sigma_{J}$ & $\lambda$ \\
 		\midrule
@@ -508,7 +517,7 @@ The entire procedure of calibration for the Merton model is fairly fast and only
 \begin{table}%[htbp]
   \centering
   \tiny
-  \caption{Resulting model correlation matrix for Merton. The values are in percentages and the colour goes from red for $\rho= 100\%$, to white for $\rho=0\%$ and to blue for $\rho=-100\%$.}
+  \caption[Merton correlation matrix]{Resulting model correlation matrix for Merton. The values are in percentages and the colour goes from red for $\rho= 100\%$, to white for $\rho=0\%$ and to blue for $\rho=-100\%$.}
     \noindent\makebox[\textwidth]{\begin{tabular}{lrrrrrrrrrrrrrrrr}
           & \multicolumn{1}{c}{\begin{sideways}btc\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bric\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}sp500\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eurostoxx\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}nasdaq\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_europe\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_us\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gbp\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}chf\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}jpy\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gold\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}wti\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}grain\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}metal\end{sideways}} \\
     btc   & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .988,  .945,  .957}7.7 & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .988,  .953,  .965}6.4 & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .973,  .976,  .992}-2.4 & \cellcolor[rgb]{ .988,  .976,  .988}2.7 & \cellcolor[rgb]{ .988,  .973,  .984}2.7 & \cellcolor[rgb]{ .988,  .984,  .996}1.2 & \cellcolor[rgb]{ .988,  .965,  .976}4.4 & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .984,  .984,  .996}-0.6 & \cellcolor[rgb]{ .988,  .984,  .996}1.1 & \cellcolor[rgb]{ .988,  .965,  .976}4.2 & \cellcolor[rgb]{ .988,  .965,  .976}4.2 \\
@@ -537,7 +546,7 @@ The implementation of the calibration of Heston model for each asset is very sim
 
 The main difference in the maximization of the log-likelihood function is that now we have an extra constraint given by the Feller condition: the same will be true for the calibration of the parameters in Bates model.
 
-To include this constraint in the global optimizer we used the package \texttt{DEoptimR} and the function \texttt{JDEoptim}: this performs the same differential evolution optimization but allows for the specification of extra constraints. The relative manual can be found in \cite{DEoptimR_manual}.
+To include this constraint in the global optimizer we used the package \texttt{DEoptimR} and the function \texttt{JDEoptim}: this performs the same differential evolution optimization but allows for the specification of extra constraints. The relative manual can be found in \citep{DEoptimR_manual}.
 
 For the local optimization we still used the \texttt{nlminb} function: to include the constraint we added a penalty to the negative log-likelihood function that would set its value to a high positive number (e.g. $10^8$).
 
@@ -564,7 +573,7 @@ The calibrated parameters for each asset are shown in Table \ref{tab:heston_para
 
 \begin{table}
 	\centering
-	\caption{Numerical results for the calibration of the parameters of the Heston model for each asset.}
+	\caption[Heston calibrated parameters]{Numerical results for the calibration of the parameters of the Heston model for each asset.}
 	\label{tab:heston_params}
 	\begin{tabular}{lrrrrr}
 		
@@ -601,7 +610,7 @@ The increase in the complexity in terms of the formulation of the model generate
 \begin{table}
 	\tiny
   \centering
-  \caption{Resulting correlation matrix for Heston. The values are percentages and the colour scheme is the usual.}
+  \caption[Heston correlation matrix]{Resulting correlation matrix for Heston. The values are percentages and the colour scheme is the usual.}
     \noindent\makebox[\textwidth]{\begin{tabular}{lrrrrrrrrrrrrrrrr}
           & \multicolumn{1}{c}{\begin{sideways}btc\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bric\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}sp500\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eurostoxx\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}nasdaq\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_europe\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_us\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}bond\_eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}eur\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gbp\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}chf\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}jpy\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}gold\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}wti\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}grain\end{sideways}} & \multicolumn{1}{c}{\begin{sideways}metal\end{sideways}} \\
     btc   & \cellcolor[rgb]{ .973,  .412,  .42}100.0 & \cellcolor[rgb]{ .988,  .98,  .992}1.8 & \cellcolor[rgb]{ .988,  .953,  .965}6.3 & \cellcolor[rgb]{ .988,  .957,  .969}5.9 & \cellcolor[rgb]{ .988,  .961,  .969}5.4 & \cellcolor[rgb]{ .988,  .98,  .992}1.9 & \cellcolor[rgb]{ .973,  .976,  .992}-2.2 & \cellcolor[rgb]{ .988,  .976,  .988}2.6 & \cellcolor[rgb]{ .988,  .973,  .984}2.8 & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .988,  .973,  .984}3.2 & \cellcolor[rgb]{ .976,  .976,  .992}-1.8 & \cellcolor[rgb]{ .984,  .984,  .996}-0.5 & \cellcolor[rgb]{ .988,  .984,  .996}0.9 & \cellcolor[rgb]{ .988,  .965,  .976}4.5 & \cellcolor[rgb]{ .988,  .973,  .984}3.3 \\
@@ -659,7 +668,7 @@ The increased number of parameters causes an increase complexity in the shape of
 
 \begin{table}
 	\centering
-	\caption{Numerical results for the calibration of the parameters of the Bates model for each asset.}
+	\caption[Bates calibrated parameters]{Numerical results for the calibration of the parameters of the Bates model for each asset.}
 	\label{tab:bates_params}
 	\noindent\makebox[\textwidth]{
 	\begin{tabular}{lrrrrrrrr}
@@ -693,7 +702,7 @@ The regularization using J\"ackel algorithm represents as usual the final step t
 \begin{table}  
 	\tiny
 	\centering  
-	\caption{Resulting correlation matrix for Bates. Values are percentages and the colour scheme is the same used for the other correlation matrices.}
+	\caption[Bates correlation matrix]{Resulting correlation matrix for Bates. Values are percentages and the colour scheme is the same used for the other correlation matrices.}
 	\label{tab:bates_corr}    
 	\noindent\makebox[\textwidth]{
 	\begin{tabular}{lrrrrrrrrrrrrrrrr} 

@@ -5,9 +5,10 @@ In this chapter we will explore what the optimal allocation is for our portfolio
 
 
 \section{Markowitz Mean-Variance Portfolio Optimization}
+\label{sec:markowitz_theory}
 
 Modern Portfolio Theory (MPT) is a mathematical framework for creating a portfolio of asset by maximizing the expected return for a given level of risk or by minizing the risk while maintaining the same expected gain. 
-Before the article \cite{MARKOWITZ1952} by Harry Markowitz in 1952, the concept of \textit{diversification} (the old warning \textit{not to put all your eggs in one basket}) was only driven by the experience of how markets behave.
+Before the article \citep{MARKOWITZ1952} by Harry Markowitz in 1952, the concept of \textit{diversification} (the old warning \textit{not to put all your eggs in one basket}) was only driven by the experience of how markets behave.
 Moreover, investors used to base their decisions on expected return alone and thus when given a choice between two assets with different expected returns, they would put all their money on the top performing one.
 
 With his article, that would later grant him the Nobel Prize in Economics, Markowitz introduced a more rigorous and mathematically sound framework to assembly a portfolio of assets. His key insight is that an asset's return and risk risk should not be assessed by itself, but rather by how it affects the overall portfolio risk and return.
@@ -46,7 +47,7 @@ We can now state the \textit{optimization problem} involving the minimization of
 %	\label{eq:mark_weights}
 	& \text{subject to}   &   & \mathbf{e}^T\mathbf{w} = 1 ,\\
 %	\label{eq:mark_return}
-	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2} \\
+	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2a} \\
 %	\label{eq:mark_noshort}
 	&		   &      & w_{i} \geq 0, \text{for} \: i = 1\dots N. 
 	\end{align}
@@ -60,7 +61,11 @@ The optimization problem in \eqref{eq:markowitz_opt} has a quadratic objective f
 
 As we are going to explain in the following sections, we will be mainly focusing on the case where there is no short selling, as indeed so far there are no instruments on the market that allow an investor to go short on Bitcoin and our analysis shows that the main diversification advantage comes from including Bitcoin in our portfolio. Allowing short-selling improves our diversification capability only so slightly.
 
+
+
 \section{Markowitz Efficient Frontier}
+\label{sec:markowitz_frontier}
+
 It is interesting to study the set of optimal allocation as a whole, rather than simply focus on one target return and minimizing the portfolio risk.
 To do so, we can consider a set of target returns and compute for each of them the respective minimum variance. We thus get a set of pairs $(\sigma^2, r)$ that represents the best allocation in terms of the minimum risk.
 
@@ -70,7 +75,7 @@ As a usual practice in finance, we will be plotting on the X-axis the volatility
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{Images/full_frontier.pdf}
-	\caption{The Markowitz Mean-Variance frontier obtained from our portfolio of assets, that includes Bitcoin and allows short-selling.}
+	\caption[Full Markowitz Efficient Frontier]{The Markowitz Mean-Variance frontier obtained from our portfolio of assets, that includes Bitcoin and allows short-selling.}
 	\label{fig:full_frontier}
 \end{figure}
 
@@ -101,72 +106,74 @@ Let us now take a look of what happens when we include Bitcoin in the reference 
 We can see some numerical proof of the diversification properties of adding Bitcoin to our portfolio in Table \ref{tab:markowitz_ret_on_vol} and Table	\ref{tab:markowitz_vol_on_ret}.
 
 \begin{table}
+	\centering
+	\caption[Markowitz efficient frontier on volatility]{Expected return for different levels of volatility, both including and excluding Bitcoin.}
+	\label{tab:markowitz_ret_on_vol}
 \begin{tabular}{ccc}
-\toprule
+
 Volatility Level & Return without Bitcoin & Return including Bitcoin \\
 \midrule
-2,61\% & 3,00\% & 3,00\% \\
-2,75\% & 3,89\% & 7,70\% \\
-3,00\% & 4,59\% & 10,94\% \\
-3,25\% & 5,05\% & 13,37\% \\
-3,50\% & 5,43\% & 15,48\% \\
-3,75\% & 5,76\% & 17,41\% \\
-4,00\% & 6,06\% & 19,21\% \\
-4,25\% & 6,34\% & 20,94\% \\
-4,50\% & 6,61\% & 22,60\% \\
-4,75\% & 6,87\% & 24,21\% \\
-5,00\% & 7,12\% & 25,79\% \\
-5,25\% & 7,37\% & 27,34\% \\
-5,50\% & 7,61\% & 28,86\% \\
-5,75\% & 7,85\% & 30,37\% \\
-6,00\% & 8,08\% & 31,85\% \\
-\bottomrule
+2.61\% & 3.00\% & 3.00\% \\
+2.75\% & 3.89\% & 7.70\% \\
+3.00\% & 4.59\% & 10.94\% \\
+3.25\% & 5.05\% & 13.37\% \\
+3.50\% & 5.43\% & 15.48\% \\
+3.75\% & 5.76\% & 17.41\% \\
+4.00\% & 6.06\% & 19.21\% \\
+4.25\% & 6.34\% & 20.94\% \\
+4.50\% & 6.61\% & 22.60\% \\
+4.75\% & 6.87\% & 24.21\% \\
+5.00\% & 7.12\% & 25.79\% \\
+5.25\% & 7.37\% & 27.34\% \\
+5.50\% & 7.61\% & 28.86\% \\
+5.75\% & 7.85\% & 30.37\% \\
+6.00\% & 8.08\% & 31.85\% \\
+\midrule
 \end{tabular}
-\caption{Expected return for different levels of volatility, both including and excluding Bitcoin.}
-\label{tab:markowitz_ret_on_vol}
 \end{table}
 
 \begin{table}
+	\centering
+	\caption[Markowitz efficient frontier on returns]{Volatility for different level of expected portfolio return, both including and excluding Bitcoin.}
+	\label{tab:markowitz_vol_on_ret}
 \begin{tabular}{ccc}
-	\toprule
-	Return Level & Volatiliy without Bitcoin & Volatility including Bitcoin \\
+	Return Level & Volatility without Bitcoin & Volatility including Bitcoin\\
 	\midrule
-	3,00\% & 2,61\% & 2,61\% \\
-	3,50\% & 2,61\% & 2,67\% \\
-	4,00\% & 2,61\% & 2,78\% \\
-	4,50\% & 2,62\% & 2,96\% \\
-	5,00\% & 2,63\% & 3,22\% \\
-	5,50\% & 2,65\% & 3,55\% \\
-	6,00\% & 2,67\% & 3,95\% \\
-	6,50\% & 2,69\% & 4,40\% \\
-	7,00\% & 2,71\% & 4,88\% \\
-	7,50\% & 2,74\% & 5,39\% \\
-	8,00\% & 2,77\% & 5,91\% \\
-	8,50\% & 2,80\% & 6,45\% \\
-	9,00\% & 2,84\% & 7,00\% \\
-	9,50\% & 2,88\% & 7,56\% \\
-	10,00\% & 2,92\% & 8,12\% \\
-	10,50\% & 2,96\% & 8,69\% \\
-	11,00\% & 3,01\% & 9,27\% \\
-	11,50\% & 3,05\% & 9,85\% \\
-	12,00\% & 3,10\% & 10,43\% \\
-	12,50\% & 3,16\% & 11,01\% \\
-	13,00\% & 3,21\% & 11,60\% \\
-	13,50\% & 3,26\% & 12,19\% \\
-	14,00\% & 3,32\% & 12,78\% \\
-	14,50\% & 3,38\% & 13,37\% \\
-	15,00\% & 3,44\% & 13,96\% \\
-	\bottomrule
+	3.00\% & 2.61\% & 2.61\% \\
+	3.50\% & 2.61\% & 2.67\% \\
+	4.00\% & 2.61\% & 2.78\% \\
+	4.50\% & 2.62\% & 2.96\% \\
+	5.00\% & 2.63\% & 3.22\% \\
+	5.50\% & 2.65\% & 3.55\% \\
+	6.00\% & 2.67\% & 3.95\% \\
+	6.50\% & 2.69\% & 4.40\% \\
+	7.00\% & 2.71\% & 4.88\% \\
+	7.50\% & 2.74\% & 5.39\% \\
+	8.00\% & 2.77\% & 5.91\% \\
+	8.50\% & 2.80\% & 6.45\% \\
+	9.00\% & 2.84\% & 7.00\% \\
+	9.50\% & 2.88\% & 7.56\% \\
+	10.00\% & 2.92\% & 8.12\% \\
+	10.50\% & 2.96\% & 8.69\% \\
+	11.00\% & 3.01\% & 9.27\% \\
+	11.50\% & 3.05\% & 9.85\% \\
+	12.00\% & 3.10\% & 10.43\% \\
+	12.50\% & 3.16\% & 11.01\% \\
+	13.00\% & 3.21\% & 11.60\% \\
+	13.50\% & 3.26\% & 12.19\% \\
+	14.00\% & 3.32\% & 12.78\% \\
+	14.50\% & 3.38\% & 13.37\% \\
+	15.00\% & 3.44\% & 13.96\% \\
+	\midrule
 \end{tabular}
-\caption{Volatility for different level of expected portfolio return, both including and excluding Bitcoin.}
-\label{tab:markowitz_vol_on_ret}
+
 \end{table}
 
 
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{Images/efficient_frontier.pdf}
-	\caption{The \textit{Efficient} Markowitz Mean-Variance frontier obtained from our portfolio of assets, both including and excluding Bitcoin and with short-selling or not.}
+	\caption[Markowitz Efficient frontier comparison]{The \textit{Efficient} Markowitz Mean-Variance frontier obtained from our portfolio of assets, both including and excluding Bitcoin and with short-selling or not.}
 	\label{fig:efficient_frontier_comparison}
 \end{figure}
 
@@ -180,6 +187,8 @@ To do so, we can plot the values of $\mathbf{w}$ as resulting from \eqref{eq:mar
 
 
 \section{Portfolio Optimization with CVaR as a Risk Measure}
+\label{sec:cvar_theory}
+
 We have so far studied the problem of optimal portfolio allocation through Markowitz MPT, considering the portfolio volatility as a proxy for its risk.
 This is only one of the possible choices in a more general framework in which the optimization problem to be solved maintains the same constraints but has a  different objective function. We can reformulate \eqref{eq:markowitz_opt} as follows:
 
@@ -221,13 +230,15 @@ An improved version of VaR is the \textit{Conditional Value-at-Risk} (CVaR), als
 There are two advantages in the usage of CVaR as opposed to VaR. Firstly, it can be proven that CVaR is a \textit{coherent} measure of risk, so we gain an important mathematical property that before was lacking. Secondly, we now take into account also the very extreme values that a loss distribution might have. The latter is especially true for discrete loss distributions (e.g. losses obtained from daily assets returns, which will is our main focus) since there might be a very few  truly high losses that nonetheless will be considered in the computation of CVaR. On the other hand, the VaR for discrete distributions just amounts to sorting all the possible losses in increasing order and taking the element in position $100*\alpha / N_{sample}$ as our $VaR_\alpha$. 
 
 These are the reasons that induced us to consider the CVaR as an alternative measure of portfolio risk to be inserted as the objective function to be minimized in the optimization problem \eqref{eq:general_opt}. 
-Considering the literature, there are already a few studies in which the conditional value at risk is used in the optimal portfolio allocation problem,  above all the paper by Rockafellar and Uryasev in \cite{ROCKAFELLAR2000}. Following studies include for instance in \cite{DICLEMENTE2002} and \cite{QUARANTA2008}. 
+Considering the literature, there are already a few studies in which the conditional value at risk is used in the optimal portfolio allocation problem,  above all the paper by Rockafellar and Uryasev in \citep{ROCKAFELLAR2000}. Following studies include for instance in \citep{DICLEMENTE2002} and \citep{QUARANTA2008}. 
 Most of these approaches are based on continuous loss functions, and as a further study beyond this work it could be of interest to study the diversification effect of the inclusion of Bitcoin in the assets portfolio in those frameworks. As we are about to see, our approach  focuses on optimizing the empirical historical CVaR from daily return data.
 
 
 
 
 \section{CVaR Efficient Frontier}
+\label{sec:cvar_frontier}
+
 Following a similar approach to the one we developed in previous sections regarding Markowitz optimization, we will now present the CVaR efficient frontier.
 
 \subsection{Efficient Frontier with and without Bitcoin}
@@ -257,7 +268,7 @@ We computed the efficient frontier for the two usual portfolios: one that includ
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{Images/efficient_frontier_CVaR.pdf}
-	\caption{The \textit{Efficient} Markowitz Mean-Variance frontier obtained from our portfolio of assets, both including and excluding Bitcoin and without short-selling.}
+	\caption[Efficient CVaR frontier comparison]{The \textit{Efficient} daily $CVaR_{95\%}$ frontier obtained from our portfolio of assets, both including and excluding Bitcoin and without short-selling.}
 	\label{fig:cvar_efficient_frontier_comparison}
 \end{figure}
 
@@ -271,49 +282,51 @@ Similarly, for a given level of risk, including the digital asset in our basket 
 Numerical results for this section are given in Table \ref{tab:return_cvar}.
 
 \begin{table}
+	\centering
+	\caption[CVaR efficient frontier on returns]{Results for the optimal daily portfolio CVaR of level $95\%$ for a number of daily expected returns, both including and excluding Bitcoin from our basket.}
+	\label{tab:return_cvar}
 \begin{tabular}{ccc}
-	\toprule
+	
 	Daily Return & $DailyCVaR_{95\%}$ without Bitcoin & $DailyCVaR_{95\%}$ including Bitcoin \\
 	\midrule
-	0,012\% & 0,376\% & 0,373\% \\
-	0,014\% & 0,383\% & 0,374\% \\
-	0,015\% & 0,396\% & 0,375\% \\
-	0,017\% & 0,425\% & 0,377\% \\
-	0,018\% & 0,457\% & 0,381\% \\
-	0,020\% & 0,505\% & 0,387\% \\
-	0,021\% & 0,560\% & 0,394\% \\
-	0,023\% & 0,617\% & 0,406\% \\
-	0,024\% & 0,684\% & 0,411\% \\
-	0,026\% & 0,753\% & 0,423\% \\
-	0,027\% & 0,870\% & 0,436\% \\
-	0,029\% & 0,883\% & 0,455\% \\
-	0,030\% & 0,973\% & 0,472\% \\
-	0,032\% & 1,026\% & 0,487\% \\
-	0,033\% & 1,121\% & 0,495\% \\
-	0,035\% & 1,190\% & 0,528\% \\
-	0,036\% & 1,256\% & 0,536\% \\
-	0,037\% & 1,334\% & 0,565\% \\
-	0,039\% & 1,403\% & 0,585\% \\
-	0,040\% & 1,478\% & 0,595\% \\
-	0,042\% & 1,557\% & 0,612\% \\
-	0,043\% & 1,637\% & 0,643\% \\
-	0,044\% & 1,700\% & 0,679\% \\
-	0,046\% & 1,787\% & 0,689\% \\
-	0,047\% & 1,870\% & 0,699\% \\
-	0,049\% & 1,936\% & 0,729\% \\
-	0,050\% & 2,036\% & 0,763\% \\
-	0,051\% & 2,077\% & 0,767\% \\
-	0,053\% & 2,152\% & 0,802\% \\
-	0,054\% & 2,241\% & 0,820\% \\
-	0,056\% & 2,295\% & 0,831\% \\
-	0,057\% & 2,361\% & 0,882\% \\
-	0,058\% & 2,386\% & 0,892\% \\
-	0,060\% & 2,421\% & 0,918\% \\
-	0,061\% & 2,448\% & 0,950\% \\
-	\bottomrule
+	0.012\% & 0.376\% & 0.373\% \\
+	0.014\% & 0.383\% & 0.374\% \\
+	0.015\% & 0.396\% & 0.375\% \\
+	0.017\% & 0.425\% & 0.377\% \\
+	0.018\% & 0.457\% & 0.381\% \\
+	0.020\% & 0.505\% & 0.387\% \\
+	0.021\% & 0.560\% & 0.394\% \\
+	0.023\% & 0.617\% & 0.406\% \\
+	0.024\% & 0.684\% & 0.411\% \\
+	0.026\% & 0.753\% & 0.423\% \\
+	0.027\% & 0.870\% & 0.436\% \\
+	0.029\% & 0.883\% & 0.455\% \\
+	0.030\% & 0.973\% & 0.472\% \\
+	0.032\% & 1.026\% & 0.487\% \\
+	0.033\% & 1.121\% & 0.495\% \\
+	0.035\% & 1.190\% & 0.528\% \\
+	0.036\% & 1.256\% & 0.536\% \\
+	0.037\% & 1.334\% & 0.565\% \\
+	0.039\% & 1.403\% & 0.585\% \\
+	0.040\% & 1.478\% & 0.595\% \\
+	0.042\% & 1.557\% & 0.612\% \\
+	0.043\% & 1.637\% & 0.643\% \\
+	0.044\% & 1.700\% & 0.679\% \\
+	0.046\% & 1.787\% & 0.689\% \\
+	0.047\% & 1.870\% & 0.699\% \\
+	0.049\% & 1.936\% & 0.729\% \\
+	0.050\% & 2.036\% & 0.763\% \\
+	0.051\% & 2.077\% & 0.767\% \\
+	0.053\% & 2.152\% & 0.802\% \\
+	0.054\% & 2.241\% & 0.820\% \\
+	0.056\% & 2.295\% & 0.831\% \\
+	0.057\% & 2.361\% & 0.882\% \\
+	0.058\% & 2.386\% & 0.892\% \\
+	0.060\% & 2.421\% & 0.918\% \\
+	0.061\% & 2.448\% & 0.950\% \\
+	\midrule
 \end{tabular}
-\caption{Results for the optimal daily portfolio CVaR of level $95\%$ for a number of daily expected returns, both including and excluding Bitcoin from our basket.}
-\label{tab:return_cvar}
+
 \end{table}
 
 \subsection{Portfolio Allocation}

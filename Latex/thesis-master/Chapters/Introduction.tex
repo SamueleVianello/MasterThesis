@@ -3,15 +3,57 @@
 
 \bigskip
 
-\section{Thesis structure}
 
+Bitcoin was presented in \citep{BTC2008} as a peer-to-peer protocol for electronic cash that would allow online payments to be sent directly from one party to another without going through a financial institution.
+It started off in 2009 as system that was only used by a niche of people in online cryptology forums  to experiment with the transaction protocol. It took a few years for Bitcoin to gain public notoriety, while the price kept rising and having quick crashes. 
 
+Bitcoin generated a lot of buzz in 2017, a year that registered the price increase from 998 \$ to 13,412 \$ in January 2018 with an all-time high of 19,666 \$ on the 17th of December. Since then, the price has deflated to a level of six thousand dollars in 2018 and has lately stabilized around three thousands.
+
+Setting aside the mere numerical value of the price, Bitcoin was the first protocol to solve the problem of double-spending without the need for a centralized party: bitcoins can be transferred but not duplicated, as they only exist as validated transaction in the distributed blockchain. 
+These features allow Bitcoin to have a chance at becoming a global, instantaneous and free payment network that would make wealth transfer as easy as online data sharing.
+In the same way that e-mail substituted post mail, Wikipedia and other knowledge-based website outdated paper encyclopaedias, music and film streaming services are becoming the new user friendly experience for the two industries, Bitcoin presents itself as a system to exchange wealth between users without the need for banks or other trusted third parties.
+
+Furthermore, Bitcoin is the first digital currency to achieve scarcity in the digital realm: its monetary policy based on deterministic supply mimics the progressive scarcity of gold. For these reasons we believe that Bitcoin  is \textit{digital gold} with an embedded secure network and its characteristics make it resemble more closely a crypto-asset rather than a crypto-currency.
+Even though there are a number of supporters of this idea, for instance in \citep{DYHRBERG2016} it is shown that Bitcoin possesses the same hedging abilities of gold, there is no general consensus on the matter and different studies get to the opposite result: see for example \citep{KLEIN2018}.
+
+Bitcoin has been called many names: a bubble, a Ponzi scheme, it has been defined as sound money and store of value. We agree with the latter and believe that if Bitcoin is a true digital gold, then its value will express the huge potential that has been so far limited by scepticism and misunderstandings.
+
+\bigskip
+
+In the present work, we intend to first study the correlation that exists between Bitcoin and other types of standard assets, both by analysing the empirical correlation of the returns and by calibrating more sophisticated models such as \text{jump diffusion} and \textit{stochastic volatility} models.
+Secondly, we want to explore the diversification property of adding Bitcoin to a portfolio of asset, by computing the optimal allocation for different levels of risk and expected return.
 
 
 \bigskip
 \noindent
-
+The present thesis has been written during the author's fellowship at the Digital Gold Institute, a research and development center focused on teaching, consulting, and advising about scarcity in the digital domain (Bitcoin and crypto-assets) and the underlying blockchain technology. \\
+The interested reader can visit the webpage of the institute at the link: \href{https://www.dgi.io/}{https://www.dgi.io/}.
 
 \bigskip
 
+\section{Thesis structure}
+Our work is structured into 5 chapters.
+
+\bigskip
+\noindent
+In Chapter \ref{chpr:corr_analysis} we study the empirical correlation between the assets taken into considerations(Section \ref{emp_corr}). We also take a look at the significance of each correlation value by performing two statistical tests, Pearson's \textit{t}-test and a permutation test, in Section \ref{sec:corr_significance}. Finally, Section \ref{sec:rolling_cor} investigate the rolling correlation between Bitcoin and the other assets.
+
+\bigskip
+\noindent
+In Chapter \ref{chpr:models} we present each model that we are going to adopt in our work. We first give a brief overview of the building blocks necessary to understand the mathematical framework of the models: definitions of geometric Brownian motion, compound Poisson process and CIR process are all presented in Section \ref{sec:notions}. 
+In the following sections we consider the models themselves. We  present the univariate formulations of Merton (Section \ref{sec:merton}), Heston (Section \ref{sec:heston}) and Bates (Section \ref{sec:bates}) and provide a possible generalization to the multi-asset case following the parsimonious approach presented in \citep{PARSIMONIOUS2011}
+
+\bigskip
+\noindent
+In Chapter \ref{chpr:calibration} we explain how to calibrate each different model: first we present a general overview of the maximum likelihood estimation (Section \ref{sec:calib_overview}) and then we proceed to specify this approach for our three models in Sections \ref{sec:merton_cal} , \ref{sec:heston_cal} and \ref{sec:bates_cal}. 
+The last section of the chapter is devoted to the details of our implementation and to the presentation of the numerical results (Section \ref{sec:results_cal}).
+
+\bigskip
+\noindent
+Chapter \ref{chpr:markowitz} is where we study the advantages of including Bitcoin in our portfolio. In Section \ref{sec:markowitz_theory} we present the general framework for the \textit{modern portfolio theory} by Markowitz. The following Section \ref{sec:markowitz_frontier} shows how to plot the efficient frontier and the results for the optimal allocation problem.
+In Section \ref{sec:cvar_theory} we change the portfolio risk measure to the daily CVaR and in Section \ref{sec:cvar_frontier} the efficient frontier and the allocations with the CVaR are presented with a comparison to those of Markowitz.
+
+\bigskip
+\noindent
+Chapter \ref{chpr:conclusion} concludes our work and sums up the main results. It also includes some final remarks to this study.
 
