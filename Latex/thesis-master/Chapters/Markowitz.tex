@@ -180,9 +180,28 @@ Volatility Level & Return without Bitcoin & Return including Bitcoin \\
 
 \subsection{Portfolio Allocation}
 We have so far seen the implications of introducing the digital asset in our portfolio in terms of improvement in the expected return and of lowering the overall portfolio risk.
-Let us now take a look at how Markowitz MPT allocates the money in the different assets.
+Let us now take a look at how Markowitz MPT allocates the wealth into the different assets.
 
-To do so, we can plot the values of $\mathbf{w}$ as resulting from \eqref{eq:markowitz_opt} for different levels of volatilities (and hence returns).
+To do so, we can plot the values of $\mathbf{w}$ as resulting from \eqref{eq:markowitz_opt} for different levels of returns (and hence volatilities): resulting allocations are plotted in Figure \ref{fig:markowitz_allocation}.
+
+
+\begin{figure}
+	\centering
+\begin{subfigure}{0.8\textwidth}
+	\includegraphics[width=\linewidth]{Images/markowitz_allocation}
+	\caption{Allocation including Bitcoin.}
+\end{subfigure}
+
+\begin{subfigure}{0.8\textwidth}
+	\centering
+	\includegraphics[width=\linewidth]{Images/markowitz_allocation_no_btc}
+	\caption{Allocation without Bitcoin.}
+\end{subfigure}
+\caption[Markowitz Optimal Allocations]{The figures represent the composition of the portfolio for different levels of expected returns, both including and excluding Bitcoin.  The percentage of wealth invested in Bitcoin is about 1.5\%  for  10\% expected return and  2\% for 15\%. Respective values of portfolio volatility can be found in Table \ref{tab:markowitz_vol_on_ret}.}
+\label{fig:markowitz_allocation}
+\end{figure}
+
+
 
 
 
@@ -336,4 +355,18 @@ Let us now take a look at how this second type of optimization allocates the mon
 To do so, we will plot the values of $\mathbf{w}$ as resulting from \eqref{eq:general_opt_CVaR} for different levels of daily CVaR (and hence returns).
 
 
-
+\begin{figure}
+	\centering
+	\begin{subfigure}{0.8\textwidth}
+		\includegraphics[width=\linewidth]{Images/cvar_allocation}
+		\caption{Allocation including Bitcoin.}
+	\end{subfigure}
+	
+	\begin{subfigure}{0.8\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{Images/cvar_allocation_no_btc}
+		\caption{Allocation without Bitcoin.}
+	\end{subfigure}
+	\caption[CVaR Optimal Allocations]{The figures represent the composition of the portfolio for different levels of expected returns, both including and excluding Bitcoin.  The percentage of wealth invested in Bitcoin is about 3\%  for  0.036\% expected daily return and  about 6\% for 0.058\%. Respective values of portfolio volatility can be found in Table \ref{tab:return_cvar}.}
+	\label{fig:markowitz_allocation}
+\end{figure}

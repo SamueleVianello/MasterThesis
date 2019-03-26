@@ -1,0 +1,17 @@
+\chapter{Coherent Risk Measure}
+\label{app:_risk_measure}
+
+Let us define $\mathcal{L}$ the set of general loss distributions (whether they are discrete or continuous it does not matter), and let $\rho$ be a functional defined from $\mathcal{L}$ to $\mathbb{R} \cup \{\infty\}$.
+
+We define $\rho$ to be a \textit{coherent risk measure} if the following four properties hold:
+
+\begin{itemize}
+	\item \textit{subadditivity}: $\quad \forall L_1,L_2 \in \mathcal{L}, \quad \rho(L_1+L_2) \leq \rho(L_1)+ \rho(L_2)$.
+	\item \textit{positive homogeneity}: $\quad \forall  \alpha \in \mathbb{R}, \forall L \in \mathcal{L},  \quad \rho(\alpha L) =\alpha \rho(L)$.
+	\item  \textit{translation invariance}: $\quad \forall  \alpha \in \mathbb{R}, \forall L \in \mathcal{L},  \quad \rho(L+ \alpha) = \rho(L) + \alpha$.
+	\item \textit{monotonicity}: $\quad \forall L_1,L_2 \in \mathcal{L} $ such that $L_1 \leq L_2, \quad \rho(L_1) \leq \rho(L_2)$.
+\end{itemize}
+
+The interpretation of the last three properties is immediate and it makes sense that a \textit{coherent} risk measure would satisfy them. The subadditivity is instead a little trickier but it is fundamental since negating it would mean that there is no advantage in diversification, which is known not to be true both by everyday experiences and numerical evidences.
+
+The VaR as a measure of risk is not coherent because it lacks the fundamental property of subadditivity.
