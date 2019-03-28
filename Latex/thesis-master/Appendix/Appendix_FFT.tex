@@ -21,7 +21,7 @@ The most common algorithm is the one by Cooley and Tuckey in \cite{COOLEY_FFT} a
 In our case, we want to compute the density function $f(x)$ starting from the characteristic function $\phi(u)$:
 \begin{equation}
 \label{eq:general_pdf_chf}
-f(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi(u) e^{-i u x} du
+f(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi(iu) e^{i u x} du
 \end{equation}
  using the formula in \eqref{eq:dft_single}. To do so we need first to define for which points we want the density to be computed.
  Let us say we want to obtain values of $f(x)$ for $x\in [a, b)$ using a discretization of $N=2^m$ equidistant points.
@@ -33,12 +33,12 @@ The grid for the $u_n$ is computed using $\Delta u = 2 \pi /(N \Delta x)$ and us
  
  \begin{equation*}
  \begin{split}
- f(x_k) &= \frac{1}{2 \pi} \sum_{n=0}^{N-1} \phi( u_n) \: e^{-i u_n x_k} \Delta u \\
- &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i (-N/2 + n \Delta u) x_k}  \\
- &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i n \Delta u x_k} e^{-i (-N/2) x_k}\\
- & = \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i n \Delta u (a + k \Delta x) } e^{-i (-N/2) x_k} \\
- & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \:e^{-i n \Delta u a  }\: e^{-i n \Delta u \:k \Delta x }\Big] e^{-i (-N/2) x_k} \\
- & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \bigg(\phi(-N/2 + n \Delta u) \:e^{-i n \Delta u a  }\bigg)\: e^{-i n k 2\pi/N}\Big] e^{-i (-N/2) x_k} .\\
+ f(x_k) &= \frac{1}{2 \pi} \sum_{n=0}^{N-1} \phi( i u_n) \: e^{i u_n x_k} \Delta u \\
+ &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi\big(i(-N/2 + n \Delta u)\big) \: e^{i (-N/2 + n \Delta u) x_k}  \\
+ &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi\big(i(-N/2 + n \Delta u)\big) \: e^{i n \Delta u x_k} e^{i (-N/2) x_k}\\
+ & = \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi\big(i(-N/2 + n \Delta u)\big) \: e^{i n \Delta u (a + k \Delta x) } e^{i (-N/2) x_k} \\
+ & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \phi\big(i(-N/2 + n \Delta u)\big) \:e^{i n \Delta u \:a  }\: e^{i n \Delta u \:k \Delta x }\Big] e^{i (-N/2) x_k} \\
+ & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \bigg(\phi\big(i(-N/2 + n \Delta u)\big) \:e^{i n \Delta u\: a  }\bigg)\: e^{i n k 2\pi/N}\Big] e^{i (-N/2) x_k} .\\
  \end{split}
  \end{equation*}
  

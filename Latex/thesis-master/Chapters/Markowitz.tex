@@ -1,24 +1,24 @@
 \chapter{Optimal Portfolio Allocation}
 \label{chpr:markowitz}
 
-In this chapter we will explore what the optimal allocation is for our portfolio of assets. We will study the \textit{efficient frontier} using two different risk measures, volatility and expected shortfall. In all our analyses, we will be comparing the effects that including Bitcoin in our portfolio has on the optimal allocation.
+In this chapter we will explore what the optimal allocation is for our portfolio of assets. We will study the \textit{efficient frontier} using two different risk measures, volatility and CVaR or expected shortfall. In all our analyses, we will be comparing the effects that including Bitcoin in our portfolio has on the optimal allocation.
 
 
 \section{Markowitz Mean-Variance Portfolio Optimization}
 \label{sec:markowitz_theory}
 
 Modern Portfolio Theory (MPT) is a mathematical framework for creating a portfolio of asset by maximizing the expected return for a given level of risk or by minizing the risk while maintaining the same expected gain. 
-Before the article \citep{MARKOWITZ1952} by Harry Markowitz in 1952, the concept of \textit{diversification} (the old warning \textit{not to put all your eggs in one basket}) was only driven by the experience of how markets behave.
-Moreover, investors used to base their decisions on expected return alone and thus when given a choice between two assets with different expected returns, they would put all their money on the top performing one.
+Before the article \citep{MARKOWITZ1952} by Harry Markowitz in 1952, the concept of \textit{diversification} (the old warning \textit{not to put all your eggs in one basket}) was only driven by the experience of how markets behaved.
+Moreover, investors used to base their decisions on expected return alone and thus when given a choice between two assets with different expected returns, they would simply  put all their money on the top performing one.
 
-With his article, that would later grant him the Nobel Prize in Economics, Markowitz introduced a more rigorous and mathematically sound framework to assembly a portfolio of assets. His key insight is that an asset's return and risk risk should not be assessed by itself, but rather by how it affects the overall portfolio risk and return.
+With his article, that would later grant him the Nobel Prize in Economics, Markowitz introduced a more rigorous and mathematically sound framework to assembly a portfolio of assets. His key insight is that an asset's return and risk  should not be assessed by itself, but rather by how it affects the overall portfolio risk and return.
 To do so, the \textit{variance} is used as a proxy for risk. Hence the name \textit{mean-variance } analysis that is often used as a substitute for MPT.
 
 \bigskip
-Let's introduce the assumption underlying the MPT:
+Let us introduce the assumptions underlying the MPT:
 \begin{enumerate}
 	\item Investors are \textit{risk averse}: they will always choose the less risky asset, when two assets offer the same return.  At the same time, an investor wanting a higher return has to be willing to accept a higher risk.
-	This equally holds for portfolios as a whole: given two portfolio with the different risk profiles, he will choose the less risky in case of same return and the most remunerating in case of same risk.
+	This equally holds for portfolios as a whole: given two portfolio with different risk profiles, he will choose the less risky in case of same return and the most remunerating in case of same risk.
 	\item Portfolio return is the weighted sum of the single assets' returns: in general $\mathbb{E}[R_{ptf}] = \sum_{i=1}^{N} w_i \mathbb{E}[R_i]$.
 	\item Portfolio variance is a function of both the assets variances and their correlations: $V_{ptf} = \sum_{i=1}^{N} w_i \sigma_i^2 + \sum_{i=1}^{N}\sum_{j\neq i , j=1}^{N} w_i w_j \rho_{i,j}\sigma_i\sigma_j$
 \end{enumerate}
@@ -59,7 +59,7 @@ Finally, the last constraint is in fact optional and is only used to exclude the
 
 The optimization problem in \eqref{eq:markowitz_opt} has a quadratic objective function given by \eqref{eq:sigma_ptf} and only has linear constraints\footnote{The last positivity constraint can be easily expressed in matrix form by writing $ \mathbf{I}_N\mathbf{w} \geq \mathbf{0}_N$ where $\mathbf{I}_N$ is the identity matrix of order $N$ and $\mathbf{0}_N$ is N-dimensional vector of zeros.}. Thanks to this property, the optimization can be carried out numerically by any of the quadratic/linear optimizers that are available for most programming languages.
 
-As we are going to explain in the following sections, we will be mainly focusing on the case where there is no short selling, as indeed so far there are no instruments on the market that allow an investor to go short on Bitcoin and our analysis shows that the main diversification advantage comes from including Bitcoin in our portfolio. Allowing short-selling improves our diversification capability only so slightly.
+As we are going to explain in the following sections, we will be mainly focusing on the case where there is no short selling, as indeed so far there are no instruments on the market that allow an investor to go short on Bitcoin and our analysis shows that the main diversification advantage comes from including Bitcoin in our portfolio. Allowing short-selling improves our diversification capability only very slightly.
 
 
 
@@ -84,7 +84,7 @@ It is interesting to notice how the curve divides the plane in two region: the a
 
 We can proceed with the same argument arguing in terms of best return for a given level of risk: we can thus introduce the \textit{efficient} frontier. For every level of volatility that has two corresponding points on the portfolio frontier, only the one with the higher expected return will be chosen by an investor in our reference framework: hence only the top half of the curve (from the vertex and up) will form the \textit{efficient portfolio frontier}.
 
-As a summary, let us keep in mind that any point in the volatility-expected return plane \textit{dominates} all the other portfolio allocations that are represented by points situated below and to the right of it. Conversely, that same point will be dominated by all other allocations above and to the left of it. 
+As a key result, let us keep in mind that any point in the volatility-expected return plane \textit{dominates} all the other portfolio allocations that are represented by points situated below and to the right of it. Conversely, that same point will be dominated by all other allocations above and to the left of it. 
 
 Another mathematical perk of considering only the efficient top section is that it renders the frontier a \textit{bijective} function. Hence, for each (attainable) level of risk there is one and only one corresponding expected portfolio return, and vice-versa.
 
@@ -94,13 +94,18 @@ Another mathematical perk of considering only the efficient top section is that 
 Let us now study how including Bitcoin in our portfolio of assets can help increase the diversification and obtain a higher (expected) return with a lower risk.
 
 In Figure \ref{fig:efficient_frontier_comparison} we have plotted the efficient Markowitz frontier in all possible cases: including and excluding Bitcoin while allowing short-selling, and the same two curves when short-selling is not allowed.
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/efficient_frontier.pdf}
+	\caption[Markowitz Efficient frontier comparison]{The \textit{Efficient} Markowitz Mean-Variance frontier obtained from our portfolio of assets, both including and excluding Bitcoin and with short-selling or not.}
+	\label{fig:efficient_frontier_comparison}
+\end{figure}
 
 Comparing the two green lines, we can clearly see that the exclusion of short-selling does not penalize our efficient allocation by much. The same can be stated for the red and orange curves, which represent our portfolio when excluding the digital asset.
 Thus, given our particular set of assets, allowing for short-selling does very little to improve the diversification of our portfolio.
 
 Let us now take a look of what happens when we include Bitcoin in the reference portfolio: as we can see from Figure \ref{fig:efficient_frontier_comparison}, we get a significant improvement in the expected return when considering each level of risk . Equivalently, for the same level of return we have a noticeable decrease in the volatility of our portfolio.
 
-\textbf{***AGGIUNGERE COMMENTO INCISIVO***}
 %This is indeed one of the main result of this work
 
 We can see some numerical proof of the diversification properties of adding Bitcoin to our portfolio in Table \ref{tab:markowitz_ret_on_vol} and Table	\ref{tab:markowitz_vol_on_ret}.
@@ -172,12 +177,7 @@ Volatility Level & Return without Bitcoin & Return including Bitcoin \\
 \end{table}
 
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\textwidth]{Images/efficient_frontier.pdf}
-	\caption[Markowitz Efficient frontier comparison]{The \textit{Efficient} Markowitz Mean-Variance frontier obtained from our portfolio of assets, both including and excluding Bitcoin and with short-selling or not.}
-	\label{fig:efficient_frontier_comparison}
-\end{figure}
+
 
 
 \subsection{Portfolio Allocation}
@@ -248,10 +248,10 @@ An improved version of VaR is the \textit{Conditional Value-at-Risk} (CVaR), als
 	CVaR_\alpha = \frac{1}{1-\alpha} \int_{\alpha}^{1} VaR_\gamma d\gamma 
 \end{equation}
 
-There are two advantages in the usage of CVaR as opposed to VaR. Firstly, it can be proven that CVaR is a \textit{coherent} measure of risk, so we gain an important mathematical property that before was lacking. Secondly, we now take into account also the very extreme values that a loss distribution might have. The latter is especially true for discrete loss distributions (e.g. losses obtained from daily assets returns, which will is our main focus) since there might be a very few  truly high losses that nonetheless will be considered in the computation of CVaR. On the other hand, the VaR for discrete distributions just amounts to sorting all the possible losses in increasing order and taking the element in position $100*\alpha / N_{sample}$ as our $VaR_\alpha$. 
-
+There are two advantages in the usage of CVaR as opposed to VaR. Firstly, it can be proven that CVaR is a \textit{coherent} measure of risk, so we gain an important mathematical property that before was lacking. Secondly, we now take into account also the very extreme values that a loss distribution might have. The latter is especially true for discrete loss distributions (e.g. losses obtained from daily assets returns, which will is our main focus) since there might be a very few  truly high losses that nonetheless will be considered in the computation of CVaR by taking the mean of all losses that are higher than the VaR of the same level. On the other hand, the VaR for discrete distributions just amounts to sorting all the possible losses in increasing order and taking the element in position $100*\alpha / N_{sample}$ as our $VaR_\alpha$. 
+\bigskip
 These are the reasons that induced us to consider the CVaR as an alternative measure of portfolio risk to be inserted as the objective function to be minimized in the optimization problem \eqref{eq:general_opt}. 
-Considering the literature, there are already a few studies in which the conditional value at risk is used in the optimal portfolio allocation problem,  above all the paper by Rockafellar and Uryasev in \citep{ROCKAFELLAR2000}. Following studies include for instance in \citep{DICLEMENTE2002} and \citep{QUARANTA2008}. 
+Considering the literature, there are already a few studies in which the conditional value at risk is used in the optimal portfolio allocation problem,  above all the paper by Rockafellar and Uryasev in \citep{ROCKAFELLAR2000}. Following studies include for instance  \citep{DICLEMENTE2002} and \citep{QUARANTA2008}. 
 Most of these approaches are based on continuous loss functions, and as a further study beyond this work it could be of interest to study the diversification effect of the inclusion of Bitcoin in the assets portfolio in those frameworks. As we are about to see, our approach  focuses on optimizing the empirical historical CVaR from daily return data.
 
 
@@ -260,7 +260,7 @@ Most of these approaches are based on continuous loss functions, and as a furthe
 \section{CVaR Efficient Frontier}
 \label{sec:cvar_frontier}
 
-Following a similar approach to the one we developed in previous sections regarding Markowitz optimization, we will now present the CVaR efficient frontier.
+Following a similar approach to the one we developed in previous sections regarding Markowitz optimization, we  now present the CVaR efficient frontier.
 
 \subsection{Efficient Frontier with and without Bitcoin}
 
@@ -281,7 +281,7 @@ In order to perform an  analysis similar to what we have done using Markowitz ap
 	\end{align}
 \end{subequations}
 
-To compute the daily CVaR of the portfolio, we considered the daily percentage returns for all the assets and all the time-steps available, and stored them in matrix $R$. $R$ has dimension $N_{timesteps} \times N_{assets}$. We then obtained the distribution of returns for a portfolio with weights $\mathbf{w}$ by doing $R_{ptf}(\mathbf{w}) = R \mathbf{w} $. The CVaR is now computed as explained in the previous section.
+To compute the daily CVaR of the portfolio, we consider the daily percentage returns for all the assets and all the time-steps available, and store them in matrix $R$. $R$ has dimension $N_{timesteps} \times N_{assets}$. We then obtain the empirical distribution of returns for a portfolio with weights $\mathbf{w}$ by doing $R_{ptf}(\mathbf{w}) = R \mathbf{w} $. The CVaR is finally computed as explained in the previous section.
 
 We computed the efficient frontier for the two usual portfolios: one that includes Bitcoin and the other that only contains \textit{standard} assets, both without short-selling. The graphs for both frontiers are plotted in Figure \ref{fig:cvar_efficient_frontier_comparison}.
 
@@ -355,8 +355,14 @@ Numerical results for this section are given in Table \ref{tab:return_cvar}.
 We have seen again the implications of introducing the digital asset in our portfolio in terms of improvement in the expected return and of lowering the daily CVaR of the portfolio.
 Let us now take a look at how this second type of optimization allocates the money in the different assets.
 
-To do so, we will plot the values of $\mathbf{w}$ as resulting from \eqref{eq:general_opt_CVaR} for different levels of daily CVaR (and hence returns).
+To do so, we  plot the values of $\mathbf{w}$ as resulting from \eqref{eq:general_opt_CVaR} for different levels of daily returns (and hence CVaRs). The optimal allocations are shown in Figure \ref{fig:cvar_allocation}.
 
+\bigskip
+
+By comparing the allocations obtained using the volatility as a risk measure and those using the CVaR, we can see that the allocations are quite similar: when including Bitcoin, most of the wealth is allocated in the US bond index, some smaller part in the American stock indexes and a about 3\% in Bitcoin. 
+When there is no digital asset, the wealth is initially allocated in the US bond index as before but when its return is no longer enough to reach the target, the investor has to start investing more and more in the Nasdaq and S\&P500 indexes. 
+
+The only difference is in the fact that there is a higher percentage allocated in the S\&P500 index when optimizing using the CVaR: other than that, both approaches to the optimal allocation problem suggest the same strategies.
 
 \begin{figure}
 	\centering
@@ -371,5 +377,5 @@ To do so, we will plot the values of $\mathbf{w}$ as resulting from \eqref{eq:ge
 		\caption{Allocation without Bitcoin.}
 	\end{subfigure}
 	\caption[CVaR Optimal Allocations]{The figures represent the composition of the portfolio for different levels of expected returns, both including and excluding Bitcoin.  The percentage of wealth invested in Bitcoin is about 3\%  for  0.036\% expected daily return and  about 6\% for 0.058\%. Respective values of portfolio volatility can be found in Table \ref{tab:return_cvar}.}
-	\label{fig:markowitz_allocation}
+	\label{fig:cvar_allocation}
 \end{figure}
