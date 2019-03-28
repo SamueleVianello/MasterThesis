@@ -4,19 +4,45 @@
 The Fast Fourier Transform is an algorithm that enables us to compute the Discrete Fourier Transform faster. In particular, a \textit{na\"ive} implementation of the DFT requires a number of operations on the order of $\mathcal{O}(N^2)$, where $N$ is the number of points that we use for the discrete transform. An FFT algorithm performs the same computation using $\mathcal{O}(N \log N)$ operations.
 
 
- The discrete Fourier transform for a set $x = x_0 , ..., x_{N-1}$ is  represented by $N$ values $u_k$, $k=0, ..., N-1$:
+ The discrete Fourier transform for a set $u = u_0 , ..., u_{N-1}$ is  represented by $N$ values $x_k$, $k=0, ..., N-1$:
 \begin{equation}
 \label{eq:dft_single}
-	u_k = \sum_{n=0}^{N-1} x_n e^{-i  k n 2\pi / N}, \: k= 0, \dots, N-1.
+	x_k = \sum_{n=0}^{N-1} u_n \:e^{-i  k n 2\pi / N}, \: k= 0, \dots, N-1.
 \end{equation}
 
 
-As we can see, we have to perform $\mathcal{O}(N)$ computations for each $u_k$, for a total of $\mathcal{O}(N^2)$ operations.
-The FFT is a smart way to compute the same quantities by dividing $ N = N_1N_2$ into two factors $ N_1$ and $N_2$, computing the DFT for the two smaller samples and then aggregating the results to return the final $N$ values of $u_k$.
+As we can see, we have to perform $\mathcal{O}(N)$ computations for each $x_k$, for a total of $\mathcal{O}(N^2)$ operations.
+The FFT is a smart way to compute the same quantities by dividing $ N = N_1N_2$ into two factors $ N_1$ and $N_2$, computing the DFT for the two smaller samples and then aggregating the results to return the final $N$ values of $x_k$.
 
-The factorization of $N$ can be performed recursively on $N_1$ and $N_2$ as long as they are not primes. The usual approach is thus to take $N=2^n$ as the $n$-th power of 2. 
+The factorization of $N$ can be performed recursively on $N_1$ and $N_2$ as long as they are not primes. The usual approach is thus to take $N=2^m$ as the $m$-th power of 2. 
 The most common algorithm is the one by Cooley and Tuckey in \cite{COOLEY_FFT} and is the one that is usually implemented in most computational tools.
 
+
+In our case, we want to compute the density function $f(x)$ starting from the characteristic function $\phi(u)$:
+\begin{equation}
+\label{eq:general_pdf_chf}
+f(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi(u) e^{-i u x} du
+\end{equation}
+ using the formula in \eqref{eq:dft_single}. To do so we need first to define for which points we want the density to be computed.
+ Let us say we want to obtain values of $f(x)$ for $x\in [a, b)$ using a discretization of $N=2^m$ equidistant points.
+ Thus we will have $x_k = a + k \Delta x$ where $\Delta x = (b-a)/N$. 
+ 
+The grid for the $u_n$ is computed using $\Delta u = 2 \pi /(N \Delta x)$ and using an interval centred on zero: $u_n = - N/2 + n \Delta u$. This allows us to obtain a formulation that is similar to \eqref{eq:dft_single} and to take advantage of the FFT algorithm, as we will now show.
+ 
+ We first obtain a discretized version of \eqref{eq:general_pdf_chf} by rectangular approximation and then perform some manipulations to arrive at an expression that looks like that of the DFT:
+ 
+ \begin{equation*}
+ \begin{split}
+ f(x_k) &= \frac{1}{2 \pi} \sum_{n=0}^{N-1} \phi( u_n) \: e^{-i u_n x_k} \Delta u \\
+ &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i (-N/2 + n \Delta u) x_k}  \\
+ &= \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i n \Delta u x_k} e^{-i (-N/2) x_k}\\
+ & = \frac{\Delta u}{2 \pi} \sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \: e^{-i n \Delta u (a + k \Delta x) } e^{-i (-N/2) x_k} \\
+ & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \phi(-N/2 + n \Delta u) \:e^{-i n \Delta u a  }\: e^{-i n \Delta u \:k \Delta x }\Big] e^{-i (-N/2) x_k} \\
+ & = \frac{\Delta u}{2 \pi} \bigg[\sum_{n=0}^{N-1} \bigg(\phi(-N/2 + n \Delta u) \:e^{-i n \Delta u a  }\bigg)\: e^{-i n k 2\pi/N}\Big] e^{-i (-N/2) x_k} .\\
+ \end{split}
+ \end{equation*}
+ 
+ We can see that in the last line the part that is limited by the square brackets has the same form as  \eqref{eq:dft_single} and thus it can be quickly computed using any FFT algorithm.
 %If we compute it for $N$ equispaced values of $u$, $u_k = k \Delta u$ and from a similarly equispaced grid of $x$, $x_n = n \Delta x $ we can rewrite \ref{eq:dft_single} as:
 %\begin{equation}
 %F(u_k) = \sum_{n=0}^{N-1} f(x_n) e^{-i k n  \Delta u  \Delta x} \Delta x, \: k= 0, \dots, N-1

@@ -106,6 +106,7 @@ Let us now take a look of what happens when we include Bitcoin in the reference 
 We can see some numerical proof of the diversification properties of adding Bitcoin to our portfolio in Table \ref{tab:markowitz_ret_on_vol} and Table	\ref{tab:markowitz_vol_on_ret}.
 
 \begin{table}
+	\small
 	\centering
 	\caption[Markowitz efficient frontier on volatility]{Expected return for different levels of volatility, both including and excluding Bitcoin.}
 	\label{tab:markowitz_ret_on_vol}
@@ -133,6 +134,7 @@ Volatility Level & Return without Bitcoin & Return including Bitcoin \\
 \end{table}
 
 \begin{table}
+	\small
 	\centering
 	\caption[Markowitz efficient frontier on returns]{Volatility for different level of expected portfolio return, both including and excluding Bitcoin.}
 	\label{tab:markowitz_vol_on_ret}
@@ -238,9 +240,9 @@ VaR is a vastly popular and common way to measure the so called ``tail-risk'': t
 Its advantage is that it considers only the downside of the expected return as opposed to what the volatility does.
 
 However, VaR has drawbacks as its mathematical definition does not make it a \textit{coherent measure of risk}. Specifically, it lacks the property of sub-additivity: the VaR of two different portfolios  considered as one may be greater than the sum of the two single VaRs. This is in direct contradiction with the principle of diversification.
+For the complete definition of \textit{coherent} risk measure, please refer to Appendix \ref{app:_risk_measure}.
 
-\textbf{aggiungere appendice dove si definisce una misura coerente di rischio con le 3/4 proprieties}
-
+\bigskip
 An improved version of VaR is the \textit{Conditional Value-at-Risk} (CVaR), also referred to as \textit{expected shortfall} since indeed it is defined as the average loss among the values of the loss distribution that exceed the corresponding VaR level. Thus, for a continuous loss distribution is defined as:
 \begin{equation}
 	CVaR_\alpha = \frac{1}{1-\alpha} \int_{\alpha}^{1} VaR_\gamma d\gamma 
@@ -301,6 +303,7 @@ Similarly, for a given level of risk, including the digital asset in our basket 
 Numerical results for this section are given in Table \ref{tab:return_cvar}.
 
 \begin{table}
+	\small
 	\centering
 	\caption[CVaR efficient frontier on returns]{Results for the optimal daily portfolio CVaR of level $95\%$ for a number of daily expected returns, both including and excluding Bitcoin from our basket.}
 	\label{tab:return_cvar}

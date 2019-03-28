@@ -77,7 +77,6 @@ for (i in 1:n_wind){
     p_values[j-1] = PermutationTestCorr(btc[idx],my_returns[idx,2*j])
   }
   roll_pvalue[i,] = p_values
-
 }
 
 colnames(roll_corr)= colnames(my_returns[2*(2:(n_assets))])
@@ -126,10 +125,9 @@ for (i in 1:n_wind){
     # p_values[j-1] = rcorr(btc[idx],my_returns[idx,2*j], type = "pearson")$P['x','y']
     p_values[j-1] = PermutationTestCorr(btc[idx],my_returns[idx,2*j])
   }
-  
   roll_pvalue[i,] = p_values
-  
 }
+
 
 colnames(roll_corr)= colnames(my_returns[2*(2:(n_assets))])
 colnames(roll_pvalue)= colnames(my_returns[2*(2:(n_assets))])
@@ -140,12 +138,11 @@ colnames(roll_pvalue)= colnames(my_returns[2*(2:(n_assets))])
 # }
 
 
-
 library(zoo)
 zoo_roll_corr = zoo(roll_corr, order.by = end_times)
 
 ########
-
+require(DescTools)
 
 y_min = -0.4
 y_max =  0.4
@@ -156,32 +153,33 @@ layout(matrix(c(1,2,3,4,1,2,3,4,5,6,7,8),nrow= 3,ncol=4, byrow=TRUE))
 plot(end_times, roll_corr[,'bric'], type = 'l', ylab = "roll_corr", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])
 lines(end_times_3y, roll_corr_3y[,'bric'], type = 'l', ylab = "Bric",col='blue')
-title("BRIC")
+title("bric")
 grid()
 
 plot(end_times, roll_corr[,'sp500'], type = 'l',ylab = "roll_corr", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'sp500'])
 lines(end_times_3y, roll_corr_3y[,'sp500'], type = 'l', ylab = "sp500",col='blue')
-title("SP500")
+title("sp500")
 grid()
 
 plot(end_times, roll_corr[,'eurostoxx'], type = 'l',ylab = "roll_corr", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'eurostoxx'], type = 'l', ylab = "eurostoxx",col='blue')
-title("EUROSTOXX")
+title("eurostoxx")
 grid()
 
 plot(end_times, roll_corr[,'nasdaq'], type = 'l',ylab = "roll_corr", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'eurostoxx'])
 lines(end_times_3y, roll_corr_3y[,'nasdaq'], type = 'l', ylab = "nasdaq",col='blue')
-title("NASDAQ")
+title("nasdaq")
 grid()
 
 
-
+Mar(top=1)
 plot(end_times, roll_pvalue[,'bric'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
 lines(end_times_3y,roll_pvalue_3y[,'bric'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
+
 
 plot(end_times, roll_pvalue[,'sp500'],type = 'b',pch=16,ylim = c(0,1),ylab = "pvalue")
 lines(end_times_3y,roll_pvalue_3y[,'sp500'],type = 'b',pch=16,col = 'blue')
@@ -232,6 +230,7 @@ abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "
 grid(nx=NA,  ny =NULL)
 
 
+Mar(top=1)
 plot(end_times, roll_pvalue[,'gold'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
 lines(end_times_3y,roll_pvalue_3y[,'gold'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
@@ -257,6 +256,7 @@ abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "
 
 # plot against fx
 x11()
+# layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE))
 layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE), heights = rep(1)/3)
 #par(mar=c(0, 0, 1, 1) + 0.0)
 plot(end_times, roll_corr[,'eur'], type = 'l', ylab = "roll_corr", ylim = c(y_min,y_max))
@@ -284,6 +284,7 @@ title("jpy")
 grid()
 
 
+Mar(top=1)
 plot(end_times, roll_pvalue[,'eur'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
 lines(end_times_3y,roll_pvalue_3y[,'eur'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
@@ -334,7 +335,7 @@ grid()
 
 
 
-
+Mar(top=0.1)
 plot(end_times, roll_pvalue[,'bond_europe'],type = 'b',pch=16,ylim = c(0,1), ylab = "pvalue")
 lines(end_times_3y,roll_pvalue_3y[,'bond_europe'],type = 'b',pch=16,col = 'blue')
 abline(h = .05,col = 'grey')
@@ -352,7 +353,7 @@ abline(h = .05,col = 'grey')
 # lines(end_times_3y,roll_pvalue_3y[,'vix'],type = 'b',pch=16,col = 'blue')
 # abline(h = .05,col = 'grey')
 
-# dev.copy2pdf(file="rolling_bonds.pdf")
-# 
-# dev.off()
+dev.copy2pdf(file="rolling_bonds.pdf")
+
+dev.off()
 

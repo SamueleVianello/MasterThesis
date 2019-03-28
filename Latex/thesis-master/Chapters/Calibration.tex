@@ -2,8 +2,8 @@
 \label{chpr:calibration}
 
 In this chapter we will explain how the different models were calibrated and what difficulties were overcome. Empirical results are included for each section.
+In particular, we will be calibrating the parameters under the physical measure though maximum likelihood estimation since we only have data for the time-series of the asset prices. 
 
-\textbf{*****aggiungere commento su diversi tipi di calibrazione e in particolare sul fatto che calibriamo su timeseries*****}
 \bigskip
 
 \section{Maximum Likelihood Calibration}
@@ -56,9 +56,9 @@ We will first present how to obtain the parameters for a single asset model and 
 
 
 \subsection{Single Asset Merton Calibration}
-As we already introduced, the calibration method that we used is the maximum likelihood approach.
+As we already introduced, the calibration method that we use is the maximum likelihood approach.
 
-We are going to calibrate the values of the 5 parameters $\psi= \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ of the jump diffusion model based on the observations of the log-returns $\Delta x_i = \log \frac{S_i}{S_{i-1}}$ for each time interval $\Delta t$. In our analysis, since we are going to use \textit{daily} log-returns, $\Delta t = 1/255$. 
+We are going to calibrate the values of the 5 parameters $\psi= \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ of the jump diffusion model based on the observations of the log-returns $\Delta x_i = \log \frac{S_i}{S_{i-1}}$ for each time interval $\Delta t$. In our analysis, since we are using \textit{daily} log-returns, $\Delta t = 1/255$. 
 
 Considering daily log-returns allows us to assume that the different samples of $\Delta x$ are independent and identically distributed according to the distribution of log-returns in Merton model given in \eqref{transitional}.
 For ease of reading, we present it again here:
@@ -114,10 +114,10 @@ The distribution of the sample log-returns is thus given by equation \eqref{eq:m
 
 One can then proceed to maximize equation \eqref{eq:merton_loglikelihood_single} to obtain the optimal parameter set $\psi$:
 \begin{equation}
-\hat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\hat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x),
 \end{equation}
 \begin{equation}
-\Psi = \{ (\mu, \sigma, \mu_J, \sigma_J, \lambda) \in \mathbb{R}^5 \: |\: \sigma,\sigma_J, \lambda >0\}
+\Psi = \{ (\mu, \sigma, \mu_J, \sigma_J, \lambda) \in \mathbb{R}^5 \: |\: \sigma,\sigma_J, \lambda >0\}.
 \end{equation}
 
 \subsection{Multi-asset Merton Calibration}
@@ -237,11 +237,11 @@ with $M_{\Gamma}$ as the moment generating function of a Gamma distribution:
 \end{align}
 \end{subequations}
 
-We now have a specific expression for the unconditional characteristic function of $\Delta x_t$ and we can obtain the corresponding density by Fourier inversion:
+We now have a specific expression for the unconditional characteristic function of $\Delta x_t$ and we can obtain the corresponding density by Fourier transform:
 
 \begin{equation}
 \label{eq:uncond_inversion}
-f_{\Delta x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty}  \phi_{\Delta x_t}(i u) e^{i u x} du
+f_{\Delta x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty}  \phi_{\Delta x_t}(i u) e^{-i u x} du
 \end{equation}
 
 
@@ -438,11 +438,13 @@ We choose to use a different boundary on each asset for the jump mean $\mu_J$  b
 Moreover, we limit the volatility of the jumps to 0.1 in order the have  a jump distribution that is more concentrated around the value of $\mu_J$.
 This way, we also avoid having extremely high values of $\lambda$, which instead is the case in \citep{HONORE1998}. 
 For our assets, the values of the boundaries for $\mu_J$ are reported in Table \ref{tab:mu_J_bounds}.
+
+
 \begin{table}
+	\small
 	\centering
 	\caption[Upper and lower bounds for jump mean in Merton]{Upper and lower bounds for the parameter $\mu_J$.}
 \begin{tabular}{lll}
-	
 	& lower bound & upper bound \\
 		\midrule
 	btc & -0.9316 & -0.2541 \\
@@ -475,6 +477,7 @@ The results for all the single asset calibration are presented in Table \ref{tab
 
 
 \begin{table}
+	\small
 	\centering
 	\caption[Merton calibrated parameters]{Numerical results for the calibration of the parameters of the Merton model for each asset.}
 	\begin{tabular}{lrrrrr}
@@ -572,6 +575,7 @@ For the parameter $\rho$ that models the asymmetry of the return distribution we
 The calibrated parameters for each asset are shown in Table \ref{tab:heston_params}.
 
 \begin{table}
+	\small
 	\centering
 	\caption[Heston calibrated parameters]{Numerical results for the calibration of the parameters of the Heston model for each asset.}
 	\label{tab:heston_params}
@@ -667,6 +671,7 @@ The increased number of parameters causes an increase complexity in the shape of
 
 
 \begin{table}
+	\small
 	\centering
 	\caption[Bates calibrated parameters]{Numerical results for the calibration of the parameters of the Bates model for each asset.}
 	\label{tab:bates_params}

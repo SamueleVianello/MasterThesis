@@ -30,6 +30,7 @@ source('CalibrationMVMerton.R')
 #               'vix_date','vix')
 # 
 # my_data = my_data[,var_names]
+
 # 
 # my_returns_values = log(my_data[1:(leng-1),2*(1:N_assets)]/my_data[2:leng,2*(1:N_assets)] )
 # my_returns =my_data[1:(leng-1),]

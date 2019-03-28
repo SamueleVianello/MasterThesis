@@ -1,6 +1,6 @@
 \chapter{Presentation of the Models}
 \label{chpr:models}
-In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce a \textit{jump diffusion} (JD) model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple B\&S dynamics of the asset price. Then we move to the \textit{stochastic volatility} (SV) model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying which evolves as a B\&S  with a stochastic volatility term.
+In this chapter we will present the stochastic frameworks in which we developed our analysis. We first introduce a \textit{jump diffusion} (JD) model presented in 1976 by R.C. Merton: he added log-normal jumps to the simple Black\&Scholes dynamics of the asset price. Then we move to the \textit{stochastic volatility} (SV) model of Heston 1993. Heston introduced a new stochastic process that accounts for the variance of the underlying price which evolves as in B\&S  but with a stochastic volatility term.
 The last model we will present was introduced by Bates in 1996 and it is the combination of the former two: an asset dynamics which includes jumps and is driven by a stochastic volatility.
 All models are first introduced in the one dimensional case and then generalised to the $n$ dimensional case which was then implemented in our code.
 
@@ -13,52 +13,53 @@ CIR process. All of these building blocks will be required to fully understand t
 
 
 \subsection{Geometric Brownian Motion}
-The simplest continuous dynamics to describe the price of an asset is that of a geometric brownian motion:
+The simplest continuous dynamics to describe the price of an asset is that of a geometric Brownian motion:
 \begin{equation}
 	\label{eq:GBM}
-	\frac{dS_t}{S_t} = \mu dt + \sigma dW_t
+	\frac{dS_t}{S_t} = \mu dt + \sigma dW_t,
 \end{equation}
 
-where $S_t$ represents the price of the asset at time $t$, $\mu$ is the (constant) drift and $\sigma$ is the (constant) volatility. $W_t$ is a Wiener process.
-This is the standard and most widespread stichastic differential equation to model asset dynamics, so we will only present those results that will be later used in our study.
+where $S_t$ represents the price of the asset at time $t$, $\mu$ is the (constant) drift and $\sigma$ is the (constant) volatility. $W_t$ is a Wiener process (or Brownian motion).
+This is the standard and most widespread stochastic differential equation to model asset dynamics, so we will only present those results that will be later used in our study.
 
 
 Applying Ito's lemma to the previous equation, we can also explicitly express the dynamics of the log-returns $X_t = log(S_t)$ , obtaining:
 \begin{equation}
-	dX_t = (\mu - 	\frac{\sigma^2}{2}) dt + \sigma dW_t
+	dX_t = (\mu - 	\frac{\sigma^2}{2}) dt + \sigma dW_t .
 \end{equation}
 
 This stochastic differential has a simple solution which can be computed via stochastic integrals and allows us to describe the dynamics of the log-returns at each instant $t$ starting from $t=0$:
 \begin{equation}
 	\label{GBM_ret_sol}
-	X_t = X_0 + (\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t
+	X_t = X_0 + (\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t.
 \end{equation}
 
 Thanks to (\ref{GBM_ret_sol}) we can now express the price dynamics of the asset by inverting the relation with the returns: $S_t = e^{X_t}$. 
 We thus obtain the solution to (\ref{eq:GBM}):
 \begin{equation}
-	S_t = S_0 \;e^{(\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t}
+	S_t = S_0 \;e^{(\mu - 	\frac{\sigma^2}{2}) t + \sigma W_t}.
 \end{equation}
 
-Given that $S_t = e^{X_t}$, that $X_t$ by its equation is a generalized brownian motion and hence we have $X_t - X_0 \sim \mathcal{N}(\mu - 	\frac{\sigma^2}{2}, \sigma^2)$, the resulting distribution of prices at time $t$ as units of the initial value is distibuted as a log-normal.
+Given that $S_t = e^{X_t}$ and that $X_t$ by its equation is a generalized brownian motion and hence we have $X_t - X_0 \sim \mathcal{N}(\mu - 	\frac{\sigma^2}{2}, \sigma^2)$, the resulting distribution of prices at time $t$ as units of the initial value is distibuted as a log-normal.
 
 The great success of these framework comes from the simplicity of its dynamics. In particular, since the log-returns follow a Gaussian distribution, $\mu$ and $\sigma$ are easy to calibrate from data and the formulas for pricing options  are often explicit.
-As one can imagine, a simple model can only explain simple phenomena: that's why we have such a great deal of \textit{new and improved} version of equation \ref{eq:GBM}.
+As one can imagine, a simple model can only explain simple phenomena: that's why we have such a great deal of \textit{new and improved} version of equation \eqref{eq:GBM}.
 
 \subsection{Poisson Process and Compound Poisson Process}
+\label{sub:poisson}
 Consider a sequence of \textit{independent} exponential random variables  $\{\tau_i\}_{i\geq1}$ with parameter $\lambda$\footnote{An exponential random variable $\tau$ of parameter $\lambda$ has a cumulative distibution function of the form: $\mathbb{P}(\tau \geq y) = e^{-\lambda y}$} and let $T_n = \sum_{i=1}^{n}\tau_i$. Then we can define the \textit{Poisson process} $N_t$ as
 \begin{equation}
- 	N_t = \sum_{n\geq 1} \mathds{1}_{t \geq T_n}
+ 	N_t = \sum_{n\geq 1} \mathds{1}_{t \geq T_n},
 \end{equation}
 
 where $\mathds{1}_{condition}$ is 1 if the \textit{condition} is true, 0 if it is false.
 
-$N_t$ is thus a piece-wise constant RCLL\footnote{RCLL is shorthand for right continuous with left limit.} process with jumps that happen at times $T_n$ and are all of size 1, as we can see from Figure \cref{fig:pois}.
+$N_t$ is thus a piece-wise constant RCLL\footnote{RCLL is shorthand for right continuous with left limit.} process with jumps that happen at times $T_n$ and are all of size 1, as we can see from Figure \ref{fig:pois}.
 An important property of Posson processes is that they have independent and stationary increments, meaning that the increment of $N_t - N_s$ (with $s\leq t$) is independent from the history of the process up to $N_s$ and has the same law of $N_{t-s}$.
 At any time $t$, $N_t$ is distributed as a Poisson of parameter $\lambda t$, which means it is a discrete random variable on the integer set with
 \begin{equation}
 \label{eq:pois_pdf}
-\mathbb{P}( N_t = n) = e^{-\lambda t}\frac{(\lambda t)^n}{n!}
+\mathbb{P}( N_t = n) = e^{-\lambda t}\frac{(\lambda t)^n}{n!}.
 \end{equation}
 
 
@@ -82,20 +83,20 @@ At any time $t$, $N_t$ is distributed as a Poisson of parameter $\lambda t$, whi
 	\label{fig:pois_process}
 \end{figure}
 
-When working with jump diffusion process, it is often the case that there is no explicit formula for its density, thus usually we resort to characteristic functions. The characteristic function of $N_t$ is given by 
+When working with jump diffusion processes, it is often the case that there is no explicit formula for its density, thus  we usually resort to characteristic functions. The characteristic function of $N_t$ is given by 
 \begin{equation}
 \label{eq:pois_chf}
 	\phi_{N_t}(u)=e^{\lambda t (e^{iu}-1)}
 \end{equation}
 
-The computations to get \ref{eq:pois_chf} from \ref{eq:pois_pdf} are carried out in Appendix \ref{app:A}. 
+The computations to get \eqref{eq:pois_chf} from \eqref{eq:pois_pdf} are carried out in Appendix \ref{app:A}. 
 
 \bigskip
-For financial applications, it is of little interest to have a process with a single possible jump size. The \textit{compound} Poisson processes are a generalization of Poisson processes  where  the jump sizes can have an arbitrary distribution. More precisely, consider a Poisson process $N_t$ with parameter $\lambda$ and a sequence of i.i.d\footnote{i.i.d stands for independent and identically distributed.} variables ${Y_i}_{i\geq 1}$ with law $f_Y(y)$. Then the process defined by
+For financial applications, it is of little interest to have a process with a single possible jump size. The \textit{compound} Poisson processes are a generalization of Poisson processes  where  the jump sizes can have an arbitrary distribution. More precisely, consider a Poisson process $N_t$ with parameter $\lambda$ and a sequence of i.i.d\footnote{i.i.d stands for independent and identically distributed.} variables $\{Y_i\}_{i\geq 1}$ with law $f_Y(y)$. Then the process defined by
 \begin{equation}
 	X_t = \sum_{n=1}^{N_t} Y_i
 \end{equation}
-is a compound Poisson process. Examples of this kind of process are plotted in Figure \cref{fig:compound_pois}.
+is a compound Poisson process. Examples of this kind of process are plotted in Figure \ref{fig:compound_pois}.
 
 As before, we developed the computations to obtain an expression for the characteristic function of $X_t$ in Appendix \ref{app:A}. The resulting expression depends on the distribution of $Y$, specifically from its characteristic function $\phi_Y(u)$:
 
@@ -106,20 +107,20 @@ As before, we developed the computations to obtain an expression for the charact
 Both in Merton's and in the Heston's models there will be a jump component driven by a compound Poisson process with Gaussian jump sizes, as we will see in the following paragraphs.
 
 \subsection{CIR Process}
-The CIR process was introduced in \citep{CIR85} in 1985 by Cox, Ingersoll and Ross (hence the name CIR) as a generalization of a Vasicek process to model the mean reverting dynamics of interest rates.
+The CIR process was introduced in \citep{CIR85} in 1985 by Cox, Ingersoll and Ross (hence the name CIR) as a generalization of a Vasicek process \citep{VASICEK77} to model the mean reverting dynamics of interest rates.
 Following their notation, the differential equation for the  evolution of the rate is given by:
 \begin{equation}
 \label{eq:cir}
 	dr_t = \kappa(\theta - r_t) dt + \sigma \sqrt{r_t}dW_t
 \end{equation}
 where we have three parameters that characterize it: $\theta$ is the \textit{long-term value} of the rate, the asymptotic level which it tends to settle at in the long run;$\kappa$ is the \textit{mean-reversion rate}, the speed at which the rate is pulled back to the $\theta$ value; finally $\sigma$ accounts for the \textit{volatility} of the stochastic component.
-When $\kappa,\theta >0$, equation (\ref{eq:cir}) represents a first order mean-reverting auto-regressive process. Moreover, thanks to \textbf{*****add citation*******}, we know that the process will not hit zero if the following condition is satisfied:
+When $\kappa,\theta >0$, equation (\ref{eq:cir}) represents a first order mean-reverting auto-regressive process. Moreover, as reported in \citep{HESTONTRAP}, we know that the process will not hit zero if the following condition is satisfied:
 \begin{equation}
-	2\kappa\theta > \sigma^2
+	2\kappa\theta > \sigma^2.
 \end{equation}
-This condition is usually referred to as \textit{Feller} condition, from the author of the cited paper in which this result was first presented.
+This condition is usually referred to as \textit{Feller} condition, as stated in the referenced paper.
 
-An example of a CIR process is shown in Figure (\ref{fig:cir_proc}), where the mean-reverting effect is  clearly visible.
+An example of a CIR process is shown in Figure \ref{fig:cir_proc}, where the mean-reverting effect is  clearly visible.
 
 \begin{figure}
 	\centering
@@ -135,17 +136,17 @@ The non negativity of the CIR process will become fundamental when we introduce 
 Since it will be useful later on in the paper, we also present the \textit{stationary} distribution of $r_t$. Due to the mean reversion effect, $r_t$ will approach a \textit{gamma} distribution with density:
 \begin{equation}
 \label{eq:cir_pdf}
-f_{r_\infty}(x) = \frac{\omega^\nu}{\Gamma(\nu)} x^{\nu-1}e^{-\omega x}
+f_{r_\infty}(x) = \frac{\omega^\nu}{\Gamma(\nu)} x^{\nu-1}e^{-\omega x},
 \end{equation}
 where
 \begin{equation*}
-\omega= \frac{2\kappa}{\sigma^2}\: , \: \nu= \frac{2\kappa\theta}{\sigma^2}
+\omega= \frac{2\kappa}{\sigma^2}\: , \: \nu= \frac{2\kappa\theta}{\sigma^2}.
 \end{equation*}
 
 Its \textit{moment generating function}, which will be useful later as well, is defined as follows:
 \begin{equation}
 \label{eq:cir_mgf}
-	M_{r_\infty}(z) = \Big(\frac{\omega}{\omega-z}\Big)^\nu
+	M_{r_\infty}(z) = \Big(\frac{\omega}{\omega-z}\Big)^\nu .
 \end{equation}
 
 \bigskip
@@ -155,7 +156,7 @@ Let us see now how the different building blocks that we just presented can be c
 
 %%% ORIGINAL MODEL
 \subsection{Original Univariate Model}
-The first jump diffusion model was originally introduced in \citep{MERTON1976} in order to account for the leptokurtic distribution of real market returns and to model sudden falls (or rises) in prices due to the arrival of new information.
+The jump diffusion model we are interested in was originally introduced in \citep{MERTON1976} in order to account for the leptokurtic distribution of real market returns and to model sudden falls (or rises) in prices due to the arrival of new information.
 The asset price dynamics $S_t$ is modelled as a GBM to which a jump component driven by a compound Poisson process is added:
 
 \begin{equation}
@@ -192,48 +193,46 @@ X_i =  \mu \Delta t + \sigma \sqrt{\Delta t} \; z +  \sum_{k=1}^{N_{i+1} - N_i} 
 
 where we denote $X_i = X_{t_i}$, $N_i = N(t_i)$ and $t_i = i \Delta t$ with $i= 0 \dots N$, $t_N = N \Delta t= T$,  $z$ is distributed as a standard Gaussian $ z\sim \mathcal{N}(0,1)$.
 
-The Poisson process $N(t)$ in (\ref{discrete_returns}) is computed at times $t_{i+1}$ and $t_i$ and these quantities are subtracted. Following basic stochastic analysis, one can prove that the resulting value $N_{i+1} - N_i$,  is distributed as a Poisson random variable $N$ of parameter $\lambda \Delta t$.
+The Poisson process $N(t)$ in (\ref{discrete_returns}) is computed at times $t_{i+1}$ and $t_i$ and these quantities are subtracted. Following the results we presented in Section \ref{sub:poisson}, $N_{i+1} - N_i$ is distributed as a Poisson random variable $N$ of parameter $\lambda \Delta t$.
 This allows us to provide an explicit formulation for the transition density of the log-returns using the theorem of total probability:
 
 \begin{equation}
 \label{transitional}
-f_{\Delta x} (x) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta x | N = k}(x) 
+f_{\Delta x} (x) = \sum_{k=0}^{\infty} \mathbb{P}(N = k) f_{\Delta x | N = k}(x) .
 \end{equation}
 
-This equation is a good analytical result but it is not so practical for calibration purposes, as we will explain more in depth in chapter \ref{chpr:calibration}.
+This equation is a good analytical result but it is not so practical for calibration purposes, as we will explain more in depth in Chapter \ref{chpr:calibration}.
 
 
 %%% MULTIVARIATE MODEL
 \subsection{Multivariate Model}
-Starting from the univariate model introduced in \citep{MERTON1976}, we can developed a generalization to $n$ assets including only idiosyncratic jumps:
+Starting from the univariate model introduced in \citep{MERTON1976}, we can develop a generalization to $n$ assets including only idiosyncratic jumps:
 
 \begin{equation}
 \frac{dS_t^{(j)}}{S_t^{(j)}} = (\mu_j - \lambda_j \mu_{J_j}) dt + \sigma_j dW_t^{(j)} + Y^{(j)}_t dN^{(j)}_t
 \end{equation}
 
-where $\mathbf{S}_t$ are the prices of the assets, $j = 1, ...  ,n$ represents the asset, $\mu_j$ are the drifts, $\sigma_j$ are the diffusion coefficients, $W^{(j)}_t$ are the components of an $n$-dimensional Wiener process $ \mathbf{W}_t$ with $dW^{(i)}dW^{(j)}=\rho_{i,j}$, $Y_j$ represent the intensities of the jumps and  $y^(j) = \log(Y^{(j)})$ are distributed as Gaussian: $y^(j)  \sim \mathcal{N}(\mu_{J_j} , \sigma_{J_j}^2)$. Finally, $N^{(j)}(t)$ are Poisson processes with parameters $\lambda_j$, which are independent of $\mathbf{W}_t$ and of one another. 
+where $\mathbf{S}_t$ are the prices of the assets, $j = 1, ...  ,n$ represents the asset, $\mu_j$ are the drifts, $\sigma_j$ are the diffusion coefficients, $W^{(j)}_t$ are the components of an $n$-dimensional Wiener process $ \mathbf{W}_t$ with $dW^{(i)}dW^{(j)}=\rho_{i,j}$, $Y_j$ represent the intensities of the jumps and  $y^{(j)} = \log(Y^{(j)})$ are distributed as Gaussian: $y^{(j)}  \sim \mathcal{N}(\mu_{J_j} , \sigma_{J_j}^2)$. Finally, $N^{(j)}(t)$ are Poisson processes with parameters $\lambda_j$, which are independent of $\mathbf{W}_t$ and of one another. 
 
 \bigskip
 
 \section{Heston Model}
 \label{sec:heston}
 
-The Heston model was presented in 1993 in \citep{HESTON93} as a new framework to model stochastic volatility in the asset price dynamics, which allows to better fit the skewness and kurtosis of the log-return distribution.
+The Heston model was presented in 1993 in \citep{HESTON93} as a new framework to model stochastic volatility in the asset price dynamics, which allows to better fit the skewness and kurtosis of the log-return distribution and account for the changes in the volatility of the price process through time.
 
 \subsection{Univariate Heston Model}
 The Heston model belongs to the family of SV processes: generalizations of B\&S model in which the volatility is no more constant but is itself  stochastic.
-\textcolor{red}{***add examples?***}
-%Example of SD processes are Heston, CEV, sabr, 3/2 model....
 
 Starting with a GBM as in the B\&S framework, we obtain the dynamics of the price process simply by allowing the volatility in (\ref{eq:GBM}) to evolve over time and specifying how this evolution takes place.
 In particular, the dynamics of the \textit{instantaneous} variance $V_t = \sigma_t^2$ for the Heston model is described by a CIR process :
 \begin{equation}
 \label{eq:heston_price}
-	\frac{dS_t}{S_t} = \mu dt +\sqrt{ V_t} dW_t^S
+	\frac{dS_t}{S_t} = \mu dt +\sqrt{ V_t} dW_t^S,
 \end{equation}
 \begin{equation}
 \label{eq:heston_variance}
-	dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
+	dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V,
 \end{equation}
 
 where $\mu$ represents the drift in the asset prices, $\kappa>0$ and $\theta>0$ are respectively the \textit{mean-reversion} rate  and the long-run level for the $V_t$ process, $\sigma_V>0$ is often referred to as the \textit{volatility of volatility} parameter, in short vol-of-vol.
@@ -246,33 +245,35 @@ It can be proven that the variance process is always non-negative if the \textit
  is satisfied. If the same inequalities holds strictly, we have that the variance process will always be strictly positive.
 
 Let us now consider the dynamics of the log-return $x_t = \log (S_t)$, as we did in the Merton case. 
-Unfortunately, given the increased complexity of the model due to the SV part, an explicit formula for the density of the log-return is not available and it has to be computed from the Fourier inversion of the characteristic function:
+Unfortunately, given the increased complexity of the model due to the SV part, an explicit formula for the density of the log-return is not available and it has to be computed from the Fourier transform of the characteristic function:
 \begin{equation}
 \label{eq:chf_inversion}
-f_{x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi_{x_t}(i u) e^{i u x} du
+f_{x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi_{x_t}(i u) e^{i u x} du .
 \end{equation}
+
+as explained in the reference paper by Heston.
 
 In (\ref{eq:chf_inversion}) we omitted the dependence of $f_{x_t}(x)$ and $\phi_{x_t}(u)$ on model parameters and on the initial values of the log-returns $x_0$ and of the variance process $V_0$. 
 
 \bigskip
 
-To derive the expression of the characteristic function $\phi_{x_t}(u)$, one has to solve a couple of \textit{Fokker-Planck} partial differential equation as is shown in the Appendix of the reference paper by Heston \citep{HESTON93}. This procedure is beyond the scope of this thesis and thus we will only report the final result, which is a log-affine equation on the information at time $t = 0$:
+To derive the expression of the characteristic function $\phi_{x_t}(u)$, one has to solve a couple of \textit{Fokker-Planck} partial differential equation as is shown in the Appendix of the reference paper by Heston \citep{HESTON93}. This procedure is beyond the scope of this thesis and thus we will only report the final result, which is a log-affine equation conditioned on the information available at time $t = 0$:
 
 \begin{subequations}
 \begin{align}
 \label{eq:heston_chf+ABC}
-	\phi_{x_t}(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}\nonumber \\
-	A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i +d)t - 2 \log\Big[  \frac{1-ge^{dt}}{1-g} \Big] \bigg)\\
-	B(t,u) &= i u \\
-	C(t,u)&= \frac{\kappa - \rho\sigma_V u i +d}{\sigma_V^2} \:\Big[\frac{1-e^{dt}}{1+ge^{dt}}\Big]
+	\phi_{x_t}(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}\nonumber, \\
+	A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i +d)t - 2 \log\Big[  \frac{1-ge^{dt}}{1-g} \Big] \bigg),\\
+	B(t,u) &= i u, \\
+	C(t,u)&= \frac{\kappa - \rho\sigma_V u i +d}{\sigma_V^2} \:\Big[\frac{1-e^{dt}}{1-ge^{dt}}\Big],
 \end{align}
 \end{subequations} 
 where :
 \begin{equation*}
 \begin{split}
-d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)}\\
+d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)},\\
 g&= \frac{\kappa - \rho\sigma_V u i + d}{\kappa - \rho\sigma_V u i - d}
-\end{split}
+\end{split}.
 \end{equation*} 
 
 
@@ -281,28 +282,21 @@ This formulation is the one proposed by Heston in his original paper \citep{HEST
 
 
 
-%\begin{IEEEeqnarray*}{rCL}
-%	\phi_{x_t}(u| x_0, V_0) &=& \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\} \IEEEyesnumber\\
-%	A(t,u) &= &\mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i +d)t - 2 \log\Big[  \frac{1-ge^{+dt}}{1-g} \Big] \bigg) \IEEEyessubnumber*\\
-%	B(t,u) &= &i u \\
-%	C(t,u) &=& \frac{\kappa - \rho\sigma_V u i +d}{\sigma_V^2} \:\Big[\frac{1-ge^{+dt}}{1+g}\Big]\\
-%\end{IEEEeqnarray*}
-
-\begin{equation}
+\begin{subequations}
 % heston trap solution
-\begin{split}
+\begin{align}
 \label{eq:heston_chf_trap}
-\phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}\\
-A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg)\\
-B(t,u) &= i u \\
-C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big]
-\end{split}
-\end{equation} 
+\phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0\}.\nonumber\\
+A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg),\\
+B(t,u) &= i u ,\\
+C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big],
+\end{align}
+\end{subequations} 
 where :
 \begin{equation*}
 \begin{split}
-d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)}\\
-g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \frac{1}{g}
+d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)},\\
+g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \frac{1}{g}.
 \end{split}
 \end{equation*} 
 
@@ -338,7 +332,7 @@ and since $B(t,u)  = i u$, the second term in the exponential is equal to zero a
 
 
 
-This equation is however still dependent on the initial value of the variance process. In a simulation framework, this would not be an issue, since we can define the level of $V_0$ ourselves and then generate all the different scenarios. However, if we need to calibrate the model parameters from asset prices, the market data for the variance process are not available. We will address more in depth different ways to solve this problem later on in Chapter \ref{chpr:calibration}. As for now, we show that we can obtain an \textit{unconditional} expression for the characteristic function of a Heston process by approximating the distribution of $V_t$ with its stationary distribution.
+This equation is however still dependent on the initial value of the variance process. In a simulation framework, this would not be an issue, since we can define the level of $V_0$ ourselves and then generate all the different scenarios. However, if we need to calibrate the model parameters from asset prices, the market data for the variance process are not available. We will address more in depth how to solve this problem later on in Chapter \ref{chpr:calibration}. As for now, we show that we can obtain an \textit{unconditional} expression for the characteristic function of a Heston process by approximating the distribution of $V_t$ with its stationary distribution.
 
 The idea of integrating out the variance was presented in \citep{DRAGULESCU2002} and here we follow a similar approach.
 The computations to obtain an unconditional characteristic function are the following:
@@ -358,15 +352,15 @@ where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \
 
 
 \subsection{Parsimonious Multi-asset Heston Model}
-The problem with generalizing Heston framework to include more than one underlying is that the model becomes quickly very complex: we need 5 parameters for each asset ($\mu, \kappa,\theta, \sigma_V$ and $ \rho$), and we can also model all types of correlation between the different stochastic drivers. In particular, we have 4 types of correlation: 
+The problem with generalizing the Heston framework to include more than one underlying is that the model becomes quickly very complex: we need 5 parameters for each asset ($\mu, \kappa,\theta, \sigma_V$ and $ \rho$), and we can also model all types of correlation between the different stochastic drivers. In particular, we have 4 types of correlation: 
 \begin{itemize}
-	\item $ \rho^{S_i , V_i}$:  correlation that we already have in the unidimensional case, that models the way the price and the variance processes are linked ;
+	\item $ \rho^{S_i , V_i}$:  correlation that we already have in the unidimensional case, that models the way the price and the variance processes of the same asset are linked ;
 	\item $ \rho^{S_i , S_j}$: correlation between the movements in prices of two different assets ;
 	\item $\rho^{V_i , V_j} $: correlation between the variance processes of two different assets. One might expect that asset of similar nature have a higher correlation both in the price and in the variance processes;
 	\item $\rho^{S_i , V_j} $: correlation between the price process of an asset and the variance process of a different one.
 \end{itemize}
 
-To overcome this increase in both mathematical and computation complexity, we will use the \textit{parsimonious} model introduced by Szimayer, Dimitroff and Lorenz in \citep{PARSIMONIOUS2011}. Their framework has two main characteristics: each single-asset sub-model forms a traditional Heston model and the parameters are  composed by $n$ single-asset Heston parameter sets and $n (n-1)/2$  \textit{asset-asset} correlations.
+To overcome this increase in both mathematical and computational complexity, we will use the \textit{parsimonious} model introduced by Szimayer, Dimitroff and Lorenz in \citep{PARSIMONIOUS2011}. Their framework has two main characteristics: each single-asset sub-model forms a traditional Heston model and the parameters are  composed by $n$ single-asset Heston parameter sets and $n (n-1)/2$  \textit{asset-asset} correlations.
 
 The $n$-dimensional model  hence becomes:
 
@@ -398,7 +392,7 @@ dt  +\\ \begin{pmatrix}
 \begin{pmatrix}
 dW^{S_i}(t)\\
 dW^{V_i }(t)
-\end{pmatrix}
+\end{pmatrix},
 \end{multline}
 
 where $dW^{S_i}(t)$ and $dW^{V_i}(t)$ are independent processes and we have written explicitly the dependence between the price and the variance processes.
@@ -409,7 +403,7 @@ To fully characterize the model, we need to describe how the different $W^{S_i}$
 \Sigma^{(S,V)} = cor(\boldsymbol{W}^{S}, \boldsymbol{W}^{V}) = \begin{pmatrix}
 \Sigma^{S} & 0 \\
 0& I_n
-\end{pmatrix}
+\end{pmatrix},
 \end{equation}
 
 in which $\Sigma^S = cor(\boldsymbol{W}^{S})$.
@@ -454,30 +448,29 @@ dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
 Of course, as these equations are directly obtained from \eqref{eq:heston_price} and \eqref{eq:heston_variance}, we have that the variance process is strictly positive whenever the Feller condition $2\kappa\theta\geq \sigma_V$ is satisfied. As in \eqref{eq:merton_model}, $Y_t$ is  the jump process and is such that $ y_t = \log(Y_t) \sim \mathcal{N}(\mu_J, \sigma_J^2)$, while $N(t)$ is a Poisson process with parameter $\lambda$.
 
 
-Unfortunately, for the same reason as in previous section, an explicit formula for the distribution of the log-returns $x_t = log(S_t)$ is not available and thus we have to make reference to their characteristic function.
-The silver lining is, though, that to obtain expression of   $\phi_{x_t}(u)$, we only have to include an extra additive term to the exponential in \eqref{eq:heston_chf_trap} to account for the jumps:
+Unfortunately, for the same reason as in previous section, an explicit formula for the distribution of the log-returns $x_t = log(S_t)$ is not available and thus we have to make use of their characteristic function.
+The silver lining however is  that to obtain the expression of   $\phi_{x_t}(u)$ we only have to include an extra additive term to the exponential in \eqref{eq:heston_chf_trap} to account for the jumps:
 
-\textbf{***** controllare jump component*********}
-\begin{equation}
+\begin{subequations}
 % heston trap solution
-\begin{split}
+\begin{align}
 \label{eq:bates_chf_trap}
-\phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0 + D(t,u)\}\\
-A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg)\\
-B(t,u) &= i u \\
-C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big]\\
+\phi_{x_t}^*(u| x_0, V_0) &= \exp\{A(t,u) + B(t,u) x_0 + C(t,u) V_0 + D(t,u)\},\nonumber\\
+A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg),\\
+B(t,u) &= i u ,\\
+C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big],\\
 D(t,u) &= -\lambda \mu_J u i t + \lambda t  \:\Big[ (1+\mu_J)^{ui} e^{\sigma_J^2(ui/2)(ui-1)}-1 \Big]
-\end{split}
-\end{equation} 
+\end{align},
+\end{subequations} 
 where :
 \begin{equation*}
 \begin{split}
-d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)}\\
-g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \frac{1}{g}
+d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)},\\
+g^*&= \frac{\kappa - \rho\sigma_V u i - d}{\kappa - \rho\sigma_V u i + d} = \frac{1}{g}.
 \end{split}
 \end{equation*} 
 
-We will used the  *  formulation for the same desirable numerical properties as already stated, while leaving out the * symbol from our notation from now on.
+We use the  *  formulation for the same desirable numerical properties as already stated, while leaving out the * symbol from our notation from now on.
 
 We can perform the same computations as in the Heston case to obtain the \textit{unconditional} characteristic function of the log-returns to obtain:
 
@@ -489,9 +482,9 @@ where $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as
 and $\nu= \frac{2\kappa\theta}{\sigma_V^2}$.
 
 \subsection{Parsimonious Multi-asset Bates Model}
-We will generalize the single-asset Bates model to a multi-asset model in the same way that we did with the Heston: we only model the asset-asset correlation $\rho^{S_i, S_j}$ for each pair of asset.
+We  generalize the single-asset Bates model to a multi-asset model in the same way that we did with the Heston: we only model the asset-asset correlation $\rho^{S_i, S_j}$ for each pair of asset.
 
-The model definition becomes is similar to \eqref{eq:mv_heston}, with the addition of the jump part for the price processes:
+The model definition  is similar to \eqref{eq:mv_heston}, with the addition of the jump part for the price processes:
 
 \begin{multline}
 \begin{pmatrix}
