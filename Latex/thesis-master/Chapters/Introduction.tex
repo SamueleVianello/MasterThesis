@@ -7,21 +7,25 @@
 Bitcoin was presented in \citep{BTC2008} as a peer-to-peer protocol for electronic cash that would allow online payments to be sent directly from one party to another without going through a financial institution.
 It started off in 2009 as system that was only used by a niche of people in online cryptology forums  to experiment with the transaction protocol. It took a few years for Bitcoin to gain public notoriety, while the price kept rising and having quick crashes. 
 
-Bitcoin generated a lot of buzz in 2017, a year that registered the price increase from 998 \$ to 13,412 \$ in January 2018 with an all-time high of 19,666 \$ on the 17th of December. Since then, the price has deflated to a level of six thousand dollars in 2018 and has lately stabilized around three thousands.
+In particular, Bitcoin generated a lot of buzz in 2017, a year that registered the price increase from 998 \$ to 13,412 \$ in January 2018 with an all-time high of 19,666 \$ on the 17th of December. 
+Like during any of history's gold rushes, many people joined the trend and tried to jump on the train  of quick and easy money and were let down when the price deflated to a level of six thousand dollars in 2018 and has lately stabilized around three thousands.
 
 Setting aside the mere numerical value of the price, Bitcoin was the first protocol to solve the problem of double-spending without the need for a centralized party: bitcoins can be transferred but not duplicated, as they only exist as validated transaction in the distributed blockchain. 
 These features allow Bitcoin to have a chance at becoming a global, instantaneous and free payment network that would make wealth transfer as easy as online data sharing.
 In the same way that e-mail substituted post mail, Wikipedia and other knowledge-based website outdated paper encyclopaedias, music and film streaming services are becoming the new user friendly experience for the two industries, Bitcoin presents itself as a system to exchange wealth between users without the need for banks or other trusted third parties.
 
-Furthermore, Bitcoin is the first digital currency to achieve scarcity in the digital realm: its monetary policy based on deterministic supply mimics the progressive scarcity of gold. For these reasons we believe that Bitcoin  is \textit{digital gold} with an embedded secure network and its characteristics make it resemble more closely a crypto-asset rather than a crypto-currency.
-Even though there are a number of supporters of this idea, for instance in \citep{DYHRBERG2016} it is shown that Bitcoin possesses the same hedging abilities of gold, there is no general consensus on the matter and different studies get to the opposite result: see for example \citep{KLEIN2018}.
+Furthermore, Bitcoin is the first digital currency to achieve scarcity in the digital realm: its monetary policy based on deterministic supply mimics the progressive scarcity of gold. It is this \textit{deterministic} supply that make Bitcoin a suitable long term investment, since it prevents arbitrary increase in its total available amount, unlike what happens with \textit{fiat} money.
 
-Bitcoin has been called many names: a bubble, a Ponzi scheme, it has been defined as sound money and store of value. We agree with the latter and believe that if Bitcoin is a true digital gold, then its value will express the huge potential that has been so far limited by scepticism and misunderstandings.
+\bigskip
+For these reasons we believe that Bitcoin can be  \textit{digital gold} with an embedded secure network and its characteristics make it resemble more closely a crypto-asset rather than a crypto-currency.
+Even though there are a number of supporters of this idea, for instance in \citep{DYHRBERG2016} it is shown that Bitcoin possesses the same hedging abilities of gold, there is yet no general consensus on the matter and different studies get to the opposite result: see for example \citep{KLEIN2018}.
+
+Bitcoin has been called many names: a bubble, a Ponzi scheme, but also defined as sound money and store of value. We agree with the latter and believe that if Bitcoin is  true digital gold, then its value will express the huge potential that has been so far limited by scepticism and misunderstandings.
 
 \bigskip
 
-In the present work, we intend to first study the correlation that exists between Bitcoin and other types of standard assets, both by analysing the empirical correlation of the returns and by calibrating more sophisticated models such as \text{jump diffusion} and \textit{stochastic volatility} models.
-Secondly, we want to explore the diversification property of adding Bitcoin to a portfolio of asset, by computing the optimal allocation for different levels of risk and expected return.
+In the present work, we intend to first study the correlation that exists between Bitcoin and other types of standard assets, both by analysing the empirical correlation of the returns with its significance and by calibrating more sophisticated models such as \text{jump diffusion} and \textit{stochastic volatility} models.
+Secondly, we want to explore the diversification property of adding Bitcoin to a portfolio of asset, by computing the optimal allocation for different levels of risk and expected return in a Markowitz mean-variance framework and by optimizing on the CVaR as the portfolio risk measure.
 
 
 \bigskip
@@ -40,8 +44,8 @@ In Chapter \ref{chpr:corr_analysis} we study the empirical correlation between t
 
 \bigskip
 \noindent
-In Chapter \ref{chpr:models} we present each model that we are going to adopt in our work. We first give a brief overview of the building blocks necessary to understand the mathematical framework of the models: definitions of geometric Brownian motion, compound Poisson process and CIR process are all presented in Section \ref{sec:notions}. 
-In the following sections we consider the models themselves. We  present the univariate formulations of Merton (Section \ref{sec:merton}), Heston (Section \ref{sec:heston}) and Bates (Section \ref{sec:bates}) and provide a possible generalization to the multi-asset case following the parsimonious approach presented in \citep{PARSIMONIOUS2011}
+In Chapter \ref{chpr:models} we present each asset model that we are going to adopt in our work. We first give a brief overview of the building blocks necessary to understand the mathematical framework of the models: definitions of geometric Brownian motions, compound Poisson processes and CIR processes are all presented in Section \ref{sec:notions}. 
+In the following sections we consider the models themselves. We  present the univariate formulations of Merton (Section \ref{sec:merton}), Heston (Section \ref{sec:heston}) and Bates (Section \ref{sec:bates}) and provide a possible generalization to the multi-asset case following the parsimonious approach as reported in \citep{PARSIMONIOUS2011}
 
 \bigskip
 \noindent
@@ -60,12 +64,14 @@ Chapter \ref{chpr:conclusion} concludes our work and sums up the main results. I
 \bigskip
 
 \section{Dataset  Presentation}
+\bigskip
 The dataset on which we focus our study contains the prices of 16 assets valued daily (excluding holidays and weekends) from the 19th of July 2010 till the 2nd of November 2018 (all data provided by Bloomberg).
 
 The assets we included in our analysis are grouped into four different classes, as explained in the following list (in brackets we indicate the shortened name that is used in the tables and graphs):
 
 \begin{enumerate}
 	\item Bitcoin (btc): Value of a single bitcoin, quoted in dollars.
+	\bigskip
 	\item Stock indexes:
 	\begin{itemize}
 		\item S\&P500 (sp500): American stock market index based on 500 large company with stock listed either on the NYSE or NASDAQ.
