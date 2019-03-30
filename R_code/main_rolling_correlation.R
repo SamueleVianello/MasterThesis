@@ -9,7 +9,6 @@ attach(my_returns)
 PermutationTestCorr = function(x,y=0, N=2000){
   # Two sided permutation test for correlation
   # H0: rho = 0   vs    H1: rho!=0
-  
   if (!is.null(dim(x)[2])){
     if ( dim(x)[2] == 2){
       y=x[,2]
@@ -31,11 +30,11 @@ PermutationTestCorr = function(x,y=0, N=2000){
     if (abs(r_sample)<abs(r_perm))
       larger = larger+1
   }
-  
   # p-value is the percentage of r_perm absolutely greater than r_sample
   p = larger/N
   return(p)
 } 
+
 ############################################################################
 
 

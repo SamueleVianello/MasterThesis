@@ -1,0 +1,783 @@
+\chapter{Code excerpts}
+\label{app:code}
+
+%
+%\usepackage{listings}
+%\usepackage[usenames,dvipsnames]{color}    
+
+\lstset{ 
+	language=R,                     % the language of the code
+	basicstyle=\tiny\ttfamily, % the size of the fonts that are used for the code
+	numbers=left,                   % where to put the line-numbers
+	numberstyle=\tiny\color{Blue},  % the style that is used for the line-numbers
+	stepnumber=1,                   % the step between two line-numbers. If it is 1, each line
+	% will be numbered
+	numbersep=5pt,                  % how far the line-numbers are from the code
+	backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+	showspaces=false,               % show spaces adding particular underscores
+	showstringspaces=false,         % underline spaces within strings
+	showtabs=false,                 % show tabs within strings adding particular underscores
+	frame=single,                   % adds a frame around the code
+	rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+	tabsize=2,                      % sets default tabsize to 2 spaces
+	captionpos=b,                   % sets the caption-position to bottom
+	breaklines=true,                % sets automatic line breaking
+	breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+    keywordstyle=\color{black},      % keyword style
+	commentstyle=\color{YellowGreen},   % comment style
+	stringstyle=\color{ForestGreen}      % string literal style
+} 
+
+\section{Correlation analysis}
+Function to perform the Permutation test:
+\begin{lstlisting}
+
+PermutationTestCorr = function(x,y=0, N=2000){
+	# Two sided permutation test for correlation
+	# H0: rho = 0   vs    H1: rho!=0
+	# Input
+	#   x: first variable values
+	#   y: second variable values
+	
+	if (!is.null(dim(x)[2])){
+		if ( dim(x)[2] == 2){
+		y=x[,2]
+		x=x[,1]
+		}
+	}
+	else if (length(x)!=length(y)){
+		stop("Error: samples should have same size.")
+	}
+	
+	n = length(x)
+	
+	r_sample= cor(x,y)
+	
+	larger = 0
+	for(i in 1:N){
+		y_perm = y[sample(n,n)]
+		r_perm = cor(x,y_perm)
+		if (abs(r_sample)<abs(r_perm))
+			larger = larger+1
+	}
+	# p-value is the percentage of r_perm absolutely greater than r_sample
+	p = larger/N
+	return(p)
+} 
+\end{lstlisting}
+
+\section{Merton, Heston and Bates  calibration}
+
+\subsection{General structure for full calibration}
+\bigskip
+\noindent
+Script to calibrate the \texttt{N\_assets} Merton model, similar structure also for the other models, just different functions for parameters  and model correlation calibration:
+\begin{lstlisting}
+### Loading daily log-returns dataset
+load("returns.Rda")
+attach(my_returns)
+
+
+N = dim(my_returns)[1] #total number of observations
+N_assets= 16
+dt = 1/255
+
+# matrix to store the parameters for each asset
+full_results = matrix(0, nrow = N_assets, ncol = 5) 
+rownames(full_results) = colnames(my_returns)[2*(1:N_assets)]
+colnames(full_results) = c("mu", "sigma","theta","delta","lambda")
+
+### Calibrating each single asset model
+for (i in 1:N_assets){
+	asset = my_returns[,2*i] #contains single asset daily log-returns
+	asset_name = colnames(my_returns)[2*i]
+	
+	# actual calibration function
+	calibrated_params = CalibrateMerton(x=matrix(asset[1:N], ncol=1),dt = dt, custom_jump_bounds = T)
+	
+	full_results[i,]=c(calibrated_params$mu, sqrt(calibrated_params$S), calibrated_params$theta, calibrated_params$delta, calibrated_params$lambda)
+}
+
+
+#### Calibrating model Correlation matrix
+
+n=16
+# sample corr matrix for comparison
+corr_matrix = cor(my_returns[,2*(1:n)])
+
+beg = Sys.time()
+# model correlation matrix
+model_corr_mat = calibrate_full_correlation_merton(sample_corr_matrix = corr_matrix, Nasset = n, 
+						mu =full_results[1:n,1] , vol = full_results[1:n,2], mu_j = full_results[1:n,3], 
+						sigma_j = full_results[1:n,4], lambda = full_results[1:n,5], dt = 1/255,final_t = 2, 
+						Nsim = 1000)
+# show computation time
+Sys.time() - beg
+
+# print both matrices to screen for comparison
+model_corr_mat
+corr_matrix[1:n,1:n]
+\end{lstlisting}
+
+
+\subsection{Single asset calibration}
+\bigskip
+\noindent
+Function that performs the calibration for a single asset Merton, only differences in the Heston and Bates cases is the objective function in the optimizers that are respectively  \texttt{heston\_negloglik} and \texttt{bates\_negloglik}
+\begin{lstlisting}
+CalibrateMerton=function(x, n, dt, trace = 10, custom_jump_bounds =T){
+	
+	library(DEoptim)
+	source("MultivariateMertonModel.R")
+	
+	if(custom_jump_bounds){
+		min_jump = rep(0,n)
+		max_jump = rep(0,n)
+		
+		alpha_max = 0.995 # quantile for max jump
+		alpha_min = 0.999 # quantile for min jump
+		for (i in 1:n) {
+			min_jump[i] = 2*quantile(x= x[,i], probs = 1-alpha_min)
+			max_jump[i] = quantile(x= x[,i], probs = 1-alpha_max)
+		}
+	}
+	else{
+		min_jump = rep(-0.1,n) # default jumps at -10%
+		max_jump = rep(-1,n)
+	}
+	
+	# Obtaining bounds from function BoundsCreator
+	bounds_nocommon = BoundsCreator(custom_jump_mean = custom_jump_bounds,
+	max_jump_mean = max_jump, min_jump_mean = min_jump)
+	
+	print(rbind(bounds_nocommon$lower, bounds_nocommon$upper))
+	
+	# First optimization using deoptim
+	print("Starting calibration using DEoptim...")
+	control_list_deoptim = list(itermax = 50, NP = 10*length(bounds_nocommon$lower), strategy = 6,trace=trace)
+	
+	
+	start_time_deoptim <- Sys.time()
+	outDE <- DEoptim(merton_negloglik,  # objective function is the negative log likelihood for Merton
+			lower = bounds_nocommon$lower, upper = bounds_nocommon$upper, control = control_list_deoptim, dt = dt, x = x)
+	end_time_deoptim <- Sys.time()
+	
+	# Second and final optimization using nlminb
+	print("Starting calibration using nlminb...")
+	
+	initial=outDE$optim$bestmem
+	start_time_nlminb <- Sys.time()
+	out_nlminb = nlminb(initial,objective = merton_negloglik,lower = bounds_nocommon$lower,
+	upper = bounds_nocommon$upper,dt=dt, x=x,
+	control=list(eval.max = 10000,iter.max = 1000, trace = trace))
+	print(out_nlminb)
+	end_time_nlminb <- Sys.time()
+	
+	print(paste("DEoptim time:",end_time_deoptim - start_time_deoptim))
+	print(paste("nlminb time:", end_time_nlminb - start_time_nlminb))
+	print(paste("TOTAL time:", end_time_nlminb - start_time_deoptim))
+	
+	res = ParametersReconstruction(out_nlminb$par,n=n)
+	res[["message"]] = out_nlminb$message
+	res[["objective_function"]] = out_nlminb$objective
+	res[["total_time"]] = end_time_nlminb - start_time_deoptim
+	return(res)
+}
+\end{lstlisting}
+
+
+\bigskip
+\noindent
+Pdf and log-likelihood function for Merton:
+\begin{lstlisting}
+#Pdf for Merton model
+merton_pdf = function(x, dt, mu, sigma, mu_J, sigma_J, lambda){
+	# Computes the density of a multivariate merton model returns with idiosyncratic and common jumps
+	# ASSUMPTION: in dt time we can only have 0 or 1 jumps in each jump process, so lambda*dt<=1
+	#
+	# INPUT
+	# x:      vector representing at which point to compute the density 
+	# mu:     drift of the continuos part 
+	# sigma:      covariance of the continuous part 
+	# mu_J:  means of the idiosyncratic jump intensity 
+	# sigma_J:  volatility of the idiosyncratic jump intensity 
+	# lambda:  poisson parameters of the idiosyncratic jump part 
+	
+	# check on lambdas: 
+	ldt =lambda*dt
+	if(ldt>=1){
+		stop("Error: lambda*dt should be lower than 1 (ideally close to 0).")
+	}
+	
+	mu_adj= mu - sigma^2/2 -lambda*mu_J 
+	pdf=(1-ldt)*dnorm(x, mean = mu_adj*dt, sd = sqrt(sigma^2*dt))+ldt *dnorm(x, mean = mu_adj*dt + mu_J, sd = sqrt(sigma^2*dt + sigma_J^2))
+	
+	return(pdf)
+}
+
+
+merton_negloglik= function(params, x, dt) {
+	# x is a matrix [Npoints * n] of all the points for which we compute the likelihood
+	
+	# reconstruction of parameters:
+	mu=params[1]
+	sigma = params[2]
+	mu_J = params[3]
+	sigma_J = params[4]
+	lambda = params[5]
+	
+	# computing pdf on each point and adding
+	partial = merton_pdf(x, dt, mu, sigma, mu_J, sigma_J, lambda)
+	nll = -sum(log(partial))
+	
+	# last check on result
+	if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+		nll = 1e10
+	}
+	
+	return(nll)
+}
+\end{lstlisting}
+
+
+\bigskip
+\noindent
+Pdf, unconditional chf and negative log-likelihood functions for Heston:
+
+\begin{lstlisting}
+# Pdf for Heston usinf FFT
+pdfHeston_fft = function(x, dt, r, k, theta, sigma_V, rho, N = 2^10){
+	# Auxiliary function
+	aux_chf = function(u,tau = dt, r_cf = r, k_cf = k,vT = theta, sigma = sigma_V, rho_cf = rho ){
+		uncond_cfHeston(u,tau ,r_cf ,k_cf,vT,sigma,rho_cf)
+	}
+	
+	min_x = min(x, -1)
+	max_x = max(x, 1)
+	eps = 0.01
+	
+	# Function that performs the inversion by using the FFT algorithm
+	pdf = characteristic_function_to_density(aux_chf,N, min_x-eps, max_x+eps)
+	
+	pdf_xx = interp1(pdf$x, pdf$density, x,method = 'spline')
+	return(pdf_xx)
+}
+
+
+# Neg logLikelihood function for Heston
+heston_negloglik= function(params, x, dt, check_feller=TRUE){
+	r = params[1]
+	k =params[2]
+	theta = params[3]
+	sigma_V = params[4]
+	rho = params[5]
+	
+	pdfs= pdfHeston_fft(x=x, dt=dt,
+	r = r, k=k, theta=theta, sigma_V = sigma_V, rho = rho)
+	
+	to_sum = log(pdfs)
+	nll = -sum(to_sum)
+	
+	if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+		nll = 1e10
+	}
+	
+	return(nll)
+}
+
+
+
+# Unconditional chf for Heston
+uncond_cfHeston = function(om, tau, r, k, vT, sigma, rho){
+	
+	if (sigma < 1e-08) 
+		sigma <- 1e-08
+	
+	om[which(om==0)]= 1e-8
+	d <- sqrt((rho * sigma * (0+1i) * om - k)^2 + sigma^2 * ((0+1i) *om + om^2))
+	g <- (k - rho * sigma * (0+1i) * om - d)/(k - rho * sigma * (0+1i) * om + d)
+	
+	# to avoid nan due to 0/0
+	g[which((k - rho * sigma * (0+1i) * om - d)==0)]=0
+	
+	A <- 1i*om *r * tau + vT * k/(sigma^2) * ((k - rho * sigma * (0+1i) * om - d) * tau - 2 * log((1 - g * exp(-d * tau))/(1 - g)))
+	B <- (k - rho * sigma * (0+1i) * om - d)/sigma^2 * (1 - exp(-d * tau))/(1 - g * exp(-d * tau))
+	
+	w = 2*k/sigma^2
+	nu = 2*k*vT/sigma^2
+	
+	res = exp(A)*(w/(w-B))^nu
+	return(res)
+}
+\end{lstlisting}
+
+\bigskip
+\noindent
+Pdf, unconditional chf and negative log-likelihood functions for Bates:
+\begin{lstlisting}
+# pdf for Bates using FFT
+pdfBates_fft = function(x,  dt,  r, k,theta, sigma_V, rho, lambda, mu_j, sigma_j,N=2^12){
+	# Auxiliary function
+	aux_bates = function( u, tau=dt, r_cf=r, vT=theta, rho_cf=rho, k_cf=k, sigma=sigma_V, lambda_cf=lambda, muJ=mu_j, vJ=sigma_j){
+		uncond_cfBates(u,tau, r_cf, vT, rho_cf, k_cf, sigma, lambda_cf, muJ, vJ)
+	}
+	
+	min_x = min(x, -1)
+	max_x = max(x, 1)
+	eps = 0.1
+	
+	# Function that performs the inversion by using the FFT algorithm
+	pdf = characteristic_function_to_density(aux_bates,N, min_x-eps, max_x+eps)
+	
+	pdf_xx = interp1( x = pdf$x, y = pdf$density, xi = x, method = 'spline')
+	return(pdf_xx)
+}
+	
+	
+# Neg logLikelihood function for Bates
+bates_negloglik = function(params, x, dt, model="bates", check_feller){
+	r = params[1]
+	k=params[2]
+	theta=params[3]
+	sigma_V = params[4]
+	rho = params[5]
+	mu_j= params[6]
+	sigma_j=params[7]
+	lambda=params[8]
+	
+	pdfs= pdfBates_fft(x=x,dt=dt, r=r,k=k, theta=theta,sigma_V=sigma_V,rho =rho,
+	mu_j = mu_j, sigma_j = sigma_j, lambda=lambda)
+	
+	to_sum = log(pdfs)
+	nll = -sum(to_sum)
+	
+	if (is.nan(nll) | is.na(nll) | is.infinite(nll)) {
+		nll = 1e10
+	}
+	
+	return(nll)
+}
+	
+# Unconditional chf for Bates
+uncond_cfBates= function (om,tau, r, vT, rho, k, sigma, lambda, muJ, vJ)
+	{
+	if (sigma < 1e-08)
+		sigma <- 1e-08
+	#sigma <- max(sigma, 1e-04)
+	
+	om[which(om==0)]= 1e-9
+	om1i <- om * (0+1i)
+	
+	d <- sqrt((rho * sigma * om1i - k)^2 + sigma^2 * (om1i + om^2))
+	g <- (k - rho * sigma * om1i - d)/(k - rho * sigma * om1i + d)
+	
+	# to avoid nan due to 0/0
+	g[which((k - rho * sigma * (0+1i) * om - d)==0)]=0
+	
+	cf1 <- om1i * ( r * tau) 
+	cf2 <- vT * k/(sigma^2) * ((k - rho * sigma * om1i - d) * tau - 2 * log((1 - g * exp(-d * tau))/(1 - g)))
+	cf_jump <- -lambda * muJ * om1i * tau + lambda * tau * ((1 + muJ)^(om1i) * exp(vJ * (om1i/2) * (om1i - 1)) - 1)
+	
+	A = cf1+cf2+cf_jump
+	B = 1/sigma^2 * (k - rho * sigma * om1i - d) * (1 - exp(-d * tau))/(1 - g * exp(-d * tau))
+	
+	w = 2*k/sigma^2
+	nu = 2*k*vT/sigma^2
+	
+	res = exp(A)*(w/(w-B))^nu
+	return(res)
+}
+\end{lstlisting}
+
+
+
+\subsection{Model correlation calibration}
+\bigskip
+\noindent
+Functions to perform the model correlation matrix calibration in the Merton case:
+
+\begin{lstlisting}
+library(MASS)
+
+# Performs the simulation of Merton model given the parameters in input
+simulate_mv_merton = function(Nasset=length(mu), mu, vol=NA, mu_j, sigma_j, lambda, CorrMatrix=matrix(NA), CovMatrix = matrix(NA),
+x0=rep(0,Nasset), dt=1/255, final_t=1, Nsim=100){
+
+if(is.na(CorrMatrix[1])& Nasset==1){
+CorrMatrix=matrix(1)
+}
+if(is.na(CovMatrix[1])){
+if (is.na(vol[1]) | is.na(CorrMatrix[1])){
+stop("Need to specify volatilities and Correlation Matrix, or only Covariance Matrix")
+}
+}
+if(is.na(vol[1]) & is.na(CorrMatrix[1])){
+CorrMatrix = cov2cor(CovMatrix)
+vol = sqrt(diag(CovMatrix))
+}
+
+if (Nasset!=length(mu) | Nasset!=length(x0) |
+Nasset!=length(mu_j) | Nasset!=length(sigma_j) | Nasset!=length(lambda)){
+#print(paste(Nasset,length(mu),length(x0),length(mu_j),length(sigma_j),length(lambda)))
+stop("Wrong dimension of parameters or initial values.")
+}
+
+Nstep = ceil(final_t / dt)
+sim_x =array(0, dim = c(Nsim, Nstep+1, Nasset), dimnames = list(NULL,NULL,paste0("X_",1:Nasset)))
+for (m in 1:Nasset) {
+sim_x[,1,m] = x0[m]
+}
+
+for (i in 1:(Nstep)) {
+z = mvrnorm(n = Nsim,mu=rep(0,Nasset) ,Sigma =CorrMatrix)
+for (m in 1:Nasset) {
+dq = rpois(Nsim, lambda = lambda[m]*dt)
+# jump = rnorm(Nsim, mean = log(1+mu_j[m]) - 0.5*sigma_j[m]^2, sd = sigma_j[m])
+jump = rnorm(Nsim, mean = mu_j[m], sd = sigma_j[m])
+sim_x[, i+1,m] = sim_x[,i,m] + (mu[m] - vol[m]^2*0.5 -lambda[m]*mu_j[m] )* dt + vol[m]*sqrt(dt)*z[,m] + dq * (jump)
+}
+}
+
+res_x = lapply(seq(dim(sim_x)[3]), function(t) sim_x[ , , t])
+names(res_x) = paste0("x_",1:Nasset)
+return( res_x)
+}
+
+
+
+# Computes correlation matrix from given simulation result
+correlation_MC_estimation = function( simulation_result){
+# simulation result should be a n-asset simulation output of simulate_mv_merton
+# NOTE: correlation is computed on the log returns in [t,t+dt] 
+
+Nasset = length(simulation_result) 
+Nsim = dim(simulation_result[[1]])[1] 
+
+if( Nasset == 2 ){
+sumcorr= 0
+for (k in 1:Nsim) {
+# correlation of log-returns in path k
+sumcorr = sumcorr + cor(diff(simulation_result[[1]][k,]), diff(simulation_result[[2]][k,]))
+}
+res = sumcorr/Nsim      # average correlation on different scenarios
+}
+else if (Nasset > 2){
+corr_matrix = diag(nrow = Nasset) # Identity matrix 
+for ( i in 1:(Nasset-1)) {
+for (j in (i+1):Nasset) {
+sumcorr = 0
+for (k in 1:Nsim) {
+sumcorr = sumcorr + cor(diff(simulation_result[[i]][k,]), diff(simulation_result[[j]][k,]))
+}
+corr_matrix[i,j] = sumcorr/Nsim
+corr_matrix[j,i] = sumcorr/Nsim
+}
+}
+res = corr_matrix
+}
+else{
+stop("Need at least 2 assets to compute correlation.")
+}
+return(res)
+}
+
+# Computes correlation for 2 assets from initial and model parameters [ used in model correlation calibration]
+expected_model_correlation_merton = function(model_corr, mu, vol, mu_j, sigma_j, lambda,
+x0, dt=1/255, final_t=1, Nsim){
+simulated = simulate_mv_merton(Nasset = 2, mu, vol, mu_j, sigma_j, lambda, matrix(c(1,model_corr, model_corr,1),ncol=2),
+x0=x0, dt=dt, final_t=final_t, Nsim = Nsim)
+rho_MC = correlation_MC_estimation(simulated)
+rho_MC
+}
+
+# Calibrates the model correlation of a 2-asset Merton given the sample corr
+calibrate_correlation_merton = function(sample_corr,Nasset=length(mu), mu, vol, mu_j, sigma_j, lambda, x0=c(0,0), dt=1/255, final_t=1, Nsim=100){
+
+if (Nasset!=length(mu) | Nasset!=length(x0) |
+Nasset!=length(mu_j) | Nasset!=length(sigma_j) | Nasset!=length(lambda)){
+stop("Wrong dimension of parameters or initial values.")
+}
+
+f_to_be_solved = function(model_corr,  sample_corr, ...){
+expected_model_correlation_merton(model_corr=model_corr, ...) - sample_corr
+}
+
+res = uniroot(f=f_to_be_solved, interval =c(-1,1),
+sample_corr = sample_corr,
+mu = mu, vol=vol, mu_j=mu_j, sigma_j=sigma_j, lambda = lambda,
+x0=x0, dt=dt, final_t=final_t, Nsim=Nsim,
+trace = 3)
+
+return(res$root)
+}
+
+
+
+# Calibrates the n by n correlation matrix for a n-asset model by iterating on all pairs of assets
+calibrate_full_correlation_merton = function(sample_corr_matrix, Nasset=length(mu), mu, vol, mu_j, sigma_j, lambda, x0=rep(0,Nasset), dt=1/255, final_t=1, Nsim=500){
+
+if (Nasset!=length(mu) | Nasset!=length(x0) |
+Nasset!=length(mu_j) | Nasset!=length(sigma_j) | Nasset!=length(lambda)){
+#print(paste(Nasset,length(mu),length(x0),length(mu_j),length(sigma_j),length(lambda)))
+stop("Wrong dimension of parameters or initial values.")
+}
+
+# create identity matrix
+model_corr_matrix = diag(Nasset) 
+
+for (i in 1:(Nasset-1)) {
+for (j in (i+1):Nasset) {
+print(paste0("Estimating element [", i, ',', j,']'))
+upper_val = expected_model_correlation_merton(model_corr = 1, mu=mu[c(i,j)], vol = vol[c(i,j)],
+mu_j=mu_j[c(i,j)], sigma_j=sigma_j[c(i,j)], lambda=lambda[c(i,j)], 
+x0=x0[c(i,j)], dt=dt, final_t=final_t, Nsim=Nsim) -sample_corr_matrix[i,j]
+lower_val = expected_model_correlation_merton(model_corr = -1, mu=mu[c(i,j)], vol = vol[c(i,j)],
+mu_j=mu_j[c(i,j)], sigma_j=sigma_j[c(i,j)], lambda=lambda[c(i,j)], 
+x0=x0[c(i,j)], dt=dt, final_t=final_t, Nsim=Nsim) -sample_corr_matrix[i,j]
+if(upper_val*lower_val < 0){
+model_corr_matrix[i,j] =  calibrate_correlation_merton(sample_corr_matrix[i,j], mu=mu[c(i,j)], vol = vol[c(i,j)],
+mu_j=mu_j[c(i,j)], sigma_j=sigma_j[c(i,j)], lambda=lambda[c(i,j)], 
+x0=x0[c(i,j)], dt=dt, final_t=final_t, Nsim=Nsim)
+}
+else{
+print(paste("Cannot obtain a correlation of", sample_corr_matrix[i,j] , "with given parameters." ))
+if(abs(upper_val)>abs(lower_val)){
+model_corr_matrix[i,j] = -1
+}
+else{
+model_corr_matrix[i,j] = 1
+}
+}
+model_corr_matrix[j,i] = model_corr_matrix[i,j]
+}
+}
+
+model_corr_matrix = regularization(model_corr_matrix, method = "jackel")
+
+return(model_corr_matrix)
+}
+
+# Performs matrix regularization
+regularization = function(mat, method =  'jackel'){
+decomp = eigen(mat,symmetric = TRUE)
+S = decomp$vectors
+eigval = decomp$values
+
+# print("Eigenvalues: ")
+# print(eigval)
+
+if(method =="jackel"){
+eigval[which(eigval<0)]=0
+
+Lambda = diag(eigval)
+
+t = rep(x=NA, length(eigval))
+for (i in 1:length(eigval)) {
+t[i] = 1/sum(S[i,]^2 * eigval)
+}  
+B = sqrt(diag(t)) %*% S %*% sqrt(Lambda)
+
+res = B %*% t(B)
+}
+else{
+eigval[which(eigval<0)]=1e-5
+res = S %*% diag(eigval)%*% t(S)
+}
+res
+}
+\end{lstlisting}
+
+\bigskip
+\noindent
+Simulation function for the Bates model (for Heston one only has to set \texttt{lambda} to zero):
+\begin{lstlisting}
+
+	simulate_mv_bates = function(Nasset=length(mu), mu, k,theta, sigma_V, rho,mu_j=1, sigma_j=0, lambda=0, CorrMatrix=matrix(1), S0=rep(1,Nasset), V0, dt=1/255, final_t=1, Nsim=100){
+	
+	if (Nasset!=length(mu) | Nasset!=length(k) | Nasset!=length(theta) | Nasset!=length(sigma_V) | Nasset!=length(rho) | Nasset!=length(S0) | Nasset!=length(V0) | Nasset!=length(mu_j) | Nasset!=length(sigma_j) | Nasset!=length(lambda)){
+		stop("Wrong dimension of parameters or initial values.")
+	}
+	
+	# correlation for the brownian motions driving the 2*Nasset vector (S1,V1,S2,V2, ... ,Sn,Vn)
+	full_corr = matrix(ncol = 2*Nasset, nrow = 2*Nasset) 
+	for (i in 1:Nasset){
+	for (j in 1:Nasset) {
+	full_corr[2*(i-1)+ c(1,2), 2*(j-1)+ c(1,2)] = correlation_block(rho,CorrMatrix, i,j)
+	}
+	}
+	
+	full_corr=regularization(full_corr)
+	
+	Nstep = ceil(final_t / dt)
+	
+	sim_x =array(0, dim = c(Nsim, Nstep+1, Nasset), dimnames = list(NULL,NULL,paste0("X_",1:Nasset)))
+	sim_V = array(0, dim = c(Nsim, Nstep+1, Nasset),dimnames = list(NULL,NULL,paste0("V_",1:Nasset)))
+	
+	for (m in 1:Nasset) {
+	sim_x[,1,m] = log(S0[m])
+	sim_V[,1,m] = V0[m]
+	}
+	
+	for (i in 1:(Nstep)) {
+	z = mvrnorm(n = Nsim,mu=rep(0,Nasset*2) ,Sigma =full_corr)
+	for (m in 1:Nasset) {
+	dq = rbinom(Nsim,size = 1, prob= lambda[m]*dt)
+	jump = rnorm(Nsim, mean = log(1+mu_j[m]) - 0.5*sigma_j[m]^2, sd = sigma_j[m])
+	V_plus= sim_V[,i,m]*(sim_V[,i,m]>0) # positive part for full truncation
+	sim_V[,i+1, m] = sim_V[,i,m] + k[m]*(theta[m] - V_plus)*dt + sigma_V[m]*sqrt(V_plus *dt)*z[,2*m]
+	sim_x[, i+1,m] = sim_x[,i,m] + (mu[m] - V_plus*0.5 -lambda[m]*mu_j[m] )* dt + sqrt(V_plus * dt)*z[,2*m-1] + dq * (jump)
+	}
+	}
+	
+	res_V = lapply(seq(dim(sim_V)[3]), function(t) sim_V[ , , t])
+	names(res_V) = paste0("V_",1:Nasset)
+	res_x = lapply(seq(dim(sim_V)[3]), function(t) sim_x[ , , t])
+	names(res_x) = paste0("x_",1:Nasset)
+	return( list( return = res_x, variance = res_V ))
+}
+\end{lstlisting}
+
+
+\section{Optimal allocation}
+
+\subsection{Markowitz efficient frontier}
+
+
+\noindent
+Function to compute the efficient frontier without short-selling (just remove the constraint to obtain the frontier to add the possibility to go short):
+
+\begin{lstlisting}
+# Function to compute the efficient frontier without shortselling
+EfficientFrontier_constr = function(r,S,full=FALSE, N=100, no_short_sales, max_r=NA, min_r =NA){
+	# r: expected returns of the assets
+	# S: covariance matrix of the asset returns
+	# full: computes only upper section of frontier if FALSE
+	# N: how many expected returns to take into consideration
+	# no_short_sales: vector containing the indexes of the asset for which it is not possible to go short
+	
+	require(quadprog)
+	
+	if (is.na(max_r)){
+		max_r = max(r)
+	}
+	if (is.na(min_r)){
+		min_r = min(r)
+	}
+	
+	# number of assets
+	n= length(r)
+	
+	D = 2*S       #times 2 because there is a 1/2 in the implicit formulation
+	d = rep(0,n)  # zeros
+	
+	# Constraint on returns
+	A = t(r)
+	
+	b = 0.0 # expected return that will be iterated to compute frontier
+	
+	# Constraint on weights: sum(w)=1
+	A = rbind(A,rep(1,n))
+	b= rbind(b,1)
+	
+	# Constraint on short selling on given assets
+	for (i in no_short_sales){
+	A_i = matrix(0,nrow=1,ncol = n)
+	A_i[1,i]=1
+	A = rbind(A,A_i)
+	b = rbind(b,0)
+	}
+	
+	yy= seq(from = min(r), to = max_r,length.out = N+1)
+	yy[1] = yy[1]+ 1e-5
+	yy[N+1] = yy[N+1] -1e-5
+	
+	b[1]= yy[1]
+	
+	xx = rep(0,length(yy))
+	for (i in 1:(N+1)) {
+		b[1] = yy[i]
+		sol = solve.QP(Dmat = D, dvec = (d), Amat = t(A), bvec = t(b), meq = 2)
+		xx[i] = sqrt(sol$value)
+	}
+	
+	if (!full){
+		min_sigma = min(xx)
+		idx = which(yy>=yy[which(xx==min_sigma)])
+		xx= xx[idx]
+		yy= yy[idx]
+	}
+	
+	res = list(sigma = xx, expected_return=yy)
+	return(res)
+}
+\end{lstlisting}
+
+\subsection{CVaR allocation}
+
+Function to compute the optimal allocation using CVaR as the portfolio risk measure:
+
+\begin{lstlisting}
+# Function to compute the optimal allocation using CVaR
+OptimalAllocationDailyCVaR= function(daily_return, alpha, target_return, N_rep=1){
+	# daily_return: daily return matrix(N_days * N_assets)
+	# alpha: level for the CVaR
+	# target_return: target return to be reached
+	# N_rep: number of times to compute the result in order to then take an average
+	
+	require(alabama)
+	
+	N_assets = dim(daily_return)[2]
+	
+	expected_asset_return = colMeans(daily_return)
+	
+	solution = list(obj = rep(0,N_rep), params = matrix(rep(0,N_rep*N_assets),ncol = N_assets), expected_ret=rep(0,N_rep))
+	
+	for (i in 1:N_rep) {
+	# creating initial random weights summing to one
+	sampled =  runif(N_assets)
+	rand_initial = sampled/sum(sampled)
+	
+	res = auglag(par = rand_initial, fn=daily_ptf_cvar, # objective function
+	hin = f_ineq_daily, heq =f_eq_daily, # constraints
+	sims=daily_return, alpha = alpha, target_return = target_return, control.outer = list(method = "nlminb", trace = FALSE))
+	solution$obj[i]=res$value
+	solution$params[i,]=matrix(res$par,ncol = N_assets)
+	solution$expected_ret[i]=(sum(res$par*expected_asset_return))
+	
+	print(paste("Target return:", target_return, "Iteration:", i))
+	}
+	
+	idx = which.min(solution$obj)
+	
+	return(list(objective = solution$obj[idx], 
+	allocation = solution$params[idx,],
+	expected_return = solution$expected_ret[idx]))
+}
+
+daily_ptf_cvar = function(w,  sims, alpha, target_return){
+	daily_loss = 1 - sims%*%w
+	sorted_loss = sort(daily_loss,decreasing = FALSE)
+	VaR = quantile(x = daily_loss, probs = 1-alpha)
+	idx_var = min(which(sorted_loss >= VaR))
+	# print(idx_var)
+	CVaR = mean(sorted_loss[idx_var:length(sorted_loss)])
+	return(CVaR)
+}
+
+# Equality constraints
+f_eq_daily = function(w, sims, alpha,target_return){
+	# weights should sum to 1
+	c1 = sum(w)-1 
+	N_s = dim(sims)[1]
+	# expected return should be the same as target_return
+	c3 =  sum(t(sims)%*% matrix(rep(1, N_s),ncol = 1) *w) /N_s - target_return
+	return(c(c1, c3))
+}
+
+# Inequality constraint
+f_ineq_daily = function(w, sims, alpha,target_return){
+	# no short-selling, so all weigths should be positive
+	return(w)
+}
+\end{lstlisting}
+
