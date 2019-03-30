@@ -256,8 +256,8 @@ abline(v=axis.Date(1, x=pretty(index(zoo_roll_corr))),col = "lightgray", lty = "
 
 # plot against fx
 x11()
-# layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE))
-layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE), heights = rep(1)/3)
+layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE))
+#layout(matrix(c(1,1,5,2,2,6,3,3,7,4,4,8),nrow= 3,ncol=4, byrow=FALSE), heights = rep(1)/3)
 #par(mar=c(0, 0, 1, 1) + 0.0)
 plot(end_times, roll_corr[,'eur'], type = 'l', ylab = "roll_corr", ylim = c(y_min,y_max))
 #points(end_times, roll_corr[,'bric'])

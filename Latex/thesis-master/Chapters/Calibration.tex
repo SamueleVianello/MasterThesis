@@ -207,7 +207,7 @@ In our analysis we preferred to keep the same approach to the calibration for al
 \subsection{Single Asset Heston Calibration}
 The first issue that we have to overcome is that an explicit formula for the probability density function of the log-returns is not available and we have to resort to performing a Fourier inversion on the characteristic function, as we already showed in equation \eqref{eq:chf_inversion}
 
-This allows us to have a pdf \textcolor{red}{AGGIUNGERE GLOSSARIO }for the log-return $x_t = \log S_t $ but in order to be able to perform a maximum likelihood calibration in the same way that we did in the  previous section, we need to have the distribution for $\Delta x_t = \log (S_{t + \Delta t} / S_t)$ and make sure that they are i.i.d. so that we can apply \eqref{eq:log_likelihood}.
+This allows us to have a \acrfull{pdf} for the log-return $x_t = \log S_t $ but in order to be able to perform a maximum likelihood calibration in the same way that we did in the  previous section, we need to have the distribution for $\Delta x_t = \log (S_{t + \Delta t} / S_t)$ and make sure that they are i.i.d. so that we can apply \eqref{eq:log_likelihood}.
 
 In order to obtain the pdf for the incremental log-returns $\Delta x_t$, we first need the distribution of  $\Delta x_{[0, t] }= \log (S_t / S_0)$. We can simply proceed as we explained in Chapter \ref{chpr:models} in the section about Heston model to get the characteristic function for $\Delta x_{[0, t] }$ conditioned on the values of $V_0$: 
 
@@ -296,7 +296,7 @@ The issue that arises when moving from a continuous dynamics to a discrete one a
 Having $V_i < 0$ causes the next update at $i+1$ to be undefined since we would have to compute the square root of a negative value in a real framework.
 
 To solve this issue, a number of possible solutions have been proposed and are collected in \citep{LORD2010}. Among those we have:
-\textit{absorption}, which consists in setting $V_i = 0$ when it is negative, \textit{reflection}, taking the absolute value $V_i = |V_i|$, and finally \textit{full truncation}, which is the solution proposed  by the authors in \citep{LORD2010} and the one we  implement. It is obtained modifying \eqref{eq:discrete_heston} as follows:
+\textit{absorption}, which consists in setting $V_i = 0$ when it is negative, \textit{reflection}, taking the absolute value $V_i = |V_i|$, and finally \textit{full truncation}, which is the solution proposed  by the authors in \citep{LORD2010} and the one we  implement. Other efficient simulation schemes that solve this problem can be found in \citep{andersen}. It is obtained modifying \eqref{eq:discrete_heston} as follows:
 
 \begin{subequations}
 	\label{eq:full_truncation}
@@ -404,7 +404,8 @@ After we have calibrated each asset-asset correlation by solving \eqref{eq:expec
 \section{Empirical results}
 \label{sec:results_cal}
 We now present the specifics of how the calibration procedure was implemented in our study, including the numerical results that it yielded.
-All the code to perform the computations was developed in R for greater portability across platforms. 	\textcolor{red}{aggiungere recap sui dati}
+All the code to perform the computations was developed in R for greater portability across platforms. 	
+As explained in the Introduction, the dataset is composed by a total of 2163 daily observations of the prices of 16 assets for the time period ranging from July 19, 2010 to November 2, 2018.
 
 \subsection{Merton Calibration Results}
 One of the core aims of this study is to compare the values of the empirical correlation of Bitcoin with other main assets as presented in Chapter \ref{chpr:corr_analysis} with the same correlations computed using more sophisticated models, in our case Merton, Heston and Bates.
@@ -516,7 +517,7 @@ Finally, the different values of $\rho_{model}$ are stored in a matrix for which
 The resulting correlation structure is shown in Table \ref{tab:merton_corr}, with the usual colour notation.
 
 
-The entire procedure of calibration for the Merton model is fairly fast and only takes about 10 minutes when executed in our computer.
+The entire procedure of calibration for the Merton model is fairly fast and only takes about 10 minutes when executed in our computer, a MacBook Pro with a  2,6 GHz Intel Core i5 processor and an 8 GB 1600 MHz DDR3  RAM.
 
 
 
