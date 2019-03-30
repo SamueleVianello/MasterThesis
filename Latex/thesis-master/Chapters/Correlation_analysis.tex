@@ -53,7 +53,7 @@ Results for the mean returns and the volatilities are inserted in Table \ref{tab
 \begin{table}
 	\small
 	\centering
-	\caption[Annualized mean returns and volatilities from sample]{Annualized returns and volatilities obtained from sample. We use $T = 250$ as the number of trading days in a year.}
+	\caption[Annualized mean returns and volatilities from sample]{Annualized returns and volatilities obtained from sample. We use $T = 255$ as the number of trading days in a year.}
 	\label{tab:sample_ret_vol}
 	\begin{tabular}{lcc}
 		& Annualized Mean Return & Annualized Volatility \\
@@ -112,13 +112,13 @@ Results for the mean returns and the volatilities are inserted in Table \ref{tab
 We are mainly interested in the correlation between Bitcoin and other assets returns, so we will now focus on the first row (or equivalently column, by symmetry) of the correlation matrix.
 All these values are fairly close to zero, never even  exceeding $5\%$ towards the positive or the negative side. 
 One may thus wonder whether these correlations are \textit{statistically significantly} different from zero.
-To answer this question, we will introduce two statistical tests to check the correlation significance.
+To answer this question, we introduce two statistical tests to check the correlation significance.
 
 
 \bigskip
 \section{Correlation Significance}
 \label{sec:corr_significance}
-The very core of Inferential Statistics, the branch of statistics that allows to draw conclusions from the information contained in a set of data, is hypothesis testing. 
+The core of Inferential Statistics, the branch of statistics that allows to draw conclusions from the information contained in a set of data, is hypothesis testing. 
 
 In our case, we are specifically interested in testing if the sample correlation coefficients are significantly different from zero or not.
 Both of the following tests are presented in the most general form for a sample of two variables, with their distribution correlation $\rho$ and their sample correlation $\hat{\rho}$. 
@@ -132,9 +132,10 @@ These will be common to both presented tests.
 \subsection{Pearson's \textit{t}-test}
 Our first test is based on Student's t-distribution and the following t-statistic:
 \begin{equation}
-	t = \hat{\rho} \sqrt{\frac{n - 2}{1 - \hat{\rho}^2}}
+	t = \hat{\rho} \sqrt{\frac{n - 2}{1 - \hat{\rho}^2}},
 \end{equation} 
 
+\noindent
 which under the null hypothesis is distributed as a Student's $t$ with $n-2$ degrees of freedom, where $n$ stands for the cardinality of the sample.
 We can thus proceed by computing the relative p-value and compare it to a given level of confidence $\alpha$ (usually $\alpha = 95\%$). 
 The result of the test will be deduced as follows:

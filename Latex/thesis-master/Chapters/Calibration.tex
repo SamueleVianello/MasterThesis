@@ -2,7 +2,7 @@
 \label{chpr:calibration}
 
 In this chapter we will explain how the different models were calibrated and what difficulties were overcome. Empirical results are included for each section.
-In particular, we will be calibrating the parameters under the physical measure though maximum likelihood estimation since we only have data for the time-series of the asset prices. 
+In particular, we will calibrate the parameters under the physical measure though maximum likelihood estimation since we only have data for the time-series of the asset prices. 
 
 \bigskip
 
@@ -22,7 +22,7 @@ The estimation of the parameter set $\psi$ can then be obtained by:
 \begin{equation}
 	\hat{\psi} = \argmax_{\psi \in \Psi} \:\mathcal{L}(\psi |  X),
 \end{equation}
-
+\noindent
 where $\mathcal{L}(\psi |  X)$ is the likelihood function for distribution $\mathcal{D}(\psi)$ given the observed data $X$.
 
 In the case that the data in $X$ are i.i.d. we have that the likelihood function can be computed as the product of the probability density function computed at each observation $x_i$:
@@ -56,7 +56,7 @@ We will first present how to obtain the parameters for a single asset model and 
 
 
 \subsection{Single Asset Merton Calibration}
-As we already introduced, the calibration method that we use is the maximum likelihood approach.
+As we have already introduced, the calibration method that we use is the maximum likelihood approach.
 
 We are going to calibrate the values of the 5 parameters $\psi= \left\{ \mu, \sigma, \mu_J, \sigma_J, \lambda \right\}$ of the jump diffusion model based on the observations of the log-returns $\Delta x_i = \log \frac{S_i}{S_{i-1}}$ for each time interval $\Delta t$. In our analysis, since we are using \textit{daily} log-returns, $\Delta t = 1/255$. 
 
@@ -77,10 +77,10 @@ In particular, we have that the probabilities to have $k = 0, 1, 2$ jumps in a s
 	\begin{align}
 	\mathbb{P}(N = 0) &= e^{-\lambda \Delta t}, \\
 	\mathbb{P}(N = 1) &= \lambda \Delta t \: e^{-\lambda \Delta t}, \\
-	\mathbb{P}(N = 2) &= \frac{(\lambda \Delta t)^2}{2} \: e^{-\lambda \Delta t}
+	\mathbb{P}(N = 2) &= \frac{(\lambda \Delta t)^2}{2} \: e^{-\lambda \Delta t},
 	\end{align}
 \end{subequations}
-
+\noindent
 since $N \sim Pois(\lambda \Delta t)$, which is the Poisson process counting jumps that happen in a $\Delta t$ interval.
 Considering $\lambda \Delta t$ as small, we can approximate to the first order  $e^{-\lambda \Delta t} =  1 - \lambda \Delta t +  o((\lambda \Delta t)^2)$. 
 We thus obtain that:
@@ -96,7 +96,7 @@ We thus obtain that:
 The result is that the only relevant terms in \eqref{eq:merton_full_pdf} are the ones for $ k = 0, 1$.
 The formula for the transition density thus  becomes:
 \begin{equation}
-f_{\Delta x} (x; \psi) = \mathbb{P}(N = 0) f_{\Delta X | N = 0}(x; \psi) + \mathbb{P}(N = 1) f_{\Delta x | N = 1}(x; \psi)
+f_{\Delta x} (x; \psi) = \mathbb{P}(N = 0) f_{\Delta X | N = 0}(x; \psi) + \mathbb{P}(N = 1) f_{\Delta x | N = 1}(x; \psi).
 \end{equation}
 We can then write this equation explicitly by considering the different distributions of the log-returns in the case of no jumps and a single jump:
 \begin{equation}
@@ -161,7 +161,7 @@ $ x_i^{(2,k)}$ for $k= 1, ... ,N_{sim}$  and compute for each scenario the corre
 From these values we can easily compute $\bar{\rho}$:
 \begin{equation}
 \label{eq:expected_model_correlation}
-	\bar{\rho} = \mathbb{E} [\rho_{scen}] = \frac{1 }{N_{sim}} \sum_{k=1}^{N_{sim}} \rho_{scen}^{(k)}
+	\bar{\rho} = \mathbb{E} [\rho_{scen}] = \frac{1 }{N_{sim}} \sum_{k=1}^{N_{sim}} \rho_{scen}^{(k)}.
 \end{equation}
 
 
@@ -170,7 +170,7 @@ We have that  the value of the \textit{expected model correlation} $\bar{\rho}$ 
 \label{eq:expected_observed}
 \bar{\rho}(\rho_{model}) = \rho_{obs},
 \end{equation}
-
+\noindent
 as we have already stated earlier in this section.
 
 \bigskip
@@ -198,7 +198,7 @@ Hence, $\widehat{M}$ is the model correlation matrix that best represents the ob
 \bigskip
 \section{Calibration of Heston Model}
 \label{sec:heston_cal}
-Calibrating the Heston model on time-series data presents an added difficulty since we only have data on the price process, while the model also takes into consideration the dynamics of the variance as a stochastic process. 
+Calibrating the Heston model on time-series data presents an additional difficulty since we only have data on the price process, while the model also takes into consideration the dynamics of the variance as a stochastic process. 
 
 The problem of deducing the parameter of a \textit{non-observable} process from the observable states of a system is called \textit{filtering} and is in general a complicated numerical procedure. There are nonetheless some studies in the literature on the subject of calibrating the Heston model through filtering, for example \citep{filtering}.
 
@@ -207,7 +207,7 @@ In our analysis we preferred to keep the same approach to the calibration for al
 \subsection{Single Asset Heston Calibration}
 The first issue that we have to overcome is that an explicit formula for the probability density function of the log-returns is not available and we have to resort to performing a Fourier inversion on the characteristic function, as we already showed in equation \eqref{eq:chf_inversion}
 
-This allows us to have a pdf for the log-return $x_t = \log S_t $ but in order to be able to perform a maximum likelihood calibration in the same way that we did in the  previous section, we need to have the distribution for $\Delta x_t = \log (S_{t + \Delta t} / S_t)$ and make sure that they are i.i.d. so that we can apply \eqref{eq:log_likelihood}.
+This allows us to have a pdf \textcolor{red}{AGGIUNGERE GLOSSARIO }for the log-return $x_t = \log S_t $ but in order to be able to perform a maximum likelihood calibration in the same way that we did in the  previous section, we need to have the distribution for $\Delta x_t = \log (S_{t + \Delta t} / S_t)$ and make sure that they are i.i.d. so that we can apply \eqref{eq:log_likelihood}.
 
 In order to obtain the pdf for the incremental log-returns $\Delta x_t$, we first need the distribution of  $\Delta x_{[0, t] }= \log (S_t / S_0)$. We can simply proceed as we explained in Chapter \ref{chpr:models} in the section about Heston model to get the characteristic function for $\Delta x_{[0, t] }$ conditioned on the values of $V_0$: 
 
@@ -226,8 +226,7 @@ The unconditional chf for the Heston model has the following expression:
 \begin{equation}
  \phi_{\Delta x_t}(u) = \exp\{A(\Delta t,u) \} M_{\Gamma}(C(\Delta t,u))
 \end{equation}
-
-
+\noindent
 with $M_{\Gamma}$ as the moment generating function of a Gamma distribution:
 \begin{subequations}
 \begin{align}
@@ -245,7 +244,7 @@ f_{\Delta x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty}  \phi_{\Delta x_t}(i 
 \end{equation}
 
 
-Another advantage of using the uncoditional chf is that since all the observed log-returns $\Delta x_i = \Delta x_{t_i} $ are considered to be sampled from the same distribution, we can numerically perform the inversion in \eqref{eq:uncond_inversion} using the Fast Fourier Transform (FFT). This allows for a great increase in the speed of the numerical computations since we can obtain the value of the pdf for all different $\Delta x_i$ with a single inversion and one interpolation.
+Another advantage of using the uncoditional \acrfull{chf} is that since all the observed log-returns $\Delta x_i = \Delta x_{t_i} $ are considered to be sampled from the same distribution, we can numerically perform the inversion in \eqref{eq:uncond_inversion} using the Fast Fourier Transform (FFT). This allows for a great increase in the speed of the numerical computations since we can obtain the value of the pdf for all different $\Delta x_i$ with a single inversion and one interpolation.
 The main ideas behind the FFT algorithm are explained in Appendix \ref{app:FFT}.
 
 
@@ -256,10 +255,10 @@ In order to perform the maximization of the log-lokelihood function to calibrate
 
 The MLE procedure will thus need to be performed including an additional constraint in the optimization given by Feller condition:
 \begin{equation}
-\widehat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x)
+\widehat{\psi} = \argmax_{\psi \in \Psi} \:\ell(\psi |  \Delta x),
 \end{equation}
 \begin{equation}
-	\Psi = \{ (\mu, \kappa, \theta, \sigma_V, \rho) \in \mathbb{R}^5 \: |\: \kappa,\theta,\sigma_V >0, \rho \in [-1,1], 2\kappa\theta \geq \sigma_V \}
+	\Psi = \{ (\mu, \kappa, \theta, \sigma_V, \rho) \in \mathbb{R}^5 \: |\: \kappa,\theta,\sigma_V >0, \rho \in [-1,1], 2\kappa\theta \geq \sigma_V \}.
 \end{equation}
 
 
@@ -283,7 +282,7 @@ The discretized dynamics of the log-returns and the variance for a single asset 
 	\label{eq:discrete_heston}
 	\begin{align}
 		x_i &= x_{i-1} + (\mu -  \frac{V_{i-1}}{2})\Delta t + \sqrt{V_{i-1} \Delta t} \:z_x, \\
-		V_i &= V_{i-1} + \kappa(\theta - V_{i-1} )\Delta t + \sigma_V \sqrt{V_{i-1} \Delta t} \: z_V
+		V_i &= V_{i-1} + \kappa(\theta - V_{i-1} )\Delta t + \sigma_V \sqrt{V_{i-1} \Delta t} \: z_V,
 	\end{align}
 \end{subequations}
 with $z_x$ and $z_V$ that are the two components of a Gaussian vector with mean zero and correlation $\rho$.\footnote{In a more extensive form: $ \mathbf{z} = \begin{pmatrix}
@@ -405,7 +404,7 @@ After we have calibrated each asset-asset correlation by solving \eqref{eq:expec
 \section{Empirical results}
 \label{sec:results_cal}
 We now present the specifics of how the calibration procedure was implemented in our study, including the numerical results that it yielded.
-All the code to perform the computations was developed in R for greater portability across platforms.
+All the code to perform the computations was developed in R for greater portability across platforms. 	\textcolor{red}{aggiungere recap sui dati}
 
 \subsection{Merton Calibration Results}
 One of the core aims of this study is to compare the values of the empirical correlation of Bitcoin with other main assets as presented in Chapter \ref{chpr:corr_analysis} with the same correlations computed using more sophisticated models, in our case Merton, Heston and Bates.
@@ -619,7 +618,7 @@ Lastly, we perform the usual regularization to obtain a valid model correlation 
 The final result is shown in Table \ref{tab:heston_corr}.
 
 \bigskip
-The increase in the complexity in terms of the formulation of the model generates a great increase in the computation time for the calibration. Each time we have to compute the (negative) log-likelihood function we need to invert the characteristic function: even when taking advantage of the FFT algorithm there still is a great increase with respect to the calibration time in Merton's case. The total time amounts to about three hour, with a single asset calibration taking up to fifteen minutes.
+The increase in the complexity in terms of the formulation of the model generates a great increase in the computation time for the calibration. Each time we have to compute the (negative) log-likelihood function we need to invert the characteristic function: even when taking advantage of the FFT algorithm there still is a great increase with respect to the calibration time in Merton's case. The total time amounts to about three hour, with a single asset calibration taking up to fifteen minutes. \textcolor{red}{aggiungere caratteristiche computer}
 
 \begin{table}
 	\tiny

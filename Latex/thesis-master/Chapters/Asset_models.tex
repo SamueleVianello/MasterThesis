@@ -10,6 +10,8 @@ All models are first introduced in the one dimensional case and then generalised
 \label{sec:notions}
 In this section we will briefly present the equation of a geometric brownian motion, introduce the notion of Poisson process and present the 
 CIR process. All of these building blocks will be required to fully understand the models to follow.
+For more details  please refer to \citep{TANKOV2015}.
+
 
 
 \subsection{Geometric Brownian Motion}
@@ -19,6 +21,7 @@ The simplest continuous dynamics to describe the price of an asset is that of a 
 	\frac{dS_t}{S_t} = \mu dt + \sigma dW_t,
 \end{equation}
 
+\noindent
 where $S_t$ represents the price of the asset at time $t$, $\mu$ is the (constant) drift and $\sigma$ is the (constant) volatility. $W_t$ is a Wiener process (or Brownian motion).
 This is the standard and most widespread stochastic differential equation to model asset dynamics, so we will only present those results that will be later used in our study.
 
@@ -52,6 +55,7 @@ Consider a sequence of \textit{independent} exponential random variables  $\{\ta
  	N_t = \sum_{n\geq 1} \mathds{1}_{t \geq T_n},
 \end{equation}
 
+\noindent
 where $\mathds{1}_{condition}$ is 1 if the \textit{condition} is true, 0 if it is false.
 
 $N_t$ is thus a piece-wise constant RCLL\footnote{RCLL is shorthand for right continuous with left limit.} process with jumps that happen at times $T_n$ and are all of size 1, as we can see from Figure \ref{fig:pois}.
@@ -86,7 +90,7 @@ At any time $t$, $N_t$ is distributed as a Poisson of parameter $\lambda t$, whi
 When working with jump diffusion processes, it is often the case that there is no explicit formula for its density, thus  we usually resort to characteristic functions. The characteristic function of $N_t$ is given by 
 \begin{equation}
 \label{eq:pois_chf}
-	\phi_{N_t}(u)=e^{\lambda t (e^{iu}-1)}
+	\phi_{N_t}(u)=e^{\lambda t (e^{iu}-1)}.
 \end{equation}
 
 The computations to get \eqref{eq:pois_chf} from \eqref{eq:pois_pdf} are carried out in Appendix \ref{app:A}. 
@@ -101,7 +105,7 @@ is a compound Poisson process. Examples of this kind of process are plotted in F
 As before, we developed the computations to obtain an expression for the characteristic function of $X_t$ in Appendix \ref{app:A}. The resulting expression depends on the distribution of $Y$, specifically from its characteristic function $\phi_Y(u)$:
 
 \begin{equation}
-	\phi_{X_t}(u) = e^{\lambda t (\phi_Y(u)-1)}
+	\phi_{X_t}(u) = e^{\lambda t (\phi_Y(u)-1)}.
 \end{equation}
 
 Both in Merton's and in the Heston's models there will be a jump component driven by a compound Poisson process with Gaussian jump sizes, as we will see in the following paragraphs.
@@ -111,7 +115,7 @@ The CIR process was introduced in \citep{CIR85} in 1985 by Cox, Ingersoll and Ro
 Following their notation, the differential equation for the  evolution of the rate is given by:
 \begin{equation}
 \label{eq:cir}
-	dr_t = \kappa(\theta - r_t) dt + \sigma \sqrt{r_t}dW_t
+	dr_t = \kappa(\theta - r_t) dt + \sigma \sqrt{r_t}dW_t,
 \end{equation}
 where we have three parameters that characterize it: $\theta$ is the \textit{long-term value} of the rate, the asymptotic level which it tends to settle at in the long run;$\kappa$ is the \textit{mean-reversion rate}, the speed at which the rate is pulled back to the $\theta$ value; finally $\sigma$ accounts for the \textit{volatility} of the stochastic component.
 When $\kappa,\theta >0$, equation (\ref{eq:cir}) represents a first order mean-reverting auto-regressive process. Moreover, as reported in \citep{HESTONTRAP}, we know that the process will not hit zero if the following condition is satisfied:
@@ -163,7 +167,7 @@ The asset price dynamics $S_t$ is modelled as a GBM to which a jump component dr
 \label{eq:merton_model}
 \frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt + \sigma dW_t  + Y_t dN,
 \end{equation}
-
+\noindent
 where $\mu$ and $\sigma$ are respectively the drift and the diffusion of the continuous part, $Y_t$ is a process modelling the intensity of the jumps and $N(t)$ is the Poisson process driving the arrival of the jumps and has parameter $\lambda$.
 The jump intensity $Y_t$ is distributed as a log-normal with parameters $(\mu_J, \sigma_J^2)$. This means that $ y_t = \log(Y_t) \sim \mathcal{N}(\mu_J, \sigma_J^2)$
 
@@ -171,13 +175,13 @@ We can rewrite (\ref{eq:merton_model}) in terms of the log-returns $X_t = log(S_
 \begin{equation}
 dX_t = (\mu - \frac{\sigma^2}{2} - \lambda \mu_J)dt + \sigma dW_t + \log(Y_t),
 \end{equation}
-
+\noindent
 that has as solution:
 \begin{equation}
 \label{merton_returns}
 X_t =X_0 +  \mu t + \sigma W_t + \sum_{k=1}^{N(t)} y_k,
 \end{equation}
-
+\noindent
 where $X_0$ is the initial value of the log-returns, $y_k= \log(Y_k) = \log(Y_{t_k})$ and $t_k$ is the time when the $k^{th}$ Poisson shock from $N(t)$ happens. 
 Following Merton in \citep{MERTON1976}, we take $y_k$ \textit{i.i.d.} (independent and identically distributed) and Gaussian, as we already stated.
 Another choice for the distribution of $y$ is given in \citep{KOU2002}, where an asymmetric distribution is used to account for positive and negative jump in two different ways. 
@@ -190,7 +194,7 @@ It is often useful when dealing with market data that are by nature discrete, to
 \label{discrete_returns}
 X_i =  \mu \Delta t + \sigma \sqrt{\Delta t} \; z +  \sum_{k=1}^{N_{i+1} - N_i} Y_k
 \end{equation}
-
+\noindent
 where we denote $X_i = X_{t_i}$, $N_i = N(t_i)$ and $t_i = i \Delta t$ with $i= 0 \dots N$, $t_N = N \Delta t= T$,  $z$ is distributed as a standard Gaussian $ z\sim \mathcal{N}(0,1)$.
 
 The Poisson process $N(t)$ in (\ref{discrete_returns}) is computed at times $t_{i+1}$ and $t_i$ and these quantities are subtracted. Following the results we presented in Section \ref{sub:poisson}, $N_{i+1} - N_i$ is distributed as a Poisson random variable $N$ of parameter $\lambda \Delta t$.
@@ -211,7 +215,7 @@ Starting from the univariate model introduced in \citep{MERTON1976}, we can deve
 \begin{equation}
 \frac{dS_t^{(j)}}{S_t^{(j)}} = (\mu_j - \lambda_j \mu_{J_j}) dt + \sigma_j dW_t^{(j)} + Y^{(j)}_t dN^{(j)}_t
 \end{equation}
-
+\noindent
 where $\mathbf{S}_t$ are the prices of the assets, $j = 1, ...  ,n$ represents the asset, $\mu_j$ are the drifts, $\sigma_j$ are the diffusion coefficients, $W^{(j)}_t$ are the components of an $n$-dimensional Wiener process $ \mathbf{W}_t$ with $dW^{(i)}dW^{(j)}=\rho_{i,j}$, $Y_j$ represent the intensities of the jumps and  $y^{(j)} = \log(Y^{(j)})$ are distributed as Gaussian: $y^{(j)}  \sim \mathcal{N}(\mu_{J_j} , \sigma_{J_j}^2)$. Finally, $N^{(j)}(t)$ are Poisson processes with parameters $\lambda_j$, which are independent of $\mathbf{W}_t$ and of one another. 
 
 \bigskip
@@ -234,7 +238,7 @@ In particular, the dynamics of the \textit{instantaneous} variance $V_t = \sigma
 \label{eq:heston_variance}
 	dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V,
 \end{equation}
-
+\noindent
 where $\mu$ represents the drift in the asset prices, $\kappa>0$ and $\theta>0$ are respectively the \textit{mean-reversion} rate  and the long-run level for the $V_t$ process, $\sigma_V>0$ is often referred to as the \textit{volatility of volatility} parameter, in short vol-of-vol.
 The two brownian motions $W_t^S$ and $W_t^V$ are correlated with correlation coefficient equal to $\rho$.
 It can be proven that the variance process is always non-negative if the \textit{Feller} condition
@@ -250,7 +254,7 @@ Unfortunately, given the increased complexity of the model due to the SV part, a
 \label{eq:chf_inversion}
 f_{x_t}(x) = \frac{1}{2\pi}\int_{-\infty}^{+\infty} \phi_{x_t}(i u) e^{i u x} du .
 \end{equation}
-
+\noindent
 as explained in the reference paper by Heston.
 
 In (\ref{eq:chf_inversion}) we omitted the dependence of $f_{x_t}(x)$ and $\phi_{x_t}(u)$ on model parameters and on the initial values of the log-returns $x_0$ and of the variance process $V_0$. 
@@ -273,8 +277,8 @@ where :
 \begin{equation*}
 \begin{split}
 d&=\sqrt{(\rho \sigma_V u i - \kappa)^2 + \sigma_V^2(u i + u^2)},\\
-g&= \frac{\kappa - \rho\sigma_V u i + d}{\kappa - \rho\sigma_V u i - d}
-\end{split}.
+g&= \frac{\kappa - \rho\sigma_V u i + d}{\kappa - \rho\sigma_V u i - d}.
+\end{split}
 \end{equation*} 
 
 
@@ -323,11 +327,11 @@ Applying the definition of characteristic function:
 	&= \exp\{A(t,u) + (B(t,u) - iu) x_0 + C(t,u) V_0\}
 	\end{split}
 \end{equation*}
-
+\noindent
 and since $B(t,u)  = i u$, the second term in the exponential is equal to zero and we are left with:
 \begin{equation}
 \label{eq:chf_V0}
-\phi_{\Delta x_t}(u|V_0) =  \exp\{A(t,u) + C(t,u) V_0\}
+\phi_{\Delta x_t}(u|V_0) =  \exp\{A(t,u) + C(t,u) V_0\}.
 \end{equation}
 
 
@@ -347,7 +351,7 @@ The computations to obtain an unconditional characteristic function are the foll
 	&= \exp\{A(t,u) \} M_{V_0}(C(t,u))
 \end{split}
 \end{equation*}
-
+\noindent
 where we have used the Law of Total Expectation and $M_{V_0}(z)$ indicates the \textit{moment generating function} of $V_0$ as considered stationary, so that of a Gamma distribution. In particular, it will have the same expression as in \eqref{eq:cir_mgf}.
 
 
@@ -395,7 +399,7 @@ dW^{S_i}(t)\\
 dW^{V_i }(t)
 \end{pmatrix},
 \end{multline}
-
+\noindent
 where $dW^{S_i}(t)$ and $dW^{V_i}(t)$ are independent processes and we have written explicitly the dependence between the price and the variance processes.
 
 To fully characterize the model, we need to describe how the different $W^{S_i}$ and $W^{V_i}$ are correlated. In accordance with what was stated earlier, the correlation structure is the following:
@@ -406,7 +410,7 @@ To fully characterize the model, we need to describe how the different $W^{S_i}$
 0& I_n
 \end{pmatrix},
 \end{equation}
-
+\noindent
 in which $\Sigma^S = cor(\boldsymbol{W}^{S})$.
 Equation (\ref{eq:heston_cor}) mathematically represents what we defined as the correlation structure for our model: we only explicitly define the \textit{asset-asset} correlations through matrix $\Sigma^S$, the dependence of every variance  on other processes is carried over via $\Sigma^S$ and the correlations $\rho_i$.
 More clearly, let $(\Sigma^S)_{i,j} = \rho_{i,j}$\footnote{Of course we will have $\rho_{i,j} = 1 $ whenever $i=j$.}:
@@ -440,10 +444,10 @@ Thus, we will have to deal with a total of 8 parameters: $\mu, \kappa, \theta, \
 
 
 \begin{equation}
-\frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt +\sqrt{ V_t} dW_t^S + Y_t dN 
+\frac{dS_t}{S_t} = (\mu - \lambda \mu_J) dt +\sqrt{ V_t} dW_t^S + Y_t dN ,
 \end{equation}
 \begin{equation}
-dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V
+dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V .
 \end{equation}
 
 Of course, as these equations are directly obtained from \eqref{eq:heston_price} and \eqref{eq:heston_variance}, we have that the variance process is strictly positive whenever the Feller condition $2\kappa\theta\geq \sigma_V$ is satisfied. As in \eqref{eq:merton_model}, $Y_t$ is  the jump process and is such that $ y_t = \log(Y_t) \sim \mathcal{N}(\mu_J, \sigma_J^2)$, while $N(t)$ is a Poisson process with parameter $\lambda$.
@@ -460,9 +464,10 @@ The silver lining however is  that to obtain the expression of   $\phi_{x_t}(u)$
 A(t,u) &= \mu u i t +  \frac{\kappa\theta}{\sigma_V^2} \bigg( (\kappa - \rho\sigma_V u i - d)t - 2 \log\Big[  \frac{1-g^*e^{-dt}}{1-g^*} \Big] \bigg),\\
 B(t,u) &= i u ,\\
 C(t,u)&= \frac{\kappa - \rho\sigma_V u i - d}{\sigma_V^2} \:\Big[\frac{1-e^{-dt}}{1-g^*e^{-dt}}\Big],\\
-D(t,u) &= -\lambda \mu_J u i t + \lambda t  \:\Big[ (1+\mu_J)^{ui} e^{\sigma_J^2(ui/2)(ui-1)}-1 \Big]
-\end{align},
+D(t,u) &= -\lambda \mu_J u i t + \lambda t  \:\Big[ (1+\mu_J)^{ui} e^{\sigma_J^2(ui/2)(ui-1)}-1 \Big],
+\end{align}
 \end{subequations} 
+\noindent
 where :
 \begin{equation*}
 \begin{split}
@@ -515,7 +520,7 @@ Y_i(t) dN^i_t  \\
 0   
 \end{pmatrix}.
 \end{multline}
-
+\noindent
 $Y_i(t)$ are the jump intensities for each asset, such that $\log Y_i(t) \sim \mathcal{N}(\mu_{J_i}, \sigma_{J_i})$ and $N_i(t)$ are the Poisson processes that drive the arrival of the jumps with parameters $\lambda_i$.
 We have explicitly expressed the correlation between the two Brownian motions for each asset in the matrix that multiplies the stochastic differential, so that $W^{S_i}(t)$ and $W^{V_i}(t)$ are independent from each other for all $i$.
 
