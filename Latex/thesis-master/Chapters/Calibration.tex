@@ -619,7 +619,7 @@ Lastly, we perform the usual regularization to obtain a valid model correlation 
 The final result is shown in Table \ref{tab:heston_corr}.
 
 \bigskip
-The increase in the complexity in terms of the formulation of the model generates a great increase in the computation time for the calibration. Each time we have to compute the (negative) log-likelihood function we need to invert the characteristic function: even when taking advantage of the FFT algorithm there still is a great increase with respect to the calibration time in Merton's case. The total time amounts to about three hour, with a single asset calibration taking up to fifteen minutes. \textcolor{red}{aggiungere caratteristiche computer}
+The increase in the complexity in terms of the formulation of the model generates a great increase in the computation time for the calibration. Each time we have to compute the (negative) log-likelihood function we need to invert the characteristic function: even when taking advantage of the FFT algorithm there still is a great increase with respect to the calibration time in Merton's case. The total time amounts to about three hour, with a single asset calibration taking up to fifteen minutes when calibrating on our machine.
 
 \begin{table}
 	\tiny
