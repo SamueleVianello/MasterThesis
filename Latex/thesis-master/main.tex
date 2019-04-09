@@ -44,7 +44,7 @@
 %\newcommand{\source}[1]{\caption*{Source: {#1}} }
 
 %\renewcommand\textflush{flushright}
-\setlength\epigraphwidth{.6\textwidth}
+\setlength\epigraphwidth{.5\textwidth}
 
 
 \include{Glossary/Glossary}
@@ -91,13 +91,16 @@
 %% Set page numbers of the introduction to roman  
 \frontmatter
 \pagestyle{plain}
+
+
+\cleardoublepage
+\vspace*{\fill}
+\epigraph{\textit{Beauty is the purgation of superfluities.}}{Michelangelo}
+\vspace*{\fill}
+
+
 \include{Abstract/abstract}
-
-%\cleardoublepage
-%\vspace*{\fill}
-%\epigraph{\textit{The secret to happiness is freedom. \\ And the secret to freedom is courage.}}{Thucydides}
-%\vspace*{\fill}
-
+\include{Acknowledgement/acknowledgement}
 
 %----------------------------------------------------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
@@ -113,8 +116,7 @@
 \glsaddall
 \printglossaries
 
-%\include{Abstract/abstract}
-%\include{Acknowledgement/acknowledgement}
+
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - CHAPTERS
