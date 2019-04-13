@@ -2,8 +2,13 @@
 
 %\usepackage{tikz}
 %\usetikzlibrary{backgrounds,fit, positioning,shapes}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
 \usepackage{mathtools}
 \usepackage{xcolor}
+\definecolor{mygreen}{RGB}{35,190,35}
+
 \usepackage{colortbl}
 \usepackage{rotating}
 %\newlength{\NOTskip} 
@@ -19,6 +24,7 @@
 \usepackage{natbib}
 \bibliographystyle{apalike}
 
+\DeclareMathOperator*{\argmax}{arg\,max}
 
 \usecolortheme{orchid}
 \mode<presentation>
@@ -37,7 +43,9 @@
 	\insertframenumber/\inserttotalframenumber
 }
 
+%Beamer settings
 \setbeamerfont{frametitle}{size=\LARGE}
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
 
 \newcommand{\backupbegin}{
 	\newcounter{framenumberappendix}
@@ -93,6 +101,8 @@
 	}
 
     \begin{frame}
+    	\bigskip
+    	
     	\bigskip
     	
     	\bigskip
@@ -198,21 +208,256 @@ The results clearly show that:
 	\textbf{Permutation test}: by permuting the sample of a pair of asset and computing Pearson's correlation on the permuted data a large number of times, we can reconstruct an empirical distribution for the possible correlations. Once we obtained this distribution, we can compute the \textit{p-value} of the test and compare it to the chosen confidence level.
 \end{frame}
 	
+	
+\begin{frame} {Correlation Significance}
+The tables report values of the correlation of Bitcoin with the other assets and the \textit{p-values} of the two tests. All p-values are higher then the threshold of 5\% (100\% minus the confidence level) except for S\&P500. 
 
-\begin{frame}{Correlation Significance}
+	\begin{table}
+		\footnotesize
+		\centering
+		\noindent\makebox[\textwidth]{\begin{tabular}{llllllll}
+			& bric & sp500 & eurostoxx & nasdaq & bond\_europe & bond\_us & bond\_eur \\
+			\midrule
+			Correlation & 1,41\% & 4,37\% & 4,12\% & 3,59\% & 1,41\% & -1,84\% & 1,92\% \\
+			Pearson & 52,70\% & \textcolor{red}{4,10\%} & 5,40\% & 9,35\% & 50,35\% & 39,90\% & 37,95\% \\
+			Permutation & 51,21\% & \textcolor{red}{4,24\%} & 5,55\% & 9,48\% & 51,29\% & 39,28\% & 37,20\% \\
+			\midrule
+		\end{tabular}
+	}
+
+\bigskip
+
+	\noindent\makebox[\textwidth]{%
+		\begin{tabular}{lllllllll}
+			& eur & gbp & chf & jpy & gold & wti & grain & metal \\
+			\midrule
+			Correlation & 2,29\% & 0,73\% & 2,46\% & -1,09\% & -0,24\% & 0,77\% & 3,50\% & 2,69\% \\
+			Pearson & 29,00\% & 72,75\% & 24,75\% & 61,45\% & 91,00\% & 71,55\% & 10,10\% & 20,90\% \\
+			Permutation & 28,64\% & 73,33\% & 25,34\% & 61,32\% & 91,08\% & 72,00\% & 10,34\% & 21,13\% \\
+			\midrule
+	\end{tabular}}
+	\end{table}
+
+This means that all correlations are \textbf{not significantly different from zero}. The only value for which both tests assert that the correlation is \textit{statistically significantly different from zero} is for S\&P500.
+\end{frame}
+	
+
+\begin{frame}{Rolling Correlation}
+
+\begin{figure}
+	\centering
+	\noindent\makebox[\textwidth]{
+			\includegraphics[width=0.8\linewidth]{Images/rolling_stocks}
+	}
+\end{figure}
+\begin{figure}
+	\centering
+	\noindent\makebox[\textwidth]{
+		\includegraphics[width=0.6\linewidth]{Images/rolling_bonds}
+	}
+\end{figure}
+\end{frame}
+
+
+\section{Models Presentation and Calibration}
+\subsection{Univariate Models}
+
+\begin{frame}{Merton Model}
+In his article \citep{MERTON1976}, Merton presented a \textbf{jump diffusion model} with the aim to account for sudden rises and falls of the prices due to the arrival of new information. It is based on the dynamics of a \textit{geometric Brownian motion} (GBM), which are the same dynamics used in Black\&Scholes:
+
+\begin{equation*}
+\frac{dS_t}{S_t} = \mu dt + \sigma dW_t ,
+\end{equation*}
+
+\noindent
+to which Merton added a jump component:
+\begin{equation*}
+\frac{dS_t}{S_t} = (\mu \textcolor{mygreen}{- \lambda \mu_J}) dt + \sigma dW_t  \textcolor{mygreen}{+ Y_t dN}.
+\end{equation*}
+
+We have that $\mu$ is the \textit{drift}, $\sigma$ is the \textit{volatility}, $\textcolor{mygreen}{N(t)}$ is a Poisson process with parameter $\textcolor{mygreen}{\lambda}$ to model the arrival of jumps, $\textcolor{mygreen}{Y_t}$ is a stochastic process to model the intensity of the jumps. In the case of Merton, $\textcolor{mygreen}{Y_t}$ is distributed as log-normal, namely $y_t = \log(Y_t) \sim \mathcal{N}(\textcolor{mygreen}{\mu_J}, \textcolor{mygreen}{\sigma_J^2})$.
+\end{frame}
+
+
+
+\begin{frame}{Heston Model}
+Heston model  \citep{HESTON93} is another improvement from the simple GBM: relaxing the assumption that the volatility is constant, Heston added \textbf{a stochastic process to model the variance}. The dynamics are described by the following equations:
+\begin{equation*}
+\frac{dS_t}{S_t} = \mu dt +\textcolor{red}{\sqrt{ V_t} }dW_t^S,
+\end{equation*}
+\begin{equation*}
+\textcolor{red}{dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V}.
+\end{equation*}
+
+The variance $\textcolor{red}{V_t}$ follows a CIR process \citep{CIR85} which is a \textit{mean-reverting} process with mean reversion \textit{level} and \textit{rate} represented respectively by $\textcolor{red}{\theta}$ and $\textcolor{red}{\kappa}$. 
+$\textcolor{red}{\sigma_V}$ models the volatility of the variance process. The two Brownian motions $W_t^S$ and $W_t^V$ are correlated through the parameter $\textcolor{red}{\rho}$: $dW_t^S dW_t^V = \textcolor{red}{\rho} dt$. The \textit{drift} is modelled by $\mu$.
+
+\bigskip
+It can be shown that the variance process is always non negative when the \textit{Feller} condition is satisfied:
+\begin{equation*}
+2\kappa\theta \geq \sigma_V
+\end{equation*}
+\end{frame}
+
+
+\begin{frame}{Bates Model}
+Bates model \citep{BATES96} is the combination of Merton and Heston model.
+It includes both a \textbf{jump component} and \textbf{stochastic volatility}:
+
+\begin{equation*}
+\frac{dS_t}{S_t} = (\mu \textcolor{mygreen}{- \lambda \mu_J}) dt +\textcolor{red}{\sqrt{ V_t}}dW_t^S \textcolor{mygreen}{+ Y_t dN},
+\end{equation*}
+\begin{equation*}
+\textcolor{red}{dV_t = \kappa (\theta - V_t) dt + \sigma_V \sqrt{V_t} dW_t^V} .
+\end{equation*}
+
+
+As before, $\mu$ is the \textit{drift}, $\textcolor{red}{V_t}$  is the variance following a CIR process with parameters $\textcolor{red}{\kappa}$, $\textcolor{red}{\theta}$ and $\textcolor{red}{\sigma_V}$,  $\textcolor{red}{\rho}$ is the correlation between the two Brownian motions. The jump component is modelled by $\textcolor{mygreen}{Y_t}$  such that $y_t = \log(Y_t) \sim \mathcal{N}(\textcolor{mygreen}{\mu_J}, \textcolor{mygreen}{\sigma_J^2})$. and  $\textcolor{mygreen}{N(t)}$ is the Poisson process with parameter $\textcolor{mygreen}{\lambda}$.
+
+\bigskip
+The variance process is always non negative when the \textit{Feller} condition is satisfied:
+\begin{equation*}
+2\kappa\theta \geq \sigma_V
+\end{equation*}
+\end{frame}
+
+
+\begin{frame}{Single Asset Calibration}
+In order to calibrate each set of parameter $\psi$, we adopt the \textbf{maximum likelihood estimation} (MLE) procedure.
+MLE consists of maximizing the likelihood function $\mathcal{L}(\psi |  X)$ computed for the sample data $X$ over the domain $\Psi$ of all admitted values of the parameters:
+\begin{equation*}
+\widehat{\psi} = \argmax_{\psi \in \Psi} \:\mathcal{L}(\psi |  X).
+\end{equation*}
+
+In our case, $X$ is composed of all observed \textbf{daily log-returns} $x_i = \log(S_i/S_{i-1})$ and they are all \textbf{i.i.d.} which allows us to compute the likelihood function as:
+\begin{equation*}
+\mathcal{L}(\psi |  X) = \prod_{i=1}^{N} f_{ \mathcal{D}}(x_{i}; \psi),
+\end{equation*}
+where $f_{ \mathcal{D}}(x; \psi)$ is the density function (pdf) of the log-returns.
+In practice, it is a common approach to consider the \textit{log}-likelihood function:
+\begin{equation*}
+\ell (\psi |  X) =\log\mathcal{L}(\psi |  X) = \sum_{i=1}^{N} \log f_{ \mathcal{D}}(x_{i}; \psi).
+\end{equation*}
+
+\end{frame}
+
+\begin{frame}{Issues with Calibrating}
+When performing the calibration, we have to face the following issues:
+\begin{itemize}
+	\item \textbf{choosing the optimizer}: the trade-off is between fast computation and robust solution. Taking into account the complexity of the shape of the log-likelihood, we implemented the combination of a \textbf{global} (\textit{Differential evolution}) and \textbf{local} (\textit{quasi-Newton method}) \textbf{optimizers}
+	\item \textbf{unavailability of the pdf}: in the cases of Heston and Bates models, there are no explicit formulas for the pdf. We have to obtain it from the \textbf{characteristic function} via \textit{Fourier inversion}. Luckily, this can be numerically implemented using the \textbf{FFT} algorithm.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Graphical Results}
+
+The two examples below show that in our implementation of the calibration \textbf{Heston} and \textbf{Bates} are able to \textbf{better fit} the empirical distribution of the log-returns, especially its \textit{leptokurtosis}.
+
+\begin{figure}[ht]
+	\begin{minipage}[b]{0.45\linewidth}
+		\footnotesize
+		\centering
+		\includegraphics[width=\textwidth]{Images/hist_btc.pdf}
+%		\caption{Histogram and calibrated pdf for Bitcoin}
+
+	\end{minipage}
+	\hspace{0.5cm}
+	\begin{minipage}[b]{0.45\linewidth}
+		\footnotesize
+		\centering
+		\includegraphics[width=\textwidth]{Images/hist_bond_eur.pdf}
+%		\caption{Histogram and calibrated pdf for Bond EUR}
+	
+	\end{minipage}
+\end{figure}
+\end{frame}
+
+\subsection{Multi Asset Framework}
+\begin{frame}{Multi Asset Framework}
+In order to obtain the values for the correlation matrix for the different models, we followed the \textit{parsimonious approach} presented in \citep{PARSIMONIOUS2011}
+that only directly models the \textit{asset-asset} correlations and not the \textit{asset-variance} or \textit{variance-variance}.
+
+There are three steps to obtaining the model matrix correlation:
+\begin{enumerate}
+	\item \textbf{Calibrate} each \textbf{single asset model}
+	\item \textbf{Compute} the model \textbf{correlation} for \textbf{every asset pair}. This is done by simulating the two paths $N_{sim}$ times with $\rho$ as the \textit{model correlation} and computing the \textit{simulated correlation} $\rho_{sim}$ in each scenario. The aim is to find a $\rho$ such that 
+	$ \mathbb{E} [\rho_{sim}(\rho)] = \rho_{obs}$, where  $\rho_{obs}$ is the \textit{sample correlation} observed from our dataset.
+	
+	\item \textbf{Perform J\"ackel regularization} to the matrix obtained in step 2 to get a valid correlation matrix as final result.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Graphical Comparison of Correlation Matrices}
 
 
 \end{frame}
 
 
-
-
-\section{Models Presentation and Calibration}
-
-
-
 \section{Optimal Portfolio Allocation}
 
+\begin{frame}{Optimal Allocation Framework}
+The general framework introduced by Markowitz in \citep{MARKOWITZ1952} consists of \textit{optimizing} the allocation of wealth based on the \textbf{assets returns} and the overall \textbf{portfolio risk} that must also take into account the correlation in the asset prices.
+
+\begin{subequations}
+	\begin{align}
+	&\!\min_{\mathbf{w}\in \mathbb{R}^{N}}     &    & R_{ptf}(\mathbf{w}) \nonumber\\
+	& \text{subject to}   &   & \mathbf{e}^T\mathbf{w} = 1 ,\nonumber\\
+	&                 &       & \mathbf{r}^T\mathbf{w} = r_{target},\label{eq:constraint2a} \nonumber\\
+	&		   &      & w_{i} \geq 0, \text{for} \: i = 1\dots N,\nonumber
+	\end{align}
+\end{subequations}
+
+Where $\mathbf{w}$ is the vector of weights, $\mathbf{e} = (1,...,1)^T$ is a vectot of ones, $\mathbf{r}$ is the vector of expected return of the assets, $R_{ptf}(\mathbf{w})$ is the portfolio risk measure.
+
+
+\end{frame}
+
+\begin{frame}{Portfolio Risk Measures}
+We will consider two different risk measures for the portfolio risk:
+\begin{enumerate}
+	\item Portfolio Variance $\sigma_{ptf}^2(\mathbf{w}) = \mathbf{w}^T \Sigma \mathbf{w}$. $\Sigma$ is the (sample) covariance matrix of the assets.
+	\item Daily Portfolio $CVaR_{95\%}(\mathbf{w})$: we can obtain the distribution of the returns of the portfolio by multiplying the matrix of daily observation of our dataset to the portfolio weights. Then we compute the $CVaR$ for the  portfolio loss distribution.
+\end{enumerate}
+
+\begin{figure}
+	\centering
+	\noindent\makebox[\textwidth]{\includegraphics[trim={2cm 3cm 2cm 1.5cm},clip,width =0.7\textwidth]{Images/cvar_example2}
+	}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Efficient Frontiers}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\includegraphics[width=\textwidth]{Images/efficient_frontier}
+	\end{column}
+	\begin{column}{0.5\textwidth}  %%<--- here
+%		\centering
+			\includegraphics[width=\textwidth]{Images/efficient_frontier_CVaR}
+	\end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Optimal Allocation}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\includegraphics[width=\textwidth]{Images/markowitz_allocation}\\
+		\includegraphics[width=\textwidth]{Images/markowitz_allocation_no_btc}
+	\end{column}
+	\begin{column}{0.5\textwidth}  %%<--- here
+		%		\centering
+		\includegraphics[width=\textwidth]{Images/cvar_allocation}\\
+		\includegraphics[width=\textwidth]{Images/cvar_allocation_no_btc}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}{Conclusions}
+	
+\end{frame}
 
 %    \section{Mathematical background and cryptographic primitives}
 %    
