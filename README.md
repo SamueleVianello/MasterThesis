@@ -1,4 +1,8 @@
-# MasterThesis
+# Bitcoin as a Digital Asset: correlation and optimal portfolio allocation.
+
+
+
+### Repository contents
 
 Biggest part of the work is in the `R_code` folder, with all R files and explanations. 
 
