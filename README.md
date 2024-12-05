@@ -6,8 +6,10 @@ Bitcoin is increasingly establishing itself as a digital investment asset other 
 
 ### PDF files
 
-Presentation slides: [here](https://drive.google.com/file/d/1dhg68twKjSyXnhouXJfBoDoaoG7mxSH_/view?usp=drive_link).\
-Full work: [here](https://drive.google.com/file/d/1etHLJBCNrHlD4wIgr5HgmrcDvqjV6XBM/view?usp=drive_link).
+Presentation slides: [here](https://drive.google.com/file/d/1dhg68twKjSyXnhouXJfBoDoaoG7mxSH_/view?usp=sharing).\
+Full work: [here](https://drive.google.com/file/d/1etHLJBCNrHlD4wIgr5HgmrcDvqjV6XBM/view?usp=sharing).
+
+
 
 ### Repository contents
 
